@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
-{% block title %}قیمت و خرید {{ products.title|truncatewords:12 }}{% endblock %}
+{% block title %}{% if products.meta_title %}{{ products.meta_title }}{% else %}قیمت و خرید {{ products.title|truncatewords:12 }}{% endif %}{% endblock %}
+{% block meta_description %}{{ products.meta_description|default:products.description|striptags|truncatechars:160 }}{% endblock %}
+{% block canonical %}<link rel="canonical" href="{% if products.canonical_url %}{{ products.canonical_url }}{% else %}{{ request.build_absolute_uri }}{% endif %}">{% endblock %}
+{% block structured_data %}<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"{{ products.title|escapejs }}","description":"{{ products.meta_description|default:products.description|striptags|truncatechars:160|escapejs }}","offers":{"@type":"Offer","price":"{{ products.price }}","priceCurrency":"IRR","availability":"{% if products.stock_count > 0 %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}"}}</script>{% endblock %}
 {% load static %}
 {% load jalali_tags %}
 {% load custom_filters %}

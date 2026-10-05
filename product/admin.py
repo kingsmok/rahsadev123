@@ -4,6 +4,11 @@ from jalali_date import datetime2jalali, date2jalali
 from jalali_date.admin import ModelAdminJalaliMixin
 
 
+class DigitalAssetInline(admin.StackedInline):
+    model = models.DigitalAsset
+    extra = 0
+
+
 class ProductImageAdmin(admin.StackedInline):
     model = models.ProductImage
 
@@ -41,7 +46,7 @@ class ProductAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
     list_editable = ['old_price', 'price', 'stock_count', 'status']
     list_filter = ['status']
-    inlines = [ProductImageAdmin]
+    inlines = [DigitalAssetInline, ProductImageAdmin]
 
     def short_title(self, obj):
         if len(obj.title) > 20:

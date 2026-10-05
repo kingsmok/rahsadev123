@@ -4,6 +4,7 @@ from . import views
 
 app_name = 'product'
 urlpatterns = [
+    path('download/<str:pid>/', views.download_asset, name='download_asset'),
     path('', views.product_list, name='product_list'),
     re_path(r'category/(?P<slug>[-\w]+)/', views.category_product_list, name='category_product_list'),
     re_path(r'brand/(?P<slug>[-\w]+)/', views.brand_product_list, name='brand_product_list'),

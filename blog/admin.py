@@ -4,6 +4,12 @@ from jalali_date import datetime2jalali, date2jalali
 from jalali_date.admin import ModelAdminJalaliMixin
 
 
+@admin.register(models.Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = ('title', 'slug')
+    prepopulated_fields = {'slug': ('title',)}
+
+
 @admin.register(models.Category)
 class CategoryAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
     list_display = ['title', 'get_created_jalali']

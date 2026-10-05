@@ -219,6 +219,13 @@ def shopping_payment(request):
 
 @login_required
 def successful_payment(request):
+    # پرداخت فقط از callback تأییدشده درگاه انجام می‌شود؛ این URL دیگر پرداخت را جعل نمی‌کند.
+    messages.info(request, 'برای ثبت سفارش، ابتدا از یکی از درگاه‌های پرداخت استفاده کنید.')
+    return redirect('cart:shopping_payment')
+
+
+@login_required
+def legacy_successful_payment_disabled(request):
     cart = get_object_or_404(Cart, user=request.user)
 
     total_price = sum(item.total_price for item in cart.items.all())

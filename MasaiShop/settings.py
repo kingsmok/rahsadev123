@@ -9,12 +9,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-#meb2myl((f^16h)_9$&zba&9!$5yxz3hw8y(6f-6catonz^)0'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'change-me-in-production')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() in ('1', 'true', 'yes')
+ALLOWED_HOSTS = [host.strip() for host in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if host.strip()]
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY = 'same-origin'
 
-ALLOWED_HOSTS = []
+# درگاه‌ها فقط با کلید محیطی فعال می‌شوند.
+ZARINPAL_MERCHANT_ID = os.environ.get('ZARINPAL_MERCHANT_ID', '')
+SNAPPAY_CLIENT_ID = os.environ.get('SNAPPAY_CLIENT_ID', '')
+SNAPPAY_CLIENT_SECRET = os.environ.get('SNAPPAY_CLIENT_SECRET', '')
+TOROBPAY_MERCHANT_ID = os.environ.get('TOROBPAY_MERCHANT_ID', '')
+ZARINPAL_REQUEST_URL = os.environ.get('ZARINPAL_REQUEST_URL', 'https://api.zarinpal.com/pg/v4/payment/request.json')
+ZARINPAL_VERIFY_URL = os.environ.get('ZARINPAL_VERIFY_URL', 'https://api.zarinpal.com/pg/v4/payment/verify.json')
+ZARINPAL_START_URL = os.environ.get('ZARINPAL_START_URL', 'https://www.zarinpal.com/pg/StartPay/')
 
 
 # Application definition
@@ -26,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'ckeditor_uploader',
     # installed apps
     'jalali_date',
     'ckeditor',
@@ -37,6 +54,9 @@ INSTALLED_APPS = [
     'blog',
     'cart',
     'dashboard',
+    'payments',
+    'downloads',
+    'pages',
 ]
 
 MIDDLEWARE = [
@@ -160,7 +180,7 @@ JALALI_DATE_DEFAULTS = {
 # CKEditor Settings
 CKEDITOR_UPLOAD_PATH = 'uploads/'
 CKEDITOR_IMAGE_BACKEND = "pillow"
-CKEDITOR_JQUERY_URL = '//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js'
+CKEDITOR_JQUERY_URL = '/static/js/core/jquery.min.js'
 CKEDITOR_CONFIGS = {
     'default':
         {
