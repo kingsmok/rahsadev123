@@ -209,11 +209,13 @@
                                 </tr>
                                 <tr>
                                     <td colspan="2">
-                                        <a href="
-                                                {% if default_address %}{% url 'cart:successful_payment' %}{% else %}#{% endif %}"
-                                           class="btn big_btn btn-main-masai {% if not default_address %}disabled{% endif %}">
-                                            اتصال به درگاه
-                                        </a>
+                                        <form method="post" action="{% if default_address %}{% url 'payments:start' 'new' %}{% else %}#{% endif %}">
+                                            {% csrf_token %}
+                                            <select name="gateway" class="form-control mb-2" aria-label="درگاه پرداخت">
+                                                <option value="zarinpal">زرین‌پال</option><option value="snappay">اسنپ‌پی</option><option value="torobpay">ترب‌پی</option>
+                                            </select>
+                                            <button type="submit" class="btn big_btn btn-main-masai {% if not default_address %}disabled{% endif %}" {% if not default_address %}disabled{% endif %}>اتصال به درگاه</button>
+                                        </form>
                                     </td>
                                 </tr>
                                 </tbody>

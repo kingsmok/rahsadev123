@@ -34,6 +34,9 @@ class Article(models.Model):
     views = models.IntegerField(default=0, editable=False, verbose_name='بازدید')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='تاریخ بروزرسانی')
+    meta_title = models.CharField(max_length=70, blank=True, verbose_name='عنوان سئو')
+    meta_description = models.CharField(max_length=160, blank=True, verbose_name='توضیحات سئو')
+    canonical_url = models.URLField(blank=True, verbose_name='آدرس canonical')
 
     class Meta:
         verbose_name = 'مقاله'

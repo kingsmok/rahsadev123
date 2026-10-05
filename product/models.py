@@ -79,10 +79,13 @@ class Product(models.Model):
     sales_count = models.IntegerField(default=0, verbose_name='تعداد فروش')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='تاریخ به‌روزرسانی')
+    meta_title = models.CharField(max_length=70, blank=True, verbose_name='عنوان سئو')
+    meta_description = models.CharField(max_length=160, blank=True, verbose_name='توضیحات سئو')
+    canonical_url = models.URLField(blank=True, verbose_name='آدرس canonical')
     # General Features
-    brand = models.ManyToManyField(ProductBrand, related_name='product_brands', null=True, blank=True, verbose_name='برند مربوطه')
+    brand = models.ManyToManyField(ProductBrand, related_name='product_brands', blank=True, verbose_name='برند مربوطه')
     model = models.CharField(max_length=100, blank=True, null=True, verbose_name='مدل')
-    color = models.ManyToManyField(ProductColor, null=True, blank=True, related_name='colors', verbose_name='رنگ')
+    color = models.ManyToManyField(ProductColor, blank=True, related_name='colors', verbose_name='رنگ')
     weight = models.CharField(max_length=50, blank=True, null=True, verbose_name='وزن')
     dimensions = models.CharField(max_length=100, blank=True, null=True, verbose_name='ابعاد')
     # Special Features for Products
@@ -121,6 +124,21 @@ class Product(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class DigitalAsset(models.Model):
+    product = models.OneToOneField(Product, related_name='digital_asset', on_delete=models.CASCADE, verbose_name='محصول')
+    file = models.FileField(upload_to='digital-products/', verbose_name='فایل محصول')
+    version = models.CharField(max_length=30, blank=True, verbose_name='نسخه')
+    download_count = models.PositiveIntegerField(default=0, editable=False, verbose_name='تعداد دانلود')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'فایل دیجیتال'
+        verbose_name_plural = 'فایل‌های دیجیتال'
+
+    def __str__(self):
+        return self.product.title
 
 
 class ProductImage(models.Model):

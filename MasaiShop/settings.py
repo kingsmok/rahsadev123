@@ -14,7 +14,13 @@ SECRET_KEY = 'django-insecure-#meb2myl((f^16h)_9$&zba&9!$5yxz3hw8y(6f-6catonz^)0
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+
+# درگاه‌ها فقط با کلید محیطی فعال می‌شوند.
+ZARINPAL_MERCHANT_ID = os.environ.get('ZARINPAL_MERCHANT_ID', '')
+SNAPPAY_CLIENT_ID = os.environ.get('SNAPPAY_CLIENT_ID', '')
+SNAPPAY_CLIENT_SECRET = os.environ.get('SNAPPAY_CLIENT_SECRET', '')
+TOROBPAY_MERCHANT_ID = os.environ.get('TOROBPAY_MERCHANT_ID', '')
 
 
 # Application definition
@@ -26,6 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'ckeditor_uploader',
     # installed apps
     'jalali_date',
     'ckeditor',
@@ -37,6 +44,7 @@ INSTALLED_APPS = [
     'blog',
     'cart',
     'dashboard',
+    'payments',
 ]
 
 MIDDLEWARE = [
@@ -160,7 +168,7 @@ JALALI_DATE_DEFAULTS = {
 # CKEditor Settings
 CKEDITOR_UPLOAD_PATH = 'uploads/'
 CKEDITOR_IMAGE_BACKEND = "pillow"
-CKEDITOR_JQUERY_URL = '//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js'
+CKEDITOR_JQUERY_URL = '/static/js/core/jquery.min.js'
 CKEDITOR_CONFIGS = {
     'default':
         {

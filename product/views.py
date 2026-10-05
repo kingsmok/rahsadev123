@@ -8,6 +8,22 @@ from django.http import JsonResponse
 from dashboard.models import Wishlist
 
 
+from django.http import FileResponse, Http404
+from django.contrib.auth.decorators import login_required
+from cart.models import Order
+
+
+@login_required
+def download_asset(request, pid):
+    asset = get_object_or_404(Product.objects.select_related('digital_asset'), pid=pid).digital_asset
+    has_paid = Order.objects.filter(user=request.user, status__in=['paid', 'processing', 'shipped', 'delivered'], items_data__icontains=asset.product.title).exists()
+    if not has_paid:
+        raise Http404
+    asset.download_count = models.F('download_count') + 1
+    asset.save(update_fields=['download_count'])
+    return FileResponse(asset.file.open('rb'), as_attachment=True, filename=asset.file.name.rsplit('/', 1)[-1])
+
+
 def redirect_to_home(request):
     return redirect('core:home')
 
