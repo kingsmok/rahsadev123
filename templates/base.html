@@ -354,6 +354,15 @@
                                 <li>
                                     <a href="{% url 'core:about' %}">درباره ما</a>
                                 </li>
+                                <li>
+                                    <a href="{% url 'pages:detail' 'راهنمای-خرید' %}">راهنمای خرید</a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'pages:detail' 'سوالات-متداول' %}">سوالات متداول</a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'pages:detail' 'قوانین-و-مقررات' %}">قوانین و مقررات</a>
+                                </li>
                                 {% if site_settings.phone1 %}<li><i class="fa fa-phone"></i> {{ site_settings.phone1 }}</li>{% endif %}
                                 {% if site_settings.email1 %}<li><i class="fa fa-envelope"></i> {{ site_settings.email1 }}</li>{% endif %}
                             </ul>

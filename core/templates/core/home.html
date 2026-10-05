@@ -461,7 +461,7 @@
                             {% for package in service_packages %}
                                 <div class="col-12 col-md-4 space-bottom-15">
                                     <div class="svc-card">
-                                        <i class="fa {{ package_icon|default:'fa-laptop-code' }}"></i>
+                                        <i class="fa {% if forloop.counter == 1 %}fa-building{% elif forloop.counter == 2 %}fa-cart-shopping{% elif forloop.counter == 3 %}fa-user-tie{% else %}fa-laptop-code{% endif %}"></i>
                                         <h4>{{ package.title }}</h4>
                                         <p>{{ package.subtitle }}</p>
                                     </div>

@@ -531,6 +531,13 @@ class Command(BaseCommand):
             ('اسلایدر ۱ - فروشگاه فایل', 'slider-1.png', 'main_slider', '/products/'),
             ('اسلایدر ۲ - قالب‌های وب سایت', 'slider-2.png', 'main_slider', '/products/category/html-templates/'),
             ('اسلایدر ۳ - خدمات طراحی سایت', 'slider-3.png', 'main_slider', '/services/'),
+            ('فایل‌های طراحی و UI Kit', 'small-design-uikit.png', 'small_banner', '/products/category/design-files/'),
+            ('محصولات مجازی و اشتراک‌ها', 'small-virtual-ai.png', 'small_banner', '/products/category/virtual-products/'),
+            ('نرم‌افزار و ابزارهای کاربردی', 'small-software-tasks.png', 'small_banner', '/products/category/software-tools/'),
+            ('تخفیف‌های ویژه فایل‌ها', 'small-design-mockup.png', 'small_banner', '/products/discount_product/'),
+            ('قالب‌های آماده وب سایت', 'large-1.png', 'large_banner', '/products/category/html-templates/'),
+            ('سفارش طراحی اختصاصی سایت', 'large-2.png', 'large_banner', '/services/'),
+            ('همه فایل‌های فروشگاه', 'single-1.png', 'single_banner', '/products/'),
         ]
         for title, image, banner_type, url in banners_data:
             if Banner.objects.filter(title=title).exists():
