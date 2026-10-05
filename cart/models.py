@@ -83,6 +83,7 @@ class CartItem(models.Model):
     class Meta:
         verbose_name = 'آیتم سبد خرید'
         verbose_name_plural = 'آیتم‌ های سبد خرید'
+        ordering = ['-created_at', '-id']
         unique_together = ['cart', 'product', 'color']
 
     def __str__(self):

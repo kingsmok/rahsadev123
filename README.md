@@ -116,6 +116,44 @@ python manage.py runserver
 8. **دسترسی به وب‌سایت:**
    در مرورگر خود به آدرس http://127.0.0.1:8000/ بروید.
 
+## ⚠️ نسخه پایتون و رفع خطای پنل ادمین
+
+این پروژه با **Django 5.1.7** کار می‌کند و نسخه‌های پیشنهادی پایتون **۳.۱۰ تا ۳.۱۳** هستند.
+
+اگر روی **پایتون ۳.۱۴** اجرا کنید، در تمام صفحات پنل ادمین (`/admin/...`) و هر قالبی که از inclusion tag استفاده می‌کند خطای زیر را می‌بینید:
+
+```
+AttributeError: 'super' object has no attribute 'dicts' and no __dict__ for setting new attributes
+django/template/context.py, line 41, in __copy__
+```
+
+علت: تغییر رفتار `copy.copy()` روی شیء `super()` در پایتون ۳.۱۴ که با پیاده‌سازی `BaseContext.__copy__` در جنگو ۵.۱ سازگار نیست.
+
+برای رفع آن، فایل `MasaiShop/compat.py` به پروژه اضافه شده و از طریق `CoreConfig.ready()` در زمان اجرا همان اصلاح رسمی جنگو را اعمال می‌کند؛ پس پروژه روی پایتون ۳.۱۴ هم بالا می‌آید. با این حال برای محیط واقعی یکی از این دو گزینه توصیه می‌شود:
+
+- استفاده از پایتون ۳.۱۲ یا ۳.۱۳ (ساده‌ترین و مطمئن‌ترین راه)، یا
+- ارتقای جنگو به نسخه‌ای که رسماً از پایتون ۳.۱۴ پشتیبانی می‌کند.
+
+ساخت محیط مجازی با نسخه درست پایتون در ویندوز:
+
+```powershell
+py -3.12 -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
+
+## 🎨 فایل‌های استاتیک روی سرور
+
+`STATIC_ROOT` در تنظیمات مقداردهی شده است؛ قبل از اجرای پروژه با `DEBUG=False` حتماً این دستور را اجرا کنید وگرنه سایت بدون CSS/JS و بهم‌ریخته نمایش داده می‌شود:
+
+```bash
+python manage.py collectstatic
+```
+
+کتابخانه SweetAlert2 هم به‌صورت محلی در `static/js/plugins/sweetalert2.all.min.js` و `static/css/plugins/sweetalert2.min.css` قرار دارد و از `base.html` بارگذاری می‌شود (بدون نیاز به CDN).
+
 > نکته: هشدار `ckeditor.W001` مربوط به نسخه قدیمی CKEditor 4 در بسته `django-ckeditor` است و مانع اجرای پروژه نمی‌شود. برای استفاده در محیط production، CKEditor 5 یا بسته LTS را پس از بررسی سازگاری و مجوزها جایگزین کنید.
 
 ## ✅ استفاده

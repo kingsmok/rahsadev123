@@ -20,6 +20,7 @@ class ProductCategory(models.Model):
     class Meta:
         verbose_name = 'دسته بندی'
         verbose_name_plural = 'دسته بندی ها'
+        ordering = ['title']
 
     def category_image(self):
         if self.image:
@@ -113,6 +114,7 @@ class Product(models.Model):
     class Meta:
         verbose_name = 'محصول'
         verbose_name_plural = 'محصولات'
+        ordering = ['-created_at', '-id']
 
     def discount_percentage(self):
         if self.old_price and self.price < self.old_price:

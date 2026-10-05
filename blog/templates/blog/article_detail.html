@@ -70,7 +70,7 @@
                             <div class="blog_list_widget_blog">
                                 <div class="widget_blog_groups">
                                     <ul class="widget_blog_posts">
-                                        {% for category in categories %}
+                                        {% for category in article_categories %}
                                             <li><a class="widget_blog_title_link" href="{% url 'blog:article_category' category.slug %}">{{ category.title }}</a></li>
                                         {% endfor %}
                                     </ul>
