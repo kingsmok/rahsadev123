@@ -1,0 +1,187 @@
+{% load static %}
+{% load jalali_tags %}
+<div class="profile-page-aside col-xl-3 col-lg-4 col-md-6 center-section order-1">
+    <div class="profile-card-1">
+        <!--image-->
+        <div class="img">
+            {% if profile.image %}
+                <img src="{{ profile.image.url }}" alt='{{ profile.user.username }}' />
+            {% else %}
+                <img src="{% static "img/default_profile_image.png" %}" alt='{{ profile.user.username }}' />
+            {% endif %}
+        </div>
+
+        <!--text-->
+        <div class="mid-section">
+            {% if profile.first_name and profile.last_name %}
+                <div class="name">{{ profile.first_name }} {{ profile.last_name }}</div>
+            {% else %}
+                <div class="name">{{ profile.user.username }}</div>
+            {% endif %}
+            <div class="line"></div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="subtext">عضو از {{ request.user.date_joined|to_jalali:'%Y/%m/%d' }}</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="responsive-profile-menu show-md location_me">
+        <div class="btn-group">
+            <button type="button" class="btn btn-second-masai dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fa fa-navicon"></i>
+                حساب کاربری شما
+            </button>
+            <div class="dropdown-menu dropdown-menu-right text-right">
+
+                <a href="{% url "dashboard:home" %}" class="dropdown-item {% if request.resolver_match.url_name == 'home' %}active-menu{% endif %}">
+                    <i class="fa fa-home colormain" aria-hidden="true"></i>
+                    داشبورد
+                </a>
+
+                <a href="{% url "dashboard:orders" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders' %}active-menu{% endif %}">
+                    <i class="fa fa-cart-arrow-down colormain" aria-hidden="true"></i>
+                    سفارشات
+                </a>
+
+                <a href="{% url "dashboard:orders_delivered" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders_delivered' %}active-menu{% endif %}">
+                    <i class="fa fa-check-circle colormain" aria-hidden="true"></i>
+                    سفارشات تحویل داده شده
+                </a>
+
+                <a href="{% url "dashboard:cart_summary" %}" class="dropdown-item {% if request.resolver_match.url_name == 'cart_summary' %}active-menu{% endif %}">
+                    <i class="fa fa-shopping-cart colormain" aria-hidden="true"></i> سفارشات در سبد
+                </a>
+
+                <a href="{% url "dashboard:orders_cancelled" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders_cancelled' %}active-menu{% endif %}">
+                    <i class="fa fa-times colormain" aria-hidden="true"></i>
+                    سفارشات لغو شده
+                </a>
+
+                <a href="{% url "dashboard:orders_return" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders_return' %}active-menu{% endif %}">
+                    <i class="fa fa-undo colormain" aria-hidden="true"></i>
+                    لغو سفارش
+                </a>
+
+                <a href="{% url "dashboard:wishlist_products" %}" class="dropdown-item {% if request.resolver_match.url_name == 'wishlist_products' %}active-menu{% endif %}">
+                    <i class="fa fa-heart colormain" aria-hidden="true"></i>
+                    محصولات مورد علاقه
+                </a>
+
+                <a href="{% url "dashboard:user_addresses" %}" class="dropdown-item {% if request.resolver_match.url_name == 'user_addresses' %}active-menu{% endif %}">
+                    <i class="fa fa-map icon-icon colormain" aria-hidden="true"></i>
+                    آدرس های من
+                </a>
+
+                <a href="{% url "dashboard:notifications" %}" class="dropdown-item {% if request.resolver_match.url_name == 'notifications' %}active-menu{% endif %}">
+                    <i class="fa fa-bell colormain" aria-hidden="true"></i>
+                    اعلان ها
+                </a>
+
+                <a href="{% url "dashboard:user_profile" %}" class="dropdown-item {% if request.resolver_match.url_name == 'user_profile' %}active-menu{% endif %}">
+                    <i class="fa fa-user-large colormain"></i>
+                    پروفایل
+                </a>
+
+                <a href="{% url "dashboard:change_password" %}" class="dropdown-item {% if request.resolver_match.url_name == 'change_password' %}active-menu{% endif %}">
+                    <i class="fa fa-shield colormain" aria-hidden="true"></i>
+                    تغییر رمز عبور
+                </a>
+
+                <a href="{% url "account:logout" %}" class="dropdown-item {% if request.resolver_match.url_name == 'logout' %}active-menu{% endif %}">
+                    <i class="fa fa-sign-out-alt colormain" aria-hidden="true"></i>
+                    خروج از حساب
+                </a>
+
+            </div>
+        </div>
+    </div>
+    <div class="profile-menu ">
+        <ul class="profile-menu-items">
+
+            <li>
+                <a href="{% url "dashboard:home" %}" class="dropdown-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                    <i class="fa fa-home colormain" aria-hidden="true"></i>
+                    داشبورد
+                </a>
+            </li>
+
+            <li>
+                <a href="{% url "dashboard:orders" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders' %}active{% endif %}">
+                    <i class="fa fa-cart-arrow-down colormain" aria-hidden="true"></i> سفارشات
+                </a>
+            </li>
+
+            <li>
+                <a href="{% url "dashboard:orders_delivered" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders_delivered' %}active{% endif %}">
+                    <i class="fa fa-check-circle colormain" aria-hidden="true"></i>
+                    سفارشات تحویل داده شده
+                </a>
+            </li>
+
+            <li>
+                <a href="{% url "dashboard:cart_summary" %}" class="dropdown-item {% if request.resolver_match.url_name == 'cart_summary' %}active{% endif %}">
+                    <i class="fa fa-shopping-cart colormain" aria-hidden="true"></i> سفارشات در سبد
+                </a>
+            </li>
+
+            <li>
+                <a href="{% url "dashboard:orders_cancelled" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders_cancelled' %}active{% endif %}">
+                    <i class="fa fa-times colormain" aria-hidden="true"></i>
+                    سفارشات لغو شده
+                </a>
+            </li>
+
+            <li>
+                <a href="{% url "dashboard:orders_return" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders_return' %}active{% endif %}">
+                    <i class="fa fa-undo colormain" aria-hidden="true"></i>
+                    لغو سفارش
+                </a>
+            </li>
+
+            <li>
+                <a href="{% url "dashboard:wishlist_products" %}" class="dropdown-item {% if request.resolver_match.url_name == 'wishlist_products' %}active{% endif %}">
+                    <i class="fa fa-heart colormain" aria-hidden="true"></i>
+                    محصولات مورد علاقه
+                </a>
+            </li>
+
+            <li>
+                <a href="{% url "dashboard:user_addresses" %}" class="dropdown-item {% if request.resolver_match.url_name == 'user_addresses' %}active{% endif %}">
+                    <i class="fa fa-map icon-icon colormain" aria-hidden="true"></i>
+                    آدرس های من
+                </a>
+            </li>
+
+            <li>
+                <a href="{% url "dashboard:notifications" %}" class="dropdown-item {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+                    <i class="fa fa-bell colormain" aria-hidden="true"></i>
+                    اعلان ها
+                </a>
+            </li>
+
+            <li>
+                <a href="{% url "dashboard:user_profile" %}" class="dropdown-item {% if request.resolver_match.url_name == 'user_profile' %}active{% endif %}">
+                    <i class="fa fa-user-large colormain"></i>
+                    پروفایل
+                </a>
+            </li>
+
+            <li>
+                <a href="{% url "dashboard:change_password" %}" class="dropdown-item {% if request.resolver_match.url_name == 'change_password' %}active{% endif %}">
+                    <i class="fa fa-shield colormain" aria-hidden="true"></i>
+                    تغییر رمز عبور
+                </a>
+            </li>
+
+            <li>
+                <a href="{% url "account:logout" %}" class="dropdown-item {% if request.resolver_match.url_name == 'logout' %}active{% endif %}">
+                    <i class="fa fa-sign-out-alt colormain" aria-hidden="true"></i>
+                    خروج از حساب
+                </a>
+            </li>
+
+        </ul>
+    </div>
+</div>

@@ -1,0 +1,547 @@
+{% extends 'base.html' %}
+{% block title %}فروشگاه اینترنتی مَسای{% endblock %}
+{% load static %}
+{% load custom_filters %}
+{% load jalali_tags %}
+
+{% block content %}
+    <main class="main default space-top-10">
+        <div class="container-fluid">
+            <div class="slider_main owl-carousel owl-theme">
+                {% for slider in main_sliders %}
+                    <div class="item">
+                        <a href="{{ slider.url }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="svg_Masai" width="231" height="75"
+                                 viewBox="0 0 231 75" fill="none"
+                                 style="float: right;margin-bottom: -100px;position: relative;z-index: 9;margin-top: 0px;margin-right: 30px;">
+                                <path clip-rule="evenodd"
+                                      d="M0 0C31.5006 0.949537 50.52 17.872 56.1955 26.4544L55.986 25.8011L82.4924 58.631C99.3032 79.4521 131.038 79.4521 147.849 58.6309L174.356 25.8011L174.146 26.4544C179.822 17.872 198.844 0.949537 230.349 0H0Z"
+                                      fill="#FCFCFC" fill-rule="" style="fill: #fff;"></path>
+                            </svg>
+                            <img src="{{ slider.image.url }}" class="img-fluid imgslider" alt="{{ slider.title }}">
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="container space-top-50 ">
+            <div class="row space-bottom-30">
+                <div class="col-sm-6">
+                    <div class="row">
+                        <div class="col-3 contact-miniicon text-center">
+                            <div class="space-5">
+                                <img src="{% static 'img/Masai/minilogo/1.png' %}" class="minilogo_w">
+                                <b class="title-3 light-black">مَسای مارکت</b>
+                            </div>
+                        </div>
+                        <div class="col-3 contact-miniicon text-center">
+                            <div class="space-5">
+                                <img src="{% static 'img/Masai/minilogo/2.png' %}" class="minilogo_w">
+                                <b class="title-3 light-black">حراج مَسای</b>
+                            </div>
+                        </div>
+                        <div class="col-3 contact-miniicon text-center">
+                            <div class="space-5">
+                                <img src="{% static 'img/Masai/minilogo/3.png' %}" class="minilogo_w">
+                                <b class="title-3 light-black">خرید اقساطی</b>
+                            </div>
+                        </div>
+                        <div class="col-3 contact-miniicon text-center">
+                            <div class="space-5">
+                                <img src="{% static 'img/Masai/minilogo/4.png' %}" class="minilogo_w">
+                                <b class="title-3 light-black">مَسای سرویس</b>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="row">
+                        <div class="col-4 contact-miniicon text-center">
+                            <div class="space-5">
+                                <img src="{% static 'img/Masai/minilogo/5.png' %}" class="minilogo_w">
+                                <b class="title-3 light-black">ماه رمضان</b>
+                            </div>
+                        </div>
+                        <div class="col-4 contact-miniicon text-center">
+                            <div class="space-5">
+                                <img src="{% static 'img/Masai/minilogo/6.png' %}" class="minilogo_w">
+                                <b class="title-3 light-black">مَسای پلاس</b>
+                            </div>
+                        </div>
+                        <div class="col-4 contact-miniicon text-center">
+                            <div class="space-5">
+                                <img src="{% static 'img/Masai/minilogo/7.png' %}" class="minilogo_w">
+                                <b class="title-3 light-black">هدیه خرید</b>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-9 hidden-xs hidden-md">
+                    <section id="offercarousel" class="carousel slide carousel-fade card border_all"
+                             data-ride="carousel">
+                        <div class="row m-0">
+
+                            <div class="carousel-inner p-0 col-12 col-lg-12">
+                                <ol class="carousel-indicators pr-0 d-flex flex-column ">
+                                    {% for product in popular_products %}
+                                        <li data-target="#offercarousel" data-slide-to="{{ forloop.counter0 }}"
+                                            {% if forloop.first %}class="active"{% endif %}>
+                                        </li>
+                                    {% endfor %}
+                                </ol>
+                                {% for product in popular_products %}
+                                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                        <div class="row m-0">
+                                            <div class="right-col col-5 d-flex imgboxofer">
+                                                <a class="w-100 text-center"
+                                                   href="{% url 'product:product_detail' product.pid product.slug %}">
+                                                    {% if product.image %}
+                                                        <img src="{{ product.image.url }}" class="img-fluid"
+                                                             alt="{{ product.title|truncatewords:10 }}">
+                                                    {% else %}
+                                                        <img src="{% static 'img/product_image_not_found.jpg' %}"
+                                                             class="img-fluid"
+                                                             alt="{{ product.title|truncatewords:10 }}">
+                                                    {% endif %}
+                                                    {% if product.discount_percentage %}
+                                                        <span class="discount-percent">%{{ product.discount_percentage }} تخفیف</span>
+                                                    {% endif %}
+
+                                                    {% if product.stock_count == 0 %}
+                                                        <img src="{% static 'img/sell.png' %}" class="imgfinish">
+                                                    {% endif %}
+
+                                                    {% if product.discount_percent %}
+                                                        <span class="discount-percent">{{ product.discount_percent }}% تخفیف</span>
+                                                    {% endif %}
+
+                                                </a>
+                                            </div>
+                                            <div class="left-col col-7">
+
+                                                <h2 class="product-title ">
+                                                    <a href="{% url 'product:product_detail' product.pid product.slug %}">{{ product.title }}</a>
+
+                                                </h2>
+                                                {% if product.model %}
+                                                    <hr class="hr-text" data-content="{{ product.model }}">
+                                                {% else %}
+                                                    <hr class="hr-text" data-content="مدل ثبت نشده">
+                                                {% endif %}
+
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <ul class="list-group space-15">
+                                                            {% if product.color.all %}
+                                                                <li class="list-group-item">
+                                                                    رنگ: {{ product.color.all|join:'، ' }}</li>
+                                                            {% endif %}
+                                                            {% if product.brand.all %}
+                                                                <li class="list-group-item">
+                                                                    برند: {{ product.brand.all|join:'، ' }}</li>
+                                                            {% endif %}
+                                                        </ul>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <ul class="list-group space-15">
+                                                            {% if product.weight %}
+                                                                <li class="list-group-item">
+                                                                    وزن: {{ product.weight }}</li>
+                                                            {% endif %}
+                                                            {% if product.dimensions %}
+                                                                <li class="list-group-item">
+                                                                    ابعاد: {{ product.dimensions }}</li>
+                                                            {% endif %}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+
+                                                <div class="price space-15">
+                                                    {% if product.old_price %}
+                                                        <del>
+                                                            <span>{{ product.old_price|format_price }}<span>تومان</span></span>
+                                                        </del>
+                                                    {% endif %}
+                                                    <ins><span>{{ product.price|format_price }}<span>تومان</span></span>
+                                                    </ins>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                <div class="col-3 hidden-xs hidden-md">
+                    <div class="widget-bid-s widget card border_all ">
+
+                        <div id="bid-s" class="owl-carousel owl-theme">
+                            {% for product in latest_products %}
+                                <div class="item">
+                                    <a href="{% url 'product:product_detail' product.pid product.slug %}">
+                                        {% if product.image %}
+                                            <img src="{{ product.image.url }}" class="w-100"
+                                                 alt="{{ product.title|truncatewords:7 }}">
+                                        {% else %}
+                                            <img src="{% static 'img/product_image_not_found.jpg' %}" class="w-100"
+                                                 alt="{{ product.title|truncatewords:7 }}">
+                                        {% endif %}
+                                        {% if product.stock_count == 0 %}
+                                            <img src="{% static 'img/img_icon.png' %}" class="type_icon">
+                                        {% endif %}
+
+                                    </a>
+                                    <h3 class="product-title">
+                                        <a href="{% url 'product:product_detail' product.pid product.slug %}">{{ product.title|truncatewords:7 }}</a>
+                                    </h3>
+                                    <div class="price">
+                                        <span class="amount">{{ product.price|format_price }}<span>تومان</span></span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div id="progressBar">
+                            <div class="slide-progress"></div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-12">
+                    <div class="row banner-ads">
+                        <div class="col-12">
+                            <div class="row">
+                                {% for banner in small_banners %}
+                                    <div class="col-6 col-lg-3">
+                                        <div class="widget-banner card border_all">
+                                            <a href="{{ banner.url }}">
+                                                <img class="img-fluid" src="{{ banner.image.url }}"
+                                                     alt="{{ banner.title }}">
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    {% if discounted_products %}
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="widget widget-product card border_all bglight pad_time_prod" id="shegeft_1">
+                                    <header class="card-header">
+                                        <h3 class="card-title">
+                                            <span>
+                                                <img src="{% static 'img/shegeft_1.png' %}"/>
+                                            </span>
+                                        </h3>
+                                    </header>
+                                    <div class="product-carousel owl-carousel owl-theme">
+                                        {% for product in discounted_products %}
+                                            <div class="item">
+                                                <a href="{% url 'product:product_detail' product.pid product.slug %}">
+                                                    {% if product.image %}
+                                                        <img src="{{ product.image.url }}" class="img-fluid"
+                                                             alt="{{ product.title|truncatewords:10 }}">
+                                                    {% else %}
+                                                        <img src="{% static 'img/product_image_not_found.jpg' %}"
+                                                             class="img-fluid"
+                                                             alt="{{ product.title|truncatewords:10 }}">
+                                                    {% endif %}
+                                                    {% if product.stock_count == 0 %}
+                                                        <img src="{% static 'img/img_icon.png' %}" class="type_icon">
+                                                    {% endif %}
+                                                </a>
+                                                <h2 class="product_title">
+                                                    <a href="{% url 'product:product_detail' product.pid product.slug %}">{{ product.title }}</a>
+                                                </h2>
+                                                <div class="price">
+                                                    {% if product.discount and product.discount > 0 %}
+                                                        <del>
+                                                            <span>{{ product.old_price|format_price }}<span>تومان</span></span>
+                                                        </del>
+                                                        <span class="discount_badge">{{ product.discount }}%</span>
+                                                        <ins>
+                                                            <span>{{ product.price|format_price }}<span>تومان</span></span>
+                                                        </ins>
+                                                    {% else %}
+                                                        <ins>
+                                                            <span>{{ product.price|format_price }}<span>تومان</span></span>
+                                                        </ins>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="product-seller-details product-seller-details-item-grid">
+                                                    <span class="search_prod_btn">
+                                                        <i class="fa fa fa-cart-arrow-down search_icon_cart" aria-hidden="true" data-product-id="{{ product.id }}" data-color-id="{% if product.color.all %}{{ product.color.first.id }}{% else %}null{% endif %}" onclick="addToCart(this)"></i>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    <a href="{% url 'product:discount_product' %}" class="view_more">مشاهده بیشتر</a>
+
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    <div class="row banner-ads">
+                        <div class="col-12">
+                            <div class="row">
+                                {% for banner in large_banners %}
+                                    <div class="col-12 col-lg-6">
+                                        <div class="widget-banner card border_all">
+                                            <a href="{{ banner.url }}">
+                                                <img class="img-fluid" src="{{ banner.image.url }}"
+                                                     alt="{{ banner.title }}">
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% if best_selling_products %}
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="widget widget-product card border_all bglight">
+                                    <header class="card-header">
+                                        <h3 class="card-title">
+                                            <span><img src="{% static 'img/seller_1.png' %}"/></span>
+                                        </h3>
+                                    </header>
+                                    <div class="product-carousel owl-carousel owl-theme">
+                                        {% for product in best_selling_products %}
+                                            <div class="item">
+                                                <a href="{% url 'product:product_detail' product.pid product.slug %}">
+                                                    {% if product.image %}
+                                                        <img src="{{ product.image.url }}" class="img-fluid"
+                                                             alt="{{ product.title|truncatewords:10 }}">
+                                                    {% else %}
+                                                        <img src="{% static 'img/product_image_not_found.jpg' %}"
+                                                             class="img-fluid"
+                                                             alt="{{ product.title|truncatewords:10 }}">
+                                                    {% endif %}
+                                                    {% if product.stock_count == 0 %}
+                                                        <img src="{% static 'img/img_icon.png' %}" class="type_icon">
+                                                    {% endif %}
+                                                </a>
+                                                <h2 class="product_title">
+                                                    <a href="{% url 'product:product_detail' product.pid product.slug %}">{{ product.title }}</a>
+                                                </h2>
+                                                <div class="price">
+                                                    {% if product.old_price %}
+                                                        <del>
+                                                            <span>{{ product.old_price|format_price }}<span>تومان</span></span>
+                                                        </del>
+                                                        <span class="discount_badge">{{ product.discount_percentage }}%</span>
+                                                        <ins>
+                                                            <span>{{ product.price|format_price }}<span>تومان</span></span>
+                                                        </ins>
+                                                    {% else %}
+                                                        <ins>
+                                                            <span>{{ product.price|format_price }}<span>تومان</span></span>
+                                                        </ins>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="product-seller-details product-seller-details-item-grid">
+                                                    <span class="search_prod_btn">
+                                                        <i class="fa fa fa-cart-arrow-down search_icon_cart" aria-hidden="true" data-product-id="{{ product.id }}" data-color-id="{% if product.color.all %}{{ product.color.first.id }}{% else %}null{% endif %}" onclick="addToCart(this)"></i>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                </div>
+
+            </div>
+            {% if single_banner %}
+                <div class="row banner-ads">
+                    <div class="col-12">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="widget widget-banner card border_all">
+                                    <a href="{{ single_banner.url }}">
+                                        <img class="img-fluid" src="{{ single_banner.image.url }}"
+                                             alt="{{ single_banner.title }}">
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            <div class="row">
+
+                <div class="col-12">
+                    <div class="brand-slider card border_all bglight">
+                        <header class="card-header">
+                            <h3 class="card-title"><span>دسته بندی های مَسای</span></h3>
+                        </header>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="row">
+                                    {% for category in categories %}
+                                        <div class="col-6 col-md-2 contact-bigicon">
+                                            <a href="{% url 'product:category_product_list' category.slug %}">
+                                                {% if category.image %}
+                                                    <img class="img-responsive imgpad" src="{{ category.image.url }}"
+                                                         alt="{{ category.title }}"/>
+                                                {% else %}
+                                                    <img class="img-responsive imgpad"
+                                                         src="{% static 'img/category_image_not_found.png' %}"
+                                                         alt="{{ category.title }}"/>
+                                                {% endif %}
+                                                <b class="title-3 light-black">{{ category.title }}</b>
+                                            </a>
+
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+
+                <div class="col-12">
+                    <div class="brand-slider card border_all bglight">
+                        <header class="card-header">
+                            <h3 class="card-title"><span>محبوب‌ترین برندها</span></h3>
+                        </header>
+                        <div class="owl-carousel">
+                            {% for brand in popular_brands %}
+                                <div class="item borderitem">
+                                    <a href="{% url 'product:brand_product_list' brand.slug %}">
+                                        {% if brand.image %}
+                                            <img src="{{ brand.image.url }}" alt="{{ brand.title }}">
+                                        {% else %}
+                                            <img src="{% static 'img/category_image_not_found.png' %}"
+                                                 alt="{{ brand.title }}">
+                                        {% endif %}
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        {% if latest_articles %}
+            <div class="container-fluid bgGray blog-box-footer">
+                <div class="container">
+                    <div class="col-12">
+                        <div class=" widget-blog  border_all ">
+                            <header class="card-header">
+                                <h3 class="card-title"><span>وبلاگ مَسای</span></h3>
+                            </header>
+                            <div class="Blog-carousel owl-carousel owl-theme">
+                                {% for article in latest_articles %}
+                                    <div class="item">
+                                        <a href="{% url 'blog:article_detail' article.slug %}">
+                                            {% if article.image %}
+                                                <img src="{{ article.image.url }}" class="img-fluid"
+                                                     alt="{{ article.title|truncatewords:13 }}">
+                                            {% else %}
+                                                <img src="{% static 'img/article_image_not_found.jpg' %}"
+                                                     class="img-fluid" alt="{{ article.title|truncatewords:13 }}">
+                                            {% endif %}
+                                        </a>
+                                        <a href="{% url 'blog:article_detail' article.slug %}">
+                                            <h2 class="Blog_title">
+                                                {{ article.title|truncatewords:13 }}
+                                            </h2>
+                                        </a>
+                                        <div class="Blog_list">
+                                        <span class="Blog_author">
+                                            <i class="fa fa-user"></i>
+                                            {% if article.author.profile.first_name and article.author.profile.last_name %}
+                                                {{ article.author.profile.first_name }}
+                                                {{ article.author.profile.last_name }}
+                                            {% else %}
+                                                {{ article.author.username }}
+                                            {% endif %}
+                                        </span>
+                                            <span class="Blog_Date">
+                                            <i class="fa fa-calendar "></i>
+                                            {{ article.created_at|to_jalali:'%d %b %Y' }}
+                                        </span>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </main>
+
+    <script>
+        function addToCart(element) {
+            {% if not request.user.is_authenticated %}
+                Swal.fire({
+                    title: 'ورود به سیستم',
+                    text: 'برای افزودن محصول به سبد خرید، ابتدا باید وارد حساب کاربری خود شوید.',
+                    icon: 'warning',
+                    confirmButtonText: 'ورود',
+                    confirmButtonColor: '#46A9AE',
+                    showCancelButton: true,
+                    cancelButtonText: 'انصراف',
+                    cancelButtonColor: '#e74c3c'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = "{% url 'account:login' %}?next={{ request.path }}";
+                    }
+                });
+                return;
+            {% endif %}
+
+            const productId = element.getAttribute('data-product-id');
+            const colorId = element.getAttribute('data-color-id') === 'null' ? null : element.getAttribute('data-color-id');
+
+            fetch(`/cart/add/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    color_id: colorId,
+                    quantity: 1
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            text: 'محصول با موفقیت به سبد خرید اضافه شد',
+                            icon: 'success',
+                            confirmButtonText: 'تایید',
+                            confirmButtonColor: '#46A9AE'
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'خطا',
+                            text: data.message,
+                            icon: 'error',
+                            confirmButtonColor: '#e74c3c'
+                        });
+                    }
+                });
+        }
+    </script>
+{% endblock %}
