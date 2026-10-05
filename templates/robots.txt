@@ -2,4 +2,10 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /admin-panel/
+Disallow: /account/
+Disallow: /dashboard/
+Disallow: /cart/
+Disallow: /payments/
+Disallow: /downloads/
+Disallow: /ckeditor/
 Sitemap: {{ request.scheme }}://{{ request.get_host }}/sitemap.xml

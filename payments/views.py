@@ -3,8 +3,9 @@ from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
-from cart.models import Cart, Order
-from .gateways import zarinpal_request, zarinpal_verify
+from cart.models import Cart, Order, OrderItem
+from downloads.models import DownloadToken
+from .services import GATEWAYS
 from .models import PaymentTransaction
 
 
@@ -17,9 +18,12 @@ def _complete(tx, ref_id='', response=None):
             order.status = 'paid'
             order.save(update_fields=['status', 'updated_at'])
             for item in order.cart.items.select_related('product').all() if order.cart else []:
+                OrderItem.objects.create(order=order, product=item.product, title_snapshot=item.product.title, unit_price=item.product.price, quantity=item.quantity, total_price=item.total_price)
                 item.product.stock_count = max(0, item.product.stock_count - item.quantity)
                 item.product.sales_count += item.quantity
                 item.product.save(update_fields=['stock_count', 'sales_count'])
+                if hasattr(item.product, 'digital_asset'):
+                    DownloadToken.objects.create(user=order.user, product=item.product, order=order)
             if order.cart:
                 order.cart.delete()
     return order
@@ -43,11 +47,9 @@ def start_payment(request, order_number):
     if gateway not in dict(PaymentTransaction.GATEWAYS):
         gateway = 'zarinpal'
     tx = PaymentTransaction.objects.create(order=order, gateway=gateway, amount=order.final_price)
-    if gateway != 'zarinpal':
-        return HttpResponse('این درگاه نیازمند endpoint و قرارداد پذیرنده است. کلیدها را در .env تنظیم کنید.', status=503)
     try:
         callback = request.build_absolute_uri(reverse('payments:callback'))
-        authority, url = zarinpal_request(tx, callback)
+        authority, url = GATEWAYS[gateway].start(tx, callback)
         tx.authority, tx.status = authority, 'redirected'
         tx.save(update_fields=['authority', 'status', 'updated_at'])
         return redirect(url)
@@ -65,7 +67,7 @@ def callback(request):
         tx.status = 'failed'; tx.save(update_fields=['status', 'updated_at'])
         return HttpResponse('پرداخت لغو شد.', status=400)
     try:
-        valid, data = zarinpal_verify(tx, authority)
+        valid, data = GATEWAYS[tx.gateway].verify(tx, request.GET)
     except Exception as exc:
         valid, data = False, {'error': str(exc)}
     if not valid:

@@ -20,6 +20,9 @@ class Coupon(models.Model):
     valid_from = models.DateTimeField(default=timezone.now, verbose_name='معتبر از')
     valid_to = models.DateTimeField(verbose_name='معتبر تا')
     is_active = models.BooleanField(default=True, verbose_name='فعال')
+    minimum_order_amount = models.PositiveIntegerField(default=0, verbose_name='حداقل مبلغ سفارش')
+    maximum_discount = models.PositiveIntegerField(null=True, blank=True, verbose_name='سقف تخفیف')
+    per_user_limit = models.PositiveIntegerField(default=0, verbose_name='محدودیت برای هر کاربر')
 
     class Meta:
         verbose_name = 'کوپن تخفیف'
@@ -89,6 +92,17 @@ class CartItem(models.Model):
     def total_price(self):
         return self.product.price * self.quantity
 
+
+class OrderItem(models.Model):
+    order = models.ForeignKey('Order', on_delete=models.CASCADE, related_name='order_items', verbose_name='سفارش')
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='order_items', verbose_name='محصول')
+    title_snapshot = models.CharField(max_length=300, verbose_name='عنوان هنگام خرید')
+    unit_price = models.PositiveIntegerField(verbose_name='قیمت واحد')
+    quantity = models.PositiveIntegerField(default=1)
+    total_price = models.PositiveIntegerField(verbose_name='مجموع')
+    class Meta:
+        verbose_name='آیتم سفارش'; verbose_name_plural='آیتم‌های سفارش'
+        indexes=[models.Index(fields=['product']), models.Index(fields=['order'])]
 
 class Order(models.Model):
     ORDER_STATUS = (

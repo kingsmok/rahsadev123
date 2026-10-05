@@ -42,7 +42,7 @@ def get_pages_to_show(current_page, total_pages):
 
 
 def product_list(request):
-    products = Product.objects.filter(status='published')
+    products = Product.objects.filter(status='published').order_by('-created_at')
 
     # Filters
     min_price = request.GET.get('min_price')
@@ -260,7 +260,7 @@ def product_detail(request, pid, slug):
 
 def product_search(request):
     products_search = request.GET.get('search', '')
-    products = Product.objects.filter(title__icontains=products_search, status='published')
+    products = Product.objects.filter(title__icontains=products_search, status='published').order_by('-created_at')
 
     # Filters
     min_price = request.GET.get('min_price')
