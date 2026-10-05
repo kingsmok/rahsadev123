@@ -73,26 +73,50 @@ source venv/bin/activate  # برای سیستم‌های Unix/Mac
 venv\Scripts\activate  # برای ویندوز
 ```
 
-3. **نصب وابستگی‌ها:**
+3. **فعال‌سازی محیط مجازی (در صورت ایجاد):**
+
+در ویندوز:
+
+```powershell
+.\venv\Scripts\Activate.ps1
+```
+
+در Unix/Mac:
+
+```bash
+source venv/bin/activate
+```
+
+4. **نصب وابستگی‌ها:**
    
 ```bash
 pip install -r requirements.txt
 ```
 
-4. **اجرای migrations:**
+5. **اجرای migrations:**
+
+این مرحله باید قبل از ساخت کاربر مدیر یا اجرای سرور انجام شود؛ در غیر این صورت خطاهایی مانند `no such table: auth_user` و `no such table: core_banner` دریافت می‌کنید.
 
 ```bash
 python manage.py migrate
 ```
 
-5. **اجرای سرور:**
+6. **ساخت کاربر مدیر (اختیاری):**
+
+```bash
+python manage.py createsuperuser
+```
+
+7. **اجرای سرور:**
 
 ```bash
 python manage.py runserver
 ```
 
-6. **دسترسی به وب‌سایت:**
+8. **دسترسی به وب‌سایت:**
    در مرورگر خود به آدرس http://127.0.0.1:8000/ بروید.
+
+> نکته: هشدار `ckeditor.W001` مربوط به نسخه قدیمی CKEditor 4 در بسته `django-ckeditor` است و مانع اجرای پروژه نمی‌شود. برای استفاده در محیط production، CKEditor 5 یا بسته LTS را پس از بررسی سازگاری و مجوزها جایگزین کنید.
 
 ## ✅ استفاده
 
