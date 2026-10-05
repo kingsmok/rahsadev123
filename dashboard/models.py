@@ -11,10 +11,10 @@ class Address(models.Model):
     full_address = models.TextField(max_length=300, verbose_name='آدرس کامل')
     city = models.CharField(max_length=50, verbose_name='شهر')
     province = models.CharField(max_length=50, verbose_name='استان')
-    postal_code = models.CharField(max_length=10, validators=[RegexValidator(regex='^\d{10}$', message='کد پستی باید 10 رقم باشد')], verbose_name='کد پستی')
+    postal_code = models.CharField(max_length=10, validators=[RegexValidator(regex=r'^\d{10}$', message='کد پستی باید 10 رقم باشد')], verbose_name='کد پستی')
 
     receiver_name = models.CharField(max_length=100, verbose_name='نام تحویل گیرنده')
-    phone_number = models.CharField(max_length=11, validators=[RegexValidator(regex='^09\d{9}$', message='شماره موبایل باید با 09 شروع شده و 11 رقم باشد')], verbose_name='شماره موبایل')
+    phone_number = models.CharField(max_length=11, validators=[RegexValidator(regex=r'^09\d{9}$', message='شماره موبایل باید با 09 شروع شده و 11 رقم باشد')], verbose_name='شماره موبایل')
 
     is_default = models.BooleanField(default=False, verbose_name='آدرس پیش‌فرض')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
