@@ -7,5 +7,8 @@ class StaticPage(models.Model):
     content=RichTextUploadingField(verbose_name='محتوا')
     is_published=models.BooleanField(default=True)
     updated_at=models.DateTimeField(auto_now=True)
-    class Meta: verbose_name='صفحه'; verbose_name_plural='صفحات'
+    class Meta:
+        verbose_name = 'صفحه'
+        verbose_name_plural = 'صفحات'
+        ordering = ['title']
     def __str__(self): return self.title

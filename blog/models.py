@@ -18,6 +18,7 @@ class Category(models.Model):
     class Meta:
         verbose_name = 'دسته بندی'
         verbose_name_plural = 'دسته بندی ها'
+        ordering = ['title']
 
     def __str__(self):
         return self.title
@@ -48,6 +49,7 @@ class Article(models.Model):
     class Meta:
         verbose_name = 'مقاله'
         verbose_name_plural = 'مقالات'
+        ordering = ['-created_at', '-id']
 
     def article_image(self):
         if self.image:

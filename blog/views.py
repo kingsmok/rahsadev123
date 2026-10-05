@@ -28,7 +28,7 @@ def article_list(request):
     pages_to_show = get_pages_to_show(object_list.number, paginator.num_pages)
 
     context = {
-        'categories': categories,
+        'article_categories': categories,
         'articles': object_list,
         'latest_articles': latest_articles,
         'pages_to_show': pages_to_show,
@@ -50,7 +50,7 @@ def category_article(request, slug):
 
     context = {
         'category': category,
-        'categories': categories,
+        'article_categories': categories,
         'articles': object_list,
         'latest_articles': latest_articles,
         'pages_to_show': pages_to_show,
@@ -71,7 +71,7 @@ def article_detail(request, slug):
         request.session['viewed_article'] = viewed_article
 
     context = {
-        'categories': categories,
+        'article_categories': categories,
         'article': article,
         'latest_articles': latest_articles,
     }
