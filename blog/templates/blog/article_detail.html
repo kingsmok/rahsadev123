@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
-{% block title %}{{ article.title }}{% endblock %}
+{% block title %}{% if article.meta_title %}{{ article.meta_title }}{% else %}{{ article.title }}{% endif %}{% endblock %}
+{% block meta_description %}{{ article.meta_description|default:article.description|striptags|truncatechars:160 }}{% endblock %}
+{% block canonical %}<link rel="canonical" href="{% if article.canonical_url %}{{ article.canonical_url }}{% else %}{{ request.build_absolute_uri }}{% endif %}">{% endblock %}
+{% block structured_data %}<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"{{ article.title|escapejs }}","datePublished":"{{ article.created_at|date:'c' }}","dateModified":"{{ article.updated_at|date:'c' }}","author":{"@type":"Person","name":"{{ article.author.get_full_name|default:article.author.username|escapejs }}"}}</script>{% endblock %}
 {% load static %}
 {% load jalali_tags %}
 

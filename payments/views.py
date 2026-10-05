@@ -1,14 +1,35 @@
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
-from cart.models import Order
+from django.urls import reverse
+from cart.models import Cart, Order
+from .gateways import zarinpal_request, zarinpal_verify
 from .models import PaymentTransaction
+
+
+def _complete(tx, ref_id='', response=None):
+    with transaction.atomic():
+        tx.status, tx.ref_id, tx.raw_response = 'paid', str(ref_id), response or {}
+        tx.save(update_fields=['status', 'ref_id', 'raw_response', 'updated_at'])
+        order = tx.order
+        if order.status == 'pending':
+            order.status = 'paid'
+            order.save(update_fields=['status', 'updated_at'])
+            for item in order.cart.items.select_related('product').all() if order.cart else []:
+                item.product.stock_count = max(0, item.product.stock_count - item.quantity)
+                item.product.sales_count += item.quantity
+                item.product.save(update_fields=['stock_count', 'sales_count'])
+            if order.cart:
+                order.cart.delete()
+    return order
 
 
 @login_required
 def start_payment(request, order_number):
+    if request.method != 'POST':
+        return HttpResponse('روش پرداخت باید با درخواست معتبر ارسال شود.', status=405)
     if order_number == 'new':
-        from cart.models import Cart
         cart = get_object_or_404(Cart, user=request.user)
         items = list(cart.items.select_related('product').all())
         if not items:
@@ -22,17 +43,34 @@ def start_payment(request, order_number):
     if gateway not in dict(PaymentTransaction.GATEWAYS):
         gateway = 'zarinpal'
     tx = PaymentTransaction.objects.create(order=order, gateway=gateway, amount=order.final_price)
-    # Adapters are deliberately configuration-driven: credentials are never hard-coded.
-    # The integration endpoint can be enabled per gateway in settings/environment.
-    if gateway == 'zarinpal':
-        return redirect(f'https://www.zarinpal.com/pg/StartPay/{tx.pk}')
-    return HttpResponse(f'درگاه {tx.get_gateway_display()} انتخاب شد. تنظیمات اتصال در محیط اجرا تکمیل نشده است.', status=503)
+    if gateway != 'zarinpal':
+        return HttpResponse('این درگاه نیازمند endpoint و قرارداد پذیرنده است. کلیدها را در .env تنظیم کنید.', status=503)
+    try:
+        callback = request.build_absolute_uri(reverse('payments:callback'))
+        authority, url = zarinpal_request(tx, callback)
+        tx.authority, tx.status = authority, 'redirected'
+        tx.save(update_fields=['authority', 'status', 'updated_at'])
+        return redirect(url)
+    except Exception as exc:
+        tx.status, tx.raw_response = 'failed', {'error': str(exc)}
+        tx.save(update_fields=['status', 'raw_response', 'updated_at'])
+        return HttpResponse(f'اتصال به درگاه انجام نشد: {exc}', status=503)
 
 
 @login_required
 def callback(request):
     authority = request.GET.get('Authority', '')
-    tx = PaymentTransaction.objects.filter(authority=authority).first()
-    if not tx:
-        return HttpResponse('تراکنش پیدا نشد.', status=404)
-    return redirect('cart:successful_payment')
+    tx = get_object_or_404(PaymentTransaction, authority=authority)
+    if request.GET.get('Status') != 'OK':
+        tx.status = 'failed'; tx.save(update_fields=['status', 'updated_at'])
+        return HttpResponse('پرداخت لغو شد.', status=400)
+    try:
+        valid, data = zarinpal_verify(tx, authority)
+    except Exception as exc:
+        valid, data = False, {'error': str(exc)}
+    if not valid:
+        tx.status, tx.raw_response = 'failed', data
+        tx.save(update_fields=['status', 'raw_response', 'updated_at'])
+        return HttpResponse('تأیید پرداخت ناموفق بود.', status=400)
+    order = _complete(tx, data.get('ref_id', ''), data)
+    return redirect('dashboard:order_detail', order_number=order.order_number)

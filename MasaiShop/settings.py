@@ -21,6 +21,9 @@ ZARINPAL_MERCHANT_ID = os.environ.get('ZARINPAL_MERCHANT_ID', '')
 SNAPPAY_CLIENT_ID = os.environ.get('SNAPPAY_CLIENT_ID', '')
 SNAPPAY_CLIENT_SECRET = os.environ.get('SNAPPAY_CLIENT_SECRET', '')
 TOROBPAY_MERCHANT_ID = os.environ.get('TOROBPAY_MERCHANT_ID', '')
+ZARINPAL_REQUEST_URL = os.environ.get('ZARINPAL_REQUEST_URL', 'https://api.zarinpal.com/pg/v4/payment/request.json')
+ZARINPAL_VERIFY_URL = os.environ.get('ZARINPAL_VERIFY_URL', 'https://api.zarinpal.com/pg/v4/payment/verify.json')
+ZARINPAL_START_URL = os.environ.get('ZARINPAL_START_URL', 'https://www.zarinpal.com/pg/StartPay/')
 
 
 # Application definition
