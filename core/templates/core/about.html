@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
-{% block title %}درباره مَسای شاپ{% endblock %}
+{% block title %}درباره {{ site_name }}{% endblock %}
+{% block meta_description %}درباره {{ site_name }}؛ مرجع تخصصی فروش فایل‌های نرم‌افزاری، قالب وب سایت، اسکریپت، فایل‌های طراحی و محصولات مجازی{% endblock %}
 {% load static %}
 {% load custom_filters %}
 
 {% block content %}
-    <main class="cart-page default ">
+    <main class="cart-page default space-top-30">
         <div class="container">
             <div class="row">
                 <div class="contact_us_content col-12 mx-auto">
@@ -19,6 +20,36 @@
                                     {{ site_settings.text_about_us|safe }}
                                 </div>
                             </form>
+                        </div>
+                    </div>
+
+                    <div class="row space-top-30">
+                        <div class="col-12 col-md-4 text-center space-bottom-15">
+                            <div class="card border_all" style="padding: 25px 15px;">
+                                <i class="fa fa-file-shield colormain" style="font-size: 34px;margin-bottom: 10px;"></i>
+                                <h4 style="font-weight: 800;">لایسنس رسمی و اورجینال</h4>
+                                <p style="font-size: 13px;color: #6b7a8c;line-height: 2;">
+                                    تمام فایل‌ها با لایسنس معتبر ارائه می‌شوند و صحت هر فایل پیش از انتشار توسط تیم فنی بررسی شده است.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4 text-center space-bottom-15">
+                            <div class="card border_all" style="padding: 25px 15px;">
+                                <i class="fa fa-bolt colormain" style="font-size: 34px;margin-bottom: 10px;"></i>
+                                <h4 style="font-weight: 800;">تحویل آنی</h4>
+                                <p style="font-size: 13px;color: #6b7a8c;line-height: 2;">
+                                    بلافاصله پس از پرداخت، لینک دانلود اختصاصی شما فعال می‌شود؛ بدون انتظار و بدون مراجعه حضوری.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4 text-center space-bottom-15">
+                            <div class="card border_all" style="padding: 25px 15px;">
+                                <i class="fa fa-headset colormain" style="font-size: 34px;margin-bottom: 10px;"></i>
+                                <h4 style="font-weight: 800;">پشتیبانی واقعی</h4>
+                                <p style="font-size: 13px;color: #6b7a8c;line-height: 2;">
+                                    تیم فنی ما در نصب، راه‌اندازی و استفاده از فایل‌ها همراه شماست؛ پاسخگوی خریداران هستیم، نه رهاکننده.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>

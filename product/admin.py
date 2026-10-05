@@ -31,22 +31,28 @@ class ProductBrandAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
         return datetime2jalali(obj.created_at).strftime('%a, %d %b %Y')
 
 
-@admin.register(models.ProductColor)
-class ProductColorAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
-    list_display = ['title', 'color_code', 'get_created_at_jalali']
-
-    @admin.display(description='تاریخ ایجاد', ordering='created_at')
-    def get_created_at_jalali(self, obj):
-        return datetime2jalali(obj.created_at).strftime('%a, %d %b %Y')
-
-
 @admin.register(models.Product)
 class ProductAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
-    list_display = ['pid', 'vendor', 'short_title', 'old_price', 'price', 'stock_count', 'sales_count', 'views', 'status', 'product_image', 'get_created_at_jalali']
+    list_display = ['pid', 'vendor', 'short_title', 'product_type', 'license_type', 'old_price', 'price', 'stock_count', 'sales_count', 'views', 'status', 'product_image', 'get_created_at_jalali']
     prepopulated_fields = {'slug': ('title',)}
     list_editable = ['old_price', 'price', 'stock_count', 'status']
-    list_filter = ['status']
+    list_filter = ['status', 'product_type', 'license_type', 'is_unlimited']
+    search_fields = ['title', 'short_description', 'pid']
     inlines = [DigitalAssetInline, ProductImageAdmin]
+    fieldsets = (
+        ('اطلاعات اصلی', {
+            'fields': ('vendor', 'title', 'slug', 'short_description', 'description', 'image', 'category', 'brand', 'status', 'is_featured', 'published_at')
+        }),
+        ('قیمت‌گذاری', {
+            'fields': ('price', 'old_price', 'stock_count', 'is_unlimited')
+        }),
+        ('مشخصات محصول دیجیتال', {
+            'fields': ('product_type', 'license_type', 'demo_url', 'documentation_url', 'requirements', 'operating_system', 'support_duration', 'update_duration')
+        }),
+        ('سئو', {
+            'fields': ('meta_title', 'meta_description', 'canonical_url')
+        }),
+    )
 
     def short_title(self, obj):
         if len(obj.title) > 20:

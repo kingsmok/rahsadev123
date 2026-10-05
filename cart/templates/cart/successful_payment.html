@@ -21,8 +21,8 @@
                             </a>
                         </li>
                         <li class="active">
-                            <a href="{% url 'cart:successful_payment' %}" class="active active3">
-                                <span>پایان خرید</span>
+                            <a href="javascript:void(0)" class="active active3">
+                                <span>پایان خرید و دانلود</span>
                             </a>
                         </li>
                     </ul>
@@ -32,15 +32,31 @@
                     <div class="container text-center cart_empty">
                         <img src="{% static 'img/successful-cart.png' %}" class=""/>
                         <h6>
-                            تبریک، سفارش با موفقیت دریافت شد
+                            تبریک، پرداخت با موفقیت انجام شد
                         </h6>
-                        <p>
-                            این اطمینان را به شما میدهیم که بزودی محصول خریداری شده شما را ارسال خواهیم کرد.
-                        </p>
                         <p>
                             کد سفارش: <b>{{ order.order_number }}</b>
                         </p>
-                        <a href="{% url 'dashboard:order_detail' order.order_number %}" class="btn btn-main-masai">مشاهده وضعیت سفارش</a>
+                        <p>
+                            فایل‌های شما آماده دانلود است! لینک دانلود اختصاصی هر فایل به مدت ۷ روز و تا ۵ بار دانلود معتبر است.
+                        </p>
+                        {% if tokens %}
+                            <div class="row justify-content-center">
+                                {% for token in tokens %}
+                                    <div class="col-12 col-md-6 mb-2">
+                                        <a href="{% url 'downloads:download' token.token %}"
+                                           class="btn btn-main-masai" style="width:100%;">
+                                            <i class="fa fa-download" aria-hidden="true"></i>
+                                            دانلود {{ token.product.title|truncatewords:6 }}
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="mt-3">
+                            <a href="{% url 'dashboard:order_detail' order.order_number %}" class="btn btn-second-masai">مشاهده سفارش و فاکتور</a>
+                            <a href="{% url 'dashboard:my_downloads' %}" class="btn btn-second-masai">دانلودهای من</a>
+                        </div>
                     </div>
                 </main>
             </div>

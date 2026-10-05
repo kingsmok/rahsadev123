@@ -4,6 +4,7 @@ from product.models import ProductBrand, Product
 from django.db import models
 from .models import Banner
 from blog.models import Article
+from services.models import ServicePackage
 
 
 def home(request):
@@ -18,7 +19,7 @@ def home(request):
     latest_products = Product.objects.filter(status='published', old_price=None).order_by('-created_at')[:4]
     latest_articles = Article.objects.filter(status='published').order_by('-created_at')[:5]
     discounted_products = Product.objects.filter(
-        status='published', stock_count__gt=0,
+        status='published',
         old_price__isnull=False,
         old_price__gt=models.F('price')
     ).annotate(
@@ -26,6 +27,7 @@ def home(request):
             (models.F('old_price') - models.F('price')) * 100 / models.F('old_price'),
             output_field=models.IntegerField())).filter(discount__gt=0).order_by('-discount')[:8]
     best_selling_products = Product.objects.filter(status='published').order_by('-sales_count')[:7]
+    service_packages = ServicePackage.objects.filter(is_active=True)[:3]
 
     context = {
         'main_sliders': main_sliders,
@@ -39,6 +41,7 @@ def home(request):
         'latest_articles': latest_articles,
         'discounted_products': discounted_products,
         'best_selling_products': best_selling_products,
+        'service_packages': service_packages,
     }
     return render(request, 'core/home.html', context)
 

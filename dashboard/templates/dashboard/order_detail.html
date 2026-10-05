@@ -410,14 +410,9 @@
                                         {% endif %}
                                     </div>
                                     <div class="info-item">
-                                        <i class="fas fa-location-dot"></i>
-                                        <span class="label">آدرس:</span>
-                                        <span class="value">{{ order.address.city }}، {{ order.address.province }}، {{ order.address.full_address }}</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class="fas fa-mail-bulk"></i>
-                                        <span class="label">کد پستی:</span>
-                                        <span class="value">{{ order.address.postal_code }}</span>
+                                        <i class="fas fa-cloud-arrow-down"></i>
+                                        <span class="label">نحوه تحویل:</span>
+                                        <span class="value">دانلود آنی از پنل کاربری</span>
                                     </div>
 
                                 </div>
@@ -433,7 +428,6 @@
                                         <th>تصویر</th>
                                         <th>محصول</th>
                                         <th>تعداد</th>
-                                        <th>رنگ</th>
                                         <th>قیمت واحد</th>
                                         <th>قیمت نهایی</th>
                                     </tr>
@@ -460,7 +454,6 @@
                                                 </div>
                                             </td>
                                             <td>{{ item.quantity }}</td>
-                                            <td>{{ item.color }}</td>
                                             <td>{{ item.unit_price|format_price }} تومان</td>
                                             <td>{{ item.total_price|format_price }} تومان</td>
                                         </tr>
@@ -469,6 +462,28 @@
                                 </table>
                             </div>
                             <!-- Products List End -->
+
+                            <!-- Digital Downloads Start -->
+                            {% if download_tokens %}
+                                <div class="invoice-section summary">
+                                    <h3><i class="fa fa-download" aria-hidden="true"></i> فایل‌های قابل دانلود</h3>
+                                    {% for token in download_tokens %}
+                                        <div class="summary-item">
+                                            <span class="label">{{ token.product.title|truncatewords:7 }}</span>
+                                            {% if token.is_valid %}
+                                                <span class="value">
+                                                    <a href="{% url 'downloads:download' token.token %}" class="btn btn-main-masai" style="padding: 4px 20px;font-size: 12px;">
+                                                        دانلود ({{ token.remaining_downloads }} باقی‌مانده)
+                                                    </a>
+                                                </span>
+                                            {% else %}
+                                                <span class="value" style="color:#c62828;">لینک منقضی شده است</span>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <!-- Digital Downloads End -->
 
                             <!--Summary Invoice Start -->
                             <div class="invoice-section summary">
@@ -483,11 +498,7 @@
                                 </div>
                                 <div class="summary-item">
                                     <span class="label">هزینه ارسال:</span>
-                                    {% if order.total_price > 10500000 %}
-                                        <span class="value">رایگان</span>
-                                    {% else %}
-                                        <span class="value">{{ order.shipping_cost|format_price }} تومان</span>
-                                    {% endif %}
+                                    <span class="value">رایگان (تحویل دیجیتال)</span>
                                 </div>
                                 <div class="summary-item total">
                                     <span class="label">مبلغ قابل پرداخت:</span>

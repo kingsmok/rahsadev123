@@ -17,6 +17,8 @@ STATUS = (
 
 
 class SiteSettings(models.Model):
+    site_name = models.CharField(max_length=100, default='فایل‌مارکت', verbose_name='نام سایت')
+    site_slogan = models.CharField(max_length=200, blank=True, default='مارکت فایل، نرم‌افزار و محصولات مجازی', verbose_name='شعار سایت')
     text_about_us = RichTextUploadingField(null=True, blank=True, verbose_name='متن درباره ما')
     text_contact_us = models.TextField(null=True, blank=True, verbose_name='متن تماس با ما')
     address = models.CharField(max_length=250, null=True, blank=True, verbose_name='آدرس')

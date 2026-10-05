@@ -10,11 +10,29 @@ STATUS = (
     ("published", "منتشر شود")
 )
 
+PRODUCT_TYPES = (
+    ("template", "قالب سایت"),
+    ("plugin", "افزونه"),
+    ("script", "اسکریپت و کد آماده"),
+    ("software", "نرم‌افزار"),
+    ("design_file", "فایل طراحی"),
+    ("virtual", "محصول مجازی"),
+)
+
+LICENSE_TYPES = (
+    ("single", "لایسنس تک‌کاربره"),
+    ("multi", "لایسنس چندکاربردی"),
+    ("lifetime", "لایسنس دائمی"),
+    ("subscription", "اشتراک دوره‌ای"),
+    ("gpl", "متن‌باز (GPL)"),
+)
+
 
 class ProductCategory(models.Model):
     title = models.CharField(max_length=100, unique=True, verbose_name='عنوان دسته بندی')
     slug = models.SlugField(max_length=100, unique=True, verbose_name='نامک')
     image = models.ImageField(upload_to='images/products/categories', null=True, blank=True, verbose_name='تصویر دسته بندی')
+    icon = models.CharField(max_length=100, blank=True, help_text='نام آیکون Font Awesome مثلاً fa-wordpress', verbose_name='آیکون')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
 
     class Meta:
@@ -39,26 +57,13 @@ class ProductBrand(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
 
     class Meta:
-        verbose_name = 'برند'
-        verbose_name_plural = 'برند ها'
+        verbose_name = 'برند / سازنده'
+        verbose_name_plural = 'برندها / سازنده‌ها'
 
     def brand_image(self):
         if self.image:
             return format_html(f'<img src="{self.image.url}" width="50px" height="50px">')
         return format_html(f'<h3 style="color: red">تصویر ندارد</h3>')
-
-    def __str__(self):
-        return self.title
-
-
-class ProductColor(models.Model):
-    title = models.CharField(max_length=50, unique=True, verbose_name='عنوان رنگ')
-    color_code = models.CharField(max_length=20, unique=True, default="#000000", help_text='این یک کد رنگی پیش فرض است', verbose_name='کد رنگ')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
-
-    class Meta:
-        verbose_name = 'رنگ'
-        verbose_name_plural = 'رنگ ها'
 
     def __str__(self):
         return self.title
@@ -76,7 +81,8 @@ class Product(models.Model):
     is_featured = models.BooleanField(default=False, verbose_name='ویژه')
     old_price = models.IntegerField(null=True, blank=True, verbose_name='قیمت قدیمی محصول')
     price = models.IntegerField(verbose_name='قیمت محصول')
-    stock_count = models.IntegerField(verbose_name='تعداد موجود')
+    stock_count = models.IntegerField(default=0, verbose_name='تعداد موجود (برای لایسنس محدود)',
+                                      help_text='برای محصولات با دانلود نامحدود نیازی به این عدد نیست')
     image = models.ImageField(upload_to='images/products', null=True, blank=True, verbose_name='تصویر محصول')
     status = models.CharField(choices=STATUS, max_length=10, default='published', verbose_name='وضعیت')
     views = models.IntegerField(default=0, verbose_name='بازدید ها')
@@ -86,35 +92,36 @@ class Product(models.Model):
     meta_title = models.CharField(max_length=70, blank=True, verbose_name='عنوان سئو')
     meta_description = models.CharField(max_length=160, blank=True, verbose_name='توضیحات سئو')
     canonical_url = models.URLField(blank=True, verbose_name='آدرس canonical')
-    # General Features
-    brand = models.ManyToManyField(ProductBrand, related_name='product_brands', blank=True, verbose_name='برند مربوطه')
-    model = models.CharField(max_length=100, blank=True, null=True, verbose_name='مدل')
-    color = models.ManyToManyField(ProductColor, blank=True, related_name='colors', verbose_name='رنگ')
-    weight = models.CharField(max_length=50, blank=True, null=True, verbose_name='وزن')
-    dimensions = models.CharField(max_length=100, blank=True, null=True, verbose_name='ابعاد')
-    # Special Features for Products
-    operating_system = models.CharField(max_length=50, blank=True, null=True, verbose_name='سیستم عامل')
-    battery_capacity = models.CharField(max_length=50, blank=True, null=True, verbose_name='ظرفیت باتری')
-    ram = models.CharField(max_length=50, blank=True, null=True, verbose_name='حافظه موقت')
-    internal_memory = models.CharField(max_length=50, blank=True, null=True, verbose_name='حافظه داخلی')
-    camera_resolution = models.CharField(max_length=50, blank=True, null=True, verbose_name='رزولوشن دوربین')
-    connectivity = models.CharField(max_length=100, blank=True, null=True, verbose_name='نوع اتصال')
-    processor_generation = models.CharField(max_length=50, blank=True, null=True, verbose_name='نسل پردازنده')
-    processor_manufacturer = models.CharField(max_length=50, blank=True, null=True, verbose_name='سازنده پردازنده')
-    processor_series = models.CharField(max_length=50, blank=True, null=True, verbose_name='سری پردازنده')
-    body_material = models.CharField(max_length=50, blank=True, null=True, verbose_name='جنس بدنه')
-    strap_material = models.CharField(max_length=50, blank=True, null=True, verbose_name='جنس بند')
-    display_size = models.CharField(max_length=50, blank=True, null=True, verbose_name='اندازه صفحه نمایش')
-    bluetooth_version = models.CharField(max_length=50, blank=True, null=True, verbose_name='نسخه بلوتوث')
-    antenna_count = models.CharField(max_length=50, null=True, blank=True, verbose_name='تعداد آنتن')
-    antenna_type = models.CharField(max_length=50, blank=True, null=True, verbose_name='نوع آنتن')
-    power_source = models.CharField(max_length=50, blank=True, null=True, verbose_name='منبع تغذیه')
-    os_support = models.TextField(blank=True, null=True, verbose_name='قابلیت پشتیبانی از سیستم عامل‌های')
+
+    # مشخصات محصولات دیجیتال
+    product_type = models.CharField(choices=PRODUCT_TYPES, max_length=20, default='template',
+                                    verbose_name='نوع محصول', help_text='قالب، افزونه، اسکریپت، نرم‌افزار، فایل طراحی یا محصول مجازی')
+    brand = models.ManyToManyField(ProductBrand, related_name='product_brands', blank=True, verbose_name='برند / سازنده')
+    license_type = models.CharField(choices=LICENSE_TYPES, max_length=20, default='single', verbose_name='نوع لایسنس')
+    is_unlimited = models.BooleanField(default=True, verbose_name='دانلود نامحدود',
+                                       help_text='اگر فعال باشد محدودیتی برای تعداد فروش و دانلود وجود ندارد')
+    demo_url = models.URLField(blank=True, verbose_name='لینک پیش‌نمایش (دمو)')
+    documentation_url = models.URLField(blank=True, verbose_name='لینک مستندات')
+    requirements = models.TextField(blank=True, verbose_name='پیش‌نیازها',
+                                    help_text='هر خط یک پیش‌نیاز است، مثلاً: PHP 8.1+')
+    operating_system = models.CharField(max_length=100, blank=True, null=True, verbose_name='سیستم عامل سازگار')
+    support_duration = models.CharField(max_length=60, blank=True, verbose_name='مدت پشتیبانی')
+    update_duration = models.CharField(max_length=60, blank=True, verbose_name='مدت دریافت به‌روزرسانی')
 
     class Meta:
         verbose_name = 'محصول'
         verbose_name_plural = 'محصولات'
         ordering = ['-created_at', '-id']
+
+    @property
+    def is_available(self):
+        """محصولات دیجیتال با دانلود نامحدود همیشه موجود هستند."""
+        return self.is_unlimited or self.stock_count > 0
+
+    @property
+    def digital_info(self):
+        """دسترسی امن به فایل دیجیتال محصول (در صورت وجود)."""
+        return getattr(self, 'digital_asset', None)
 
     def discount_percentage(self):
         if self.old_price and self.price < self.old_price:
@@ -138,12 +145,34 @@ class DigitalAsset(models.Model):
     file_size = models.PositiveBigIntegerField(default=0, editable=False, verbose_name='حجم فایل')
     file_type = models.CharField(max_length=80, blank=True, verbose_name='فرمت فایل')
     version = models.CharField(max_length=30, blank=True, verbose_name='نسخه')
+    changelog = models.TextField(blank=True, verbose_name='تغییرات نسخه', help_text='هر خط یک مورد از تغییرات نسخه')
     download_count = models.PositiveIntegerField(default=0, editable=False, verbose_name='تعداد دانلود')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = 'فایل دیجیتال'
         verbose_name_plural = 'فایل‌های دیجیتال'
+
+    def save(self, *args, **kwargs):
+        if self.file:
+            try:
+                self.file_size = self.file.size
+            except Exception:
+                pass
+            if not self.file_type:
+                self.file_type = self.file.name.rsplit('.', 1)[-1].upper() if '.' in self.file.name else ''
+        super().save(*args, **kwargs)
+
+    @property
+    def file_size_display(self):
+        size = self.file_size
+        if not size:
+            return '-'
+        if size >= 1024 ** 3:
+            return f'{size / 1024 ** 3:.2f} گیگابایت'
+        if size >= 1024 ** 2:
+            return f'{size / 1024 ** 2:.1f} مگابایت'
+        return f'{size / 1024:.0f} کیلوبایت'
 
     def __str__(self):
         return self.product.title
@@ -175,4 +204,3 @@ class ProductComment(models.Model):
 
     def __str__(self):
         return self.product.title
-

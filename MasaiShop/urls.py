@@ -15,6 +15,7 @@ urlpatterns = [
     path('robots.txt', TemplateView.as_view(template_name='robots.txt', content_type='text/plain'), name='robots'),
     path('payments/', include('payments.urls')),
     path('downloads/', include('downloads.urls')),
+    path('services/', include('services.urls')),
     path('pages/', include('pages.urls')),
     path('', include('core.urls')),
     path('products/', include('product.urls')),

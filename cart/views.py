@@ -3,32 +3,38 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.contrib import messages
 from .models import Cart, CartItem, Coupon, Order
-from product.models import Product, ProductColor
-from dashboard.models import Address
+from product.models import Product
 from django.utils import timezone
-import json
+
+
+def _cart_summary(user):
+    """جمع سبد خرید دیجیتال (بدون هزینه ارسال)."""
+    cart = Cart.objects.filter(user=user).first()
+    items = list(cart.items.select_related('product')) if cart else []
+    total_price = sum(item.total_price for item in items)
+    return {
+        'cart': cart,
+        'cart_items': items,
+        'total_price': total_price,
+        'coupon_discount': cart.coupon_discount if cart else 0,
+        'final_price': total_price - (cart.coupon_discount if cart else 0),
+    }
 
 
 @login_required
 def cart(request):
-    cart, created = Cart.objects.get_or_create(user=request.user)
-    cart_items = cart.items.all()
+    summary = _cart_summary(request.user)
 
-    if not cart_items.exists() and cart.coupon:
-        cart.coupon = None
-        cart.coupon_discount = 0
-        cart.save()
-
-    total_price = sum(item.total_price for item in cart_items) if cart_items else 0
-    shipping_cost = 50000 if total_price < 10500000 else 0
-    final_price = total_price - cart.coupon_discount + shipping_cost
+    if not summary['cart_items'] and summary['cart'] and summary['cart'].coupon:
+        summary['cart'].coupon = None
+        summary['cart'].coupon_discount = 0
+        summary['cart'].save()
 
     context = {
-        'cart': cart,
-        'cart_items': cart_items,
-        'total_price': total_price,
-        'shipping_cost': shipping_cost,
-        'final_price': final_price,
+        'cart': summary['cart'],
+        'cart_items': summary['cart_items'],
+        'total_price': summary['total_price'],
+        'final_price': summary['final_price'],
     }
     return render(request, 'cart/cart.html', context)
 
@@ -37,88 +43,24 @@ def cart(request):
 def add_to_cart(request, product_id):
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
-            product = get_object_or_404(Product, pk=product_id)
-            color_id = data.get('color_id')
-            quantity = int(data.get('quantity', 1))
+            product = get_object_or_404(Product, pk=product_id, status='published')
 
-            if quantity > product.stock_count:
-                return JsonResponse({'success': False, 'message': 'تعداد درخواستی بیشتر از موجودی است'})
+            if not product.is_available:
+                return JsonResponse({'success': False, 'message': 'این فایل در حال حاضر قابل خرید نیست'})
 
             cart, created = Cart.objects.get_or_create(user=request.user)
 
-            if product.color.count() == 1:
-                color = product.color.first()
-            else:
-                color = get_object_or_404(ProductColor, pk=color_id) if color_id else None
-
+            # محصول دانلودی: هر فایل فقط یک بار به سبد اضافه می‌شود
             cart_item, created = CartItem.objects.get_or_create(
                 cart=cart,
                 product=product,
-                color=color,
-                defaults={'quantity': quantity}
+                defaults={'quantity': 1}
             )
 
             if not created:
-                new_quantity = cart_item.quantity + quantity
-                if new_quantity > product.stock_count:
-                    return JsonResponse({'success': False, 'message': 'تعداد درخواستی بیشتر از موجودی است'})
-                cart_item.quantity = new_quantity
-                cart_item.save()
+                return JsonResponse({'success': False, 'message': 'این فایل از قبل در سبد خرید شما موجود است'})
 
-            return JsonResponse({'success': True, 'cart_count': cart.items.count()})
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)})
-    return JsonResponse({'success': False, 'message': 'درخواست نامعتبر'})
-
-
-@login_required
-def update_cart_item(request, item_id):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            quantity = data.get('quantity')
-            color_id = data.get('color_id')
-
-            cart_item = get_object_or_404(CartItem, pk=item_id, cart__user=request.user)
-
-            if color_id and str(color_id) != str(cart_item.color.id if cart_item.color else ''):
-                new_color = get_object_or_404(ProductColor, pk=color_id)
-                existing_item = CartItem.objects.filter(
-                    cart=cart_item.cart,
-                    product=cart_item.product,
-                    color=new_color
-                ).exclude(pk=cart_item.id).first()
-
-                if existing_item:
-                    existing_item.quantity += cart_item.quantity
-                    existing_item.save()
-                    cart_item.delete()
-                    cart_item = existing_item
-                else:
-                    cart_item.color = new_color
-                    cart_item.save()
-
-            if quantity:
-                quantity = int(quantity)
-                if quantity > cart_item.product.stock_count:
-                    return JsonResponse({'success': False, 'message': 'تعداد درخواستی بیشتر از موجودی است'})
-                cart_item.quantity = quantity
-                cart_item.save()
-
-            cart = cart_item.cart
-            total_price = sum(item.total_price for item in cart.items.all())
-            shipping_cost = 50000 if total_price < 10500000 else 0
-            final_price = total_price - cart.coupon_discount + shipping_cost
-
-            return JsonResponse({
-                'success': True,
-                'item_price': cart_item.total_price,
-                'total_price': total_price,
-                'shipping_cost': shipping_cost,
-                'final_price': final_price,
-                'cart_count': cart.items.count()
-            })
+            return JsonResponse({'success': True, 'message': 'فایل با موفقیت به سبد خرید اضافه شد', 'cart_count': cart.items.count()})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
     return JsonResponse({'success': False, 'message': 'درخواست نامعتبر'})
@@ -129,19 +71,15 @@ def remove_cart_item(request, item_id):
     if request.method == 'POST':
         try:
             cart_item = get_object_or_404(CartItem, pk=item_id, cart__user=request.user)
+            cart = cart_item.cart
             cart_item.delete()
-
-            cart = Cart.objects.get(user=request.user)
             total_price = sum(item.total_price for item in cart.items.all())
-            shipping_cost = 50000 if total_price < 10500000 else 0
-            final_price = total_price - cart.coupon_discount + shipping_cost
 
             return JsonResponse({
                 'success': True,
-                'cart_count': cart.items.count(),
                 'total_price': total_price,
-                'shipping_cost': shipping_cost,
-                'final_price': final_price
+                'final_price': total_price - cart.coupon_discount,
+                'cart_count': cart.items.count()
             })
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
@@ -174,6 +112,13 @@ def apply_coupon(request):
             else:
                 discount = coupon.discount_value
 
+            if coupon.minimum_order_amount and total_price < coupon.minimum_order_amount:
+                messages.error(request, f'حداقل مبلغ سفارش برای این کد تخفیف {coupon.minimum_order_amount:,} تومان است')
+                return redirect('cart:cart')
+
+            if coupon.maximum_discount:
+                discount = min(discount, coupon.maximum_discount)
+
             discount = min(discount, total_price)
 
             cart.coupon = coupon
@@ -196,73 +141,21 @@ def apply_coupon(request):
 
 @login_required
 def shopping_payment(request):
-    cart = get_object_or_404(Cart, user=request.user)
-    if not cart.items.exists():
+    summary = _cart_summary(request.user)
+    if not summary['cart_items']:
         messages.warning(request, 'سبد خرید شما خالی است')
         return redirect('cart:cart')
 
-    default_address = Address.objects.filter(user=request.user, is_default=True).first()
-
-    total_price = sum(item.total_price for item in cart.items.all())
-    shipping_cost = 50000 if total_price < 10500000 else 0
-    final_price = total_price - cart.coupon_discount + shipping_cost
-
     context = {
-        'cart': cart,
-        'default_address': default_address,
-        'total_price': total_price,
-        'shipping_cost': shipping_cost,
-        'final_price': final_price,
+        'cart': summary['cart'],
+        'cart_items': summary['cart_items'],
+        'total_price': summary['total_price'],
+        'final_price': summary['final_price'],
     }
     return render(request, 'cart/shopping_payment.html', context)
 
 
 @login_required
 def successful_payment(request):
-    # پرداخت فقط از callback تأییدشده درگاه انجام می‌شود؛ این URL دیگر پرداخت را جعل نمی‌کند.
     messages.info(request, 'برای ثبت سفارش، ابتدا از یکی از درگاه‌های پرداخت استفاده کنید.')
     return redirect('cart:shopping_payment')
-
-
-@login_required
-def legacy_successful_payment_disabled(request):
-    cart = get_object_or_404(Cart, user=request.user)
-
-    total_price = sum(item.total_price for item in cart.items.all())
-    shipping_cost = 50000 if total_price < 10500000 else 0
-
-    items_data = []
-    for item in cart.items.all():
-        item_data = {
-            'product_id': item.product.id,
-            'product_title': item.product.title,
-            'quantity': item.quantity,
-            'unit_price': item.product.price,
-            'color': item.color.title if item.color else None,
-            'total_price': item.total_price
-        }
-        items_data.append(item_data)
-
-    order = Order.objects.create(
-        user=request.user,
-        address=Address.objects.filter(user=request.user, is_default=True).first(),
-        items_data=items_data,
-        total_price=total_price,
-        coupon_discount=cart.coupon_discount,
-        shipping_cost=shipping_cost,
-        final_price=total_price - cart.coupon_discount + shipping_cost,
-        status='paid'
-    )
-
-    for item in cart.items.all():
-        product = item.product
-        product.stock_count -= item.quantity
-        product.sales_count += item.quantity
-        product.save()
-
-    cart.delete()
-
-    context = {
-        'order': order
-    }
-    return render(request, 'cart/successful_payment.html', context)

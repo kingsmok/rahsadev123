@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% block title %}دانلودهای من | {{ site_name }}{% endblock %}
+{% load static %}
+{% load custom_filters %}
+{% load jalali_tags %}
+
+{% block content %}
+    <main class="cart-page default space-top-30">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <header class="card-header">
+                        <h3 class="card-title">
+                            <span><i class="fa fa-cloud-arrow-down colormain" aria-hidden="true"></i> دانلودهای من (فایل‌های خریداری‌شده)</span>
+                        </h3>
+                    </header>
+                </div>
+
+                <div class="cart_content col-xl-9 col-lg-8 col-md-7 order-2">
+                    {% if tokens %}
+                        <div class="table-responsive default">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th scope="col">فایل</th>
+                                    <th scope="col">عنوان</th>
+                                    <th scope="col">سفارش</th>
+                                    <th scope="col">تاریخ خرید</th>
+                                    <th scope="col">وضعیت لینک</th>
+                                    <th scope="col">دانلود</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for token in tokens %}
+                                    <tr>
+                                        <td>
+                                            {% if token.product.image %}
+                                                <img src="{{ token.product.image.url }}"
+                                                     alt="{{ token.product.title|truncatewords:5 }}">
+                                            {% else %}
+                                                <img src="{% static 'img/product_image_not_found.jpg' %}"
+                                                     alt="{{ token.product.title|truncatewords:5 }}">
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <h3 class="cart_title">
+                                                <a href="{% url 'product:product_detail' token.product.pid token.product.slug %}">
+                                                    {{ token.product.title|truncatewords:6 }}
+                                                </a>
+                                            </h3>
+                                            {% if token.product.digital_info %}
+                                                <div class="cart_content">
+                                                    <div><span>نسخه: </span><span
+                                                            class="item_property">{{ token.product.digital_info.version|default:'-' }}</span></div>
+                                                    <div><span>حجم: </span><span
+                                                            class="item_property">{{ token.product.digital_info.file_size_display }}</span></div>
+                                                </div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'dashboard:order_detail' token.order.order_number %}">
+                                                {{ token.order.order_number }}
+                                            </a>
+                                        </td>
+                                        <td>{{ token.created_at|to_jalali:'%d %B %Y' }}</td>
+                                        <td>
+                                            {% if token.is_valid %}
+                                                <span class="item_property" style="color:#2e9e44;">
+                                                    {{ token.remaining_downloads }} دانلود باقی‌مانده
+                                                </span>
+                                                <div><small class="text-muted">انقضا: {{ token.expires_at|to_jalali:'%d %B %Y' }}</small></div>
+                                            {% else %}
+                                                <span style="color:#c62828;">لینک منقضی شده</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if token.is_valid %}
+                                                <a href="{% url 'downloads:download' token.token %}"
+                                                   class="btn btn-main-masai" style="padding: 5px 18px;font-size: 12px;">
+                                                    <i class="fa fa-download" aria-hidden="true"></i> دانلود
+                                                </a>
+                                            {% else %}
+                                                <button class="btn btn-second-masai" disabled style="padding: 5px 18px;font-size: 12px;">
+                                                    غیرفعال
+                                                </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if tokens.has_other_pages %}
+                            <div class="pagination">
+                                {% if tokens.has_previous %}
+                                    <a href="?page={{ tokens.previous_page_number }}" class="page-arrow prev"><i class="fa fa-angle-right"></i></a>
+                                {% endif %}
+                                {% for page in pages_to_show %}
+                                    {% if page == '...' %}
+                                        <span class="page-number">...</span>
+                                    {% elif tokens.number == page %}
+                                        <a href="?page={{ page }}" class="page-number active">{{ page }}</a>
+                                    {% else %}
+                                        <a href="?page={{ page }}" class="page-number">{{ page }}</a>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if tokens.has_next %}
+                                    <a href="?page={{ tokens.next_page_number }}" class="page-arrow next"><i class="fa fa-angle-left"></i></a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-warning text-center">
+                            هنوز فایلی خریداری نکرده‌اید. فایل‌های خریداری‌شده شما بعد از پرداخت موفق به‌صورت خودکار در این بخش نمایش داده می‌شوند.
+                        </div>
+                        <div class="text-center">
+                            <a href="{% url 'product:product_list' %}" class="btn btn-main-masai">مشاهده فایل‌ها</a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Dashboard Sidebar Start -->
+                {% include "includes/dashboard_sidebar.html" %}
+                <!-- Dashboard Sidebar End -->
+            </div>
+        </div>
+    </main>
+{% endblock %}

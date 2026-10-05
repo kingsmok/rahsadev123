@@ -13,6 +13,9 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'change-me-in-production')
 
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('1', 'true', 'yes')
 ALLOWED_HOSTS = [host.strip() for host in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if host.strip()]
+if DEBUG and os.environ.get('ALLOW_ALL_HOSTS', '1').lower() in ('1', 'true', 'yes'):
+    # در حالت توسعه همه هاست‌ها پذیرفته می‌شود تا پیش‌نمایش آنلاین و دامنه‌های تست کار کنند.
+    ALLOWED_HOSTS += ['*']
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
@@ -56,6 +59,7 @@ INSTALLED_APPS = [
     'dashboard',
     'payments',
     'downloads',
+    'services',
     'pages',
 ]
 

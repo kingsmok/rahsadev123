@@ -1,12 +1,11 @@
 from core.models import SiteSettings
-from product.models import ProductCategory, ProductColor, ProductBrand
+from product.models import ProductCategory, ProductBrand
 from cart.models import Cart, CartItem
 
 
 def shop_func(request):
     site_settings = SiteSettings.objects.first()
     categories = ProductCategory.objects.all()
-    colors = ProductColor.objects.all()
     brands = ProductBrand.objects.all()
 
     cart = None
@@ -18,17 +17,16 @@ def shop_func(request):
             if cart:
                 cart_items = CartItem.objects.filter(cart=cart).select_related('product')
                 cart_total = cart.total_price
-        except:
+        except Exception:
             pass
 
     return {
         'site_settings': site_settings,
+        'site_name': site_settings.site_name if site_settings else 'فایل‌مارکت',
         'categories': categories,
-        'colors': colors,
         'brands': brands,
 
         'cart': cart,
         'cart_items': cart_items,
         'cart_total': cart_total,
     }
-

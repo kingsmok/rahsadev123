@@ -7,8 +7,13 @@
     <meta charset="utf-8"/>
     <link rel="apple-touch-icon" sizes="76x76" href="{% static 'img/favicon.png' %}">
     <link rel="icon" type="image/png" href="{% static 'img/favicon.png' %}">
-    <title>{% block title %}فایل‌مارکت{% endblock %}</title>
-    <meta name="description" content="{% block meta_description %}فروشگاه تخصصی فایل‌های دیجیتال، قالب، افزونه و آموزش{% endblock %}">
+    <title>{% block title %}{{ site_name }} | فروش فایل، نرم‌افزار، قالب و محصولات مجازی{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}دانلود فایل‌های نرم‌افزاری، قالب وب سایت، افزونه، اسکریپت، فایل‌های طراحی و محصولات مجازی با لایسنس رسمی و دانلود آنی{% endblock %}">
+    <style>
+        .text-logo{display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:24px;color:#46A9AE;}
+        .text-logo i{background:linear-gradient(135deg,#61bec3,#46a9ae);color:#fff;border-radius:12px;padding:8px 12px;font-size:20px;}
+        .text-logo small{display:block;font-size:11px;font-weight:400;color:#8a97a8;line-height:1.4;}
+    </style>
     <meta name="robots" content="index,follow">
     {% block canonical %}<link rel="canonical" href="{{ request.build_absolute_uri }}">{% endblock %}
     {% block structured_data %}{% endblock %}
@@ -70,13 +75,14 @@
         </div>
         <div class="collapse navbar-collapse justify-content-end" id="navigation">
             <div class="logo-nav-res default text-center">
-                <a href="{% url 'core:home' %}">
-                    <img src="{% static 'img/logo.png' %}" alt="">
+                <a href="{% url 'core:home' %}" class="text-logo">
+                    <i class="fa fa-cloud-arrow-down" aria-hidden="true"></i>
+                    <span>{{ site_name }}</span>
                 </a>
             </div>
             <ul class="navbar-nav default">
                 <li class="sub-menu">
-                    <a href="javascript:void(0)">دسته بندی کالاها</a>
+                    <a href="javascript:void(0)">دسته بندی فایل‌ها</a>
                     <ul>
                         {% for category in categories %}
                             <li>
@@ -86,7 +92,10 @@
                     </ul>
                 </li>
                 <li>
-                    <a href="{% url 'product:product_list' %}"> محصولات</a>
+                    <a href="{% url 'product:product_list' %}"> همه فایل‌ها</a>
+                </li>
+                <li>
+                    <a href="{% url 'services:services' %}">طراحی وب سایت</a>
                 </li>
                 <li>
                     <a href="{% url 'blog:article_list' %}">وبلاگ</a>
@@ -110,15 +119,16 @@
             <div class="row">
                 <div class="col-lg-2 col-md-3 col-sm-4 col-5">
                     <div class="logo-area default">
-                        <a href="{% url 'core:home' %}">
-                            <img src="{% static 'img/logo.png' %}" alt="">
+                        <a href="{% url 'core:home' %}" class="text-logo">
+                            <i class="fa fa-cloud-arrow-down" aria-hidden="true"></i>
+                            <span>{{ site_name }}<small>فایل | نرم‌افزار | محصولات مجازی</small></span>
                         </a>
                     </div>
                 </div>
                 <div class="col-lg-8 col-md-5 col-sm-8 col-7">
                     <div class="search-area default">
                         <form action="{% url 'product:product_search' %}" method="get" class="search">
-                            <input type="text" name="search" value="{{ request.GET.search }}" placeholder="جستجو">
+                            <input type="text" name="search" value="{{ request.GET.search }}" placeholder="جستجو در فایل‌ها، قالب‌ها و نرم‌افزارها...">
                             <button type="submit"><img src="{% static 'img/search.png' %}" alt=""></button>
                         </form>
                     </div>
@@ -165,11 +175,8 @@
                                                             {{ item.product.title|truncatewords:3 }}
                                                         </div>
                                                         <div class="m_cart-item-params">
-                                                            <div class="m_cart-item-props">
-                                                                <span>تعداد: {{ item.quantity }}</span>
-                                                                {% if item.color %}
-                                                                    <span>رنگ: {{ item.color.title }}</span>
-                                                                {% endif %}
+                                                                <div class="m_cart-item-props">
+                                                                <span><i class="fa fa-download" aria-hidden="true"></i> دانلود آنی</span>
                                                             </div>
                                                             <div class="m_cart-item-price">
                                                                 {{ item.total_price|format_price }} تومان
@@ -210,7 +217,7 @@
                 <li class="list_style">
                     <i class="fa fa-bars icon-icon" aria-hidden="true"></i><a href="javascript:void(0)"
                                                                               class="list__link">دسته بندی
-                    کالاها</a>
+                    فایل‌ها</a>
                     <div class="submeno">
                         <ul class="main_meno-drobdown">
                             {% for category in categories %}
@@ -223,10 +230,18 @@
                     </div>
                 </li>
                 <li class="list_style">
-                    <i class="fa fa-box icon-icon" aria-hidden="true"></i><a href="{% url 'product:product_list' %}"
+                    <i class="fa fa-folder-open icon-icon" aria-hidden="true"></i><a href="{% url 'product:product_list' %}"
                                                                              class="list__link">
-                    محصولات
+                    همه فایل‌ها
                 </a>
+                </li>
+                <li class="list_style">
+                    <i class="fa fa-code icon-icon" aria-hidden="true"></i>
+                    <a href="{% url 'services:services' %}" class="list__link">طراحی وب سایت</a>
+                </li>
+                <li class="list_style">
+                    <i class="fa fa-tags icon-icon" aria-hidden="true"></i>
+                    <a href="{% url 'product:discount_product' %}" class="list__link">تخفیف‌های ویژه</a>
                 </li>
                 <li class="list_style">
                     <i class="fa fa-newspaper icon-icon" aria-hidden="true"></i>
@@ -263,27 +278,27 @@
                 <div class="row">
                     <div class="service-item col-2 contact-box text-center">
                         <img src="{% static 'img/ico/png-4.png' %}" class="width-40"/>
-                        <span class="title-1 light-black">ضمانت اصل بودن</span>
+                        <span class="title-1 light-black">دانلود آنی پس از پرداخت</span>
                     </div>
                     <div class="service-item col-2 contact-box text-center">
                         <img src="{% static 'img/ico/png-1.png' %}" class="width-40"/>
-                        <span class="title-1 light-black">پرداخت امن</span>
+                        <span class="title-1 light-black">پرداخت امن بانکی</span>
                     </div>
                     <div class="service-item col-2 contact-box text-center">
                         <img src="{% static 'img/ico/png-2.png' %}" class="width-40"/>
-                        <span class="title-1 light-black">ارسال سریع</span>
+                        <span class="title-1 light-black">لایسنس اورجینال</span>
                     </div>
                     <div class="service-item col-2 contact-box text-center">
                         <img src="{% static 'img/ico/png-5.png' %}" class="width-40"/>
-                        <span class="title-1 light-black">فرصت 7 روزه استرداد</span>
+                        <span class="title-1 light-black">7 روز ضمانت بازگشت وجه</span>
                     </div>
                     <div class="service-item col-2 contact-box text-center">
                         <img src="{% static 'img/ico/png-3.png' %}" class="width-40"/>
-                        <span class="title-1 light-black">پشتیبانی تلفنی</span>
+                        <span class="title-1 light-black">پشتیبانی فنی</span>
                     </div>
                     <div class="service-item col-2 contact-box text-center">
                         <img src="{% static 'img/ico/png-7.png' %}" class="width-40"/>
-                        <span class="title-1 light-black">هدیه نقدی</span>
+                        <span class="title-1 light-black">به‌روزرسانی محصولات</span>
                     </div>
 
                 </div>
@@ -297,22 +312,29 @@
                     <div class="col-12 col-md-6 col-lg-3">
                         <div class="widget-menu widget card">
                             <div class="card-header">
-                                <h3 class="card-title">درباره مَسای</h3>
+                                <h3 class="card-title">درباره {{ site_name }}</h3>
                             </div>
                             <p class="about_footer">
-                                فروشگاه مَسای با هدف ارائه بهترین محصولات و خدمات به شما عزیزان تأسیس شده است. در مَسای، ما به کیفیت و تنوع
-                                محصولات خود افتخار می‌کنیم و تلاش می‌کنیم تا تجربه خریدی راحت و لذت‌بخش را برای شما فراهم کنیم.
+                                {{ site_name }} مرجع تخصصی خرید و دانلود فایل‌های نرم‌افزاری، قالب و افزونه وب سایت، اسکریپت،
+                                فایل‌های طراحی و محصولات مجازی است. همه فایل‌ها با لایسنس رسمی، به‌روزرسانی منظم و پشتیبانی فنی
+                                ارائه می‌شوند؛ سفارش شما بلافاصله پس از پرداخت قابل دانلود است.
                             </p>
                         </div>
                     </div>
                     <div class="col-12 col-md-6 col-lg-3">
                         <div class="widget-menu widget card">
                             <div class="card-header">
-                                <h3 class="card-title">لینک های مفید</h3>
+                                <h3 class="card-title">دسترسی سریع</h3>
                             </div>
                             <ul class="footer-menu">
                                 <li>
-                                    <a href="{% url 'product:product_list' %}">محصولات</a>
+                                    <a href="{% url 'product:product_list' %}">همه فایل‌ها</a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'product:discount_product' %}">تخفیف‌های ویژه</a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'services:services' %}">خدمات طراحی سایت</a>
                                 </li>
                                 <li>
                                     <a href="{% url 'blog:article_list' %}">وبلاگ</a>
@@ -323,7 +345,7 @@
                     <div class="col-12 col-md-6 col-lg-3">
                         <div class="widget-menu widget card">
                             <div class="card-header">
-                                <h3 class="card-title">آشنایی با مَسای</h3>
+                                <h3 class="card-title">پشتیبانی</h3>
                             </div>
                             <ul class="footer-menu">
                                 <li>
@@ -332,6 +354,8 @@
                                 <li>
                                     <a href="{% url 'core:about' %}">درباره ما</a>
                                 </li>
+                                {% if site_settings.phone1 %}<li><i class="fa fa-phone"></i> {{ site_settings.phone1 }}</li>{% endif %}
+                                {% if site_settings.email1 %}<li><i class="fa fa-envelope"></i> {{ site_settings.email1 }}</li>{% endif %}
                             </ul>
                         </div>
                     </div>

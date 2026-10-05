@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from accounts.models import Profile
 from cart.models import Order, CartItem, Cart
 from product.models import Product, ProductComment
+from downloads.models import DownloadToken
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.utils import timezone
@@ -87,21 +88,53 @@ def order_detail(request, order_number):
     order = get_object_or_404(Order, order_number=order_number, user=user)
 
     items = []
-    for item_data in (order.items_data or []):
+    items_data = order.items_data or {}
+    raw_items = items_data.get('items', []) if isinstance(items_data, dict) else items_data
+    for item_data in raw_items:
+        product_id = item_data.get('product_id') or item_data.get('product')
+        # یکسان‌سازی کلیدها برای قالب فاکتور
+        unit_price = item_data.get('unit_price') or item_data.get('price') or 0
+        item_data['unit_price'] = unit_price
+        item_data.setdefault('total_price', unit_price * item_data.get('quantity', 1))
+        item_data.setdefault('product_title', item_data.get('title', ''))
         try:
-            product = Product.objects.get(pk=item_data['product_id'])
+            product = Product.objects.get(pk=product_id)
             item_data['product_obj'] = product
             items.append(item_data)
-        except Product.DoesNotExist:
+        except (Product.DoesNotExist, TypeError, ValueError):
             continue
+
+    # توکن‌های دانلود این سفارش (فایل‌های دیجیتال)
+    download_tokens = DownloadToken.objects.filter(order=order, user=user).select_related('product')
 
     context = {
         'profile': profile,
 
         'order': order,
         'items': items,
+        'download_tokens': download_tokens,
     }
     return render(request, 'dashboard/order_detail.html', context)
+
+
+@login_required
+def my_downloads(request):
+    """فایل‌های خریداری‌شده کاربر به همراه لینک دانلود امن."""
+    user = request.user
+    profile = Profile.objects.get(user=user)
+    tokens = DownloadToken.objects.filter(user=user).select_related('product', 'order').order_by('-created_at')
+
+    page_number = request.GET.get('page')
+    paginator = Paginator(tokens, 10)
+    object_list = paginator.get_page(page_number)
+    pages_to_show = get_pages_to_show(object_list.number, paginator.num_pages)
+
+    context = {
+        'profile': profile,
+        'tokens': object_list,
+        'pages_to_show': pages_to_show,
+    }
+    return render(request, 'dashboard/my_downloads.html', context)
 
 
 @login_required
@@ -253,7 +286,7 @@ def add_to_wishlist(request, product_id):
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({'status': status, 'message': message})
-    return redirect('product:product_detail', pk=product_id)
+    return redirect('product:product_list')
 
 
 @login_required
