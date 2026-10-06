@@ -379,7 +379,7 @@ html { scroll-behavior: smooth; }
     position: absolute;
     top: calc(100% + 10px);
     right: 0; left: 0;
-    z-index: 9999;
+    z-index: var(--fm-z-popover, 1010);
     background: var(--fm-surface);
     border: 1px solid var(--fm-border);
     border-radius: var(--fm-radius);
@@ -447,7 +447,7 @@ html { scroll-behavior: smooth; }
     position: fixed;
     bottom: 26px;
     left: 26px;
-    z-index: 9500;
+    z-index: var(--fm-z-floating, 900);
     width: 52px; height: 52px;
     border-radius: 50%;
     border: none;

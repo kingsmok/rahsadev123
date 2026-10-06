@@ -134,6 +134,11 @@
 
         function setMobileNavigation(open) {
             if (!isMobileNavigation()) return;
+            if (open) {
+                // نتایج جست‌وجوی زنده در همان ناحیهٔ هدر نمایش داده می‌شوند؛
+                // با باز شدن پنل نباید زیر یا روی منوی همبرگری باقی بمانند.
+                $('.live-search-results').removeClass('open');
+            }
             $('html').toggleClass('nav-open', open);
             var $backdrop = mobileBackdrop();
             if (open) {

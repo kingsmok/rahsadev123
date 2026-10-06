@@ -100,6 +100,16 @@
     --fm-sp-8: 64px;
 
     --fm-ease: cubic-bezier(.4, 0, .2, 1);
+
+    /* لایه‌ها: مقادیر محدود و نقش‌محور؛ drawer سبد باید فقط از هدر/منوی
+       موبایل بالاتر باشد و همچنان زیر modal استاندارد Bootstrap بماند. */
+    --fm-z-content:          1;
+    --fm-z-floating:         900;
+    --fm-z-popover:          1010;
+    --fm-z-mobile-backdrop:  1025;
+    --fm-z-mobile-panel:     1030;
+    --fm-z-cart-backdrop:    1040;
+    --fm-z-cart-drawer:      1045;
 }
 
 /* ───────────────────────── ۲) حالت شب ───────────────────────── */

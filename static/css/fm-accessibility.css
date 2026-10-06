@@ -225,7 +225,7 @@ a.btn-main-masai:hover,
 .fm-mobile-nav-backdrop {
     position: fixed;
     inset: 0;
-    z-index: 1025;
+    z-index: var(--fm-z-mobile-backdrop);
     background: rgba(15, 23, 32, .52);
     opacity: 0;
     transition: opacity .22s var(--fm-ease);
@@ -325,7 +325,7 @@ a.btn-main-masai:hover,
         text-align: right;
         transform: translate3d(110%, 0, 0) !important;
         transition: transform .25s var(--fm-ease) !important;
-        z-index: 1030;
+        z-index: var(--fm-z-mobile-panel);
     }
 
     .sidebar-collapse nav.header-responsive .navbar-collapse::before { display: none; }
@@ -416,6 +416,224 @@ a.btn-main-masai:hover,
         color: var(--fm-primary-700) !important;
         background: var(--fm-primary-50);
     }
+}
+
+/* -------------------------------------------------------------------------
+   Drawer سبد خرید
+   -------------------------------------------------------------------------
+   dropdown قدیمی داخل header قرار داشت؛ بنابراین به stacking context و
+   overflow همان header وابسته بود. پنل جدید هم‌سطح wrapper است و با لایهٔ
+   مشخص خود باز می‌شود، پس نه زیر هدر می‌ماند و نه محتوای بلندش بریده می‌شود. */
+.fm-cart-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: var(--fm-z-cart-backdrop);
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: rgba(15, 23, 32, .56);
+    transition: opacity .22s var(--fm-ease), visibility 0s linear .22s;
+}
+
+.fm-cart-drawer {
+    position: fixed;
+    inset: 0 0 0 auto;
+    z-index: var(--fm-z-cart-drawer);
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    width: min(420px, 100vw);
+    max-width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    visibility: hidden;
+    background: var(--fm-surface);
+    border-left: 1px solid var(--fm-border);
+    box-shadow: var(--fm-shadow-lg);
+    color: var(--fm-text);
+    text-align: right;
+    transform: translate3d(105%, 0, 0);
+    transition: transform .25s var(--fm-ease), visibility 0s linear .25s;
+}
+
+html.cart-drawer-open,
+html.cart-drawer-open body {
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+html.cart-drawer-open .fm-cart-drawer-backdrop {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transition-delay: 0s;
+}
+html.cart-drawer-open .fm-cart-drawer {
+    visibility: visible;
+    transform: translate3d(0, 0, 0);
+    transition-delay: 0s;
+}
+
+.fm-cart-drawer__header,
+.fm-cart-drawer__footer {
+    background: var(--fm-surface);
+    padding-right: max(16px, env(safe-area-inset-right));
+    padding-left: max(16px, env(safe-area-inset-left));
+}
+
+.fm-cart-drawer__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 68px;
+    padding-top: env(safe-area-inset-top);
+    border-bottom: 1px solid var(--fm-border);
+}
+
+.fm-cart-drawer__header h2 {
+    margin: 0;
+    color: var(--fm-text);
+    font-size: 18px;
+    font-weight: 800;
+}
+.fm-cart-drawer__header h2 i { color: var(--fm-primary-600); margin-left: 8px; }
+
+.fm-cart-drawer__close,
+.fm-cart-drawer__remove {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    padding: 0;
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-r-sm);
+    background: var(--fm-surface-alt);
+    color: var(--fm-text-soft);
+    cursor: pointer;
+}
+.fm-cart-drawer__close:hover,
+.fm-cart-drawer__close:focus-visible {
+    background: var(--fm-primary-50);
+    color: var(--fm-primary-700);
+}
+.fm-cart-drawer__remove { color: var(--fm-danger); }
+.fm-cart-drawer__remove:hover,
+.fm-cart-drawer__remove:focus-visible { background: var(--fm-danger-bg); }
+
+.fm-cart-drawer__body {
+    min-height: 0;
+    padding: 12px 16px 20px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.fm-cart-drawer__items {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.fm-cart-drawer__item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px;
+    align-items: start;
+    gap: 10px;
+    padding: 10px;
+    background: var(--fm-surface-alt);
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-r-md);
+}
+
+.fm-cart-drawer__product {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 10px;
+    min-width: 0;
+    color: var(--fm-text);
+    text-decoration: none;
+}
+.fm-cart-drawer__product:hover { color: var(--fm-primary-700); text-decoration: none; }
+.fm-cart-drawer__product img {
+    width: 72px;
+    height: 72px;
+    max-width: 72px;
+    object-fit: cover;
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-r-sm);
+}
+.fm-cart-drawer__product-info {
+    display: grid;
+    align-content: start;
+    gap: 4px;
+    min-width: 0;
+}
+.fm-cart-drawer__product-title {
+    overflow-wrap: anywhere;
+    font-size: 13px;
+    font-weight: 750;
+    line-height: 1.75;
+}
+.fm-cart-drawer__product-meta { color: var(--fm-text-soft); font-size: 12px; }
+.fm-cart-drawer__product-meta i { color: var(--fm-primary-600); margin-left: 4px; }
+.fm-cart-drawer__product-info strong { color: var(--fm-primary-700); font-size: 13px; }
+
+.fm-cart-drawer__footer {
+    padding-top: 14px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--fm-border);
+    box-shadow: 0 -8px 18px rgba(23, 42, 52, .06);
+}
+.fm-cart-drawer__total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    color: var(--fm-text-soft);
+    font-size: 14px;
+}
+.fm-cart-drawer__total strong { color: var(--fm-text); font-size: 16px; }
+.fm-cart-drawer__actions { display: grid; grid-template-columns: 1fr 1.25fr; gap: 8px; }
+.fm-cart-drawer__actions .fm-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+}
+.fm-cart-drawer__empty {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    min-height: 100%;
+    padding: 24px 8px;
+    color: var(--fm-text-soft);
+    text-align: center;
+}
+.fm-cart-drawer__empty > i { margin-bottom: 12px; color: var(--fm-primary-500); font-size: 36px; }
+.fm-cart-drawer__empty p { margin: 0 0 16px; }
+.fm-cart-drawer__empty .fm-btn { text-decoration: none; }
+
+/* هر دو trigger (هدر دسکتاپ و موبایل) هدف لمس مستقل و قابل پیش‌بینی دارند. */
+header.Masai-header .js-cart-drawer-toggle {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+}
+
+@media (max-width: 375px) {
+    .fm-cart-drawer__body { padding-right: 12px; padding-left: 12px; }
+    .fm-cart-drawer__footer { padding-right: 12px; padding-left: 12px; }
+    .fm-cart-drawer__actions { grid-template-columns: 1fr; }
 }
 
 /* -------------------------------------------------------------------------
