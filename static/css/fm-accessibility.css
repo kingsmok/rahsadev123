@@ -421,7 +421,7 @@ a.btn-main-masai:hover,
 /* -------------------------------------------------------------------------
    داشبورد و تب‌ها در صفحه‌های باریک
    ------------------------------------------------------------------------- */
-@media (max-width: 991.98px) {
+@media (max-width: 992px) {
     .profile-page-aside {
         flex: 0 0 100%;
         max-width: 100%;
@@ -478,6 +478,171 @@ a.btn-main-masai:hover,
     .fm-local-map img { max-height: 230px; }
     .nav_header .nav__ullist .list_style.is-open .submeno,
     .nav_header .nav__ullist .list_style:focus-within .submeno { width: min(260px, 85vw); }
+}
+
+/* -------------------------------------------------------------------------
+   بازبینی موبایل: ۳۲۰px تا تبلت، در هر دو حالت روشن/شب
+   ------------------------------------------------------------------------- */
+
+/* وضعیت فعال مرحلهٔ خرید نباید از رنگ کم‌کنتراست قدیمی استفاده کند. */
+.order-steps li a.active,
+.order-steps li > span.active { color: var(--fm-primary-700); }
+
+@media (max-width: 1077px) {
+    /* محتویات هدر تا y=94 ادامه دارد؛ ارتفاع 96px با margin بالای main
+       هم‌راستا است و جلوی پوشانده‌شدن ابتدای صفحه را می‌گیرد. */
+    nav.header-responsive { height: 96px; }
+
+    nav.header-responsive .search-nav form input {
+        /* در نمایشگر 320px پس از سه کنترل 44px، فضای متن جست‌وجو محدود است. */
+        padding: 10px 40px 9px 12px;
+    }
+
+    nav.header-responsive .search-nav ul li a,
+    nav.header-responsive .search-nav .theme-toggle {
+        /* primary-700 روی زمینهٔ روشن و تیره خوانا است؛ action-bg شب بیش از
+           حد تیره بود و آیکن‌ها را در پس‌زمینهٔ تیره محو می‌کرد. */
+        color: var(--fm-primary-700) !important;
+    }
+
+    [data-theme="dark"] nav.header-responsive .search-nav form input {
+        background: var(--fm-surface-alt) !important;
+        border-color: var(--fm-border) !important;
+        color: var(--fm-text) !important;
+    }
+}
+
+/* پروفایل از قالب قدیمی چند سطح سفید و متن تیرهٔ hard-code داشت. */
+[data-theme="dark"] .profile-card-1 .mid-section {
+    background: var(--fm-surface) !important;
+}
+
+[data-theme="dark"] .profile-card-1 .mid-section .name,
+[data-theme="dark"] .profile-card-1 .mid-section .stats .stat {
+    color: var(--fm-text) !important;
+}
+
+[data-theme="dark"] .profile-card-1 .mid-section .description,
+[data-theme="dark"] .profile-card-1 .mid-section .stats .stat .subtext {
+    color: var(--fm-text-soft) !important;
+}
+
+[data-theme="dark"] .profile-card-1 .view-more .fa-plus-circle {
+    background: var(--fm-surface);
+}
+
+/* گزینه‌های پرداخت و منوی واکنش‌گرای داشبورد در شب باید سطح تیره داشته
+   باشند، نه selected سفید و متن تیرهٔ legacy. */
+[data-theme="dark"] .plans .plan .plan-content {
+    background: var(--fm-surface-alt);
+    border-color: var(--fm-border);
+}
+
+[data-theme="dark"] .plans .plan .plan-details span { color: var(--fm-text); }
+[data-theme="dark"] .plans .plan .plan-details p { color: var(--fm-text-soft); }
+[data-theme="dark"] .plans .plan .plan-content:hover { box-shadow: var(--fm-shadow-sm); }
+
+[data-theme="dark"] .plans .plan input[type="radio"]:checked + .plan-content {
+    background: var(--fm-primary-50);
+    border-color: var(--fm-primary-500);
+}
+
+[data-theme="dark"] .plans .plan input[type="radio"]:checked + .plan-content::after {
+    background: var(--fm-primary-500);
+    border-color: var(--fm-surface);
+}
+
+[data-theme="dark"] .responsive-profile-menu .btn-second-masai {
+    background: var(--fm-primary-100) !important;
+    color: var(--fm-primary-700) !important;
+}
+
+[data-theme="dark"] .responsive-profile-menu .btn-second-masai:hover {
+    background: var(--fm-primary-200) !important;
+    color: var(--fm-primary-700) !important;
+}
+
+[data-theme="dark"] .responsive-profile-menu .dropdown-menu a.active-menu,
+[data-theme="dark"] .responsive-profile-menu .dropdown-menu a:active {
+    background: var(--fm-primary-50) !important;
+    color: var(--fm-primary-700) !important;
+}
+
+@media (max-width: 992px) {
+    /* location_me در قالب قدیمی absolute بود و dropdown روی کارت پروفایل
+       می‌افتاد. در گوشی و تبلت آن را به بخش مستقل زیر کارت تبدیل می‌کنیم. */
+    .profile-page-aside .responsive-profile-menu {
+        position: relative;
+        top: auto;
+    }
+
+    .profile-page-aside .responsive-profile-menu .dropdown-menu {
+        width: 100%;
+        max-height: min(60dvh, 420px);
+        overflow-y: auto;
+    }
+
+    .profile-page-aside .responsive-profile-menu .dropdown-item {
+        display: flex;
+        align-items: center;
+        min-height: 44px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    /* فضای داخلی checkout برای نمایشگرهای 320 تا 575px؛ فرم کد تخفیف دیگر
+       از کنار دکمه بیرون نمی‌زند و بخش جمع سفارش در خط بعدی مرتب می‌ماند. */
+    .cart_details { padding: 20px 14px; }
+
+    .cart_details .coupon-form {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: stretch;
+    }
+
+    .cart_details .coupon-form .input_second.width-200 {
+        width: 100% !important;
+        min-width: 0;
+    }
+
+    .cart_details .coupon-form .btn-main-masai { min-height: 44px; white-space: nowrap; }
+    .cart_details .coupon-form .coupon-message { grid-column: 1 / -1; }
+
+    .cart_details .divider_details {
+        border-top: 1px solid var(--fm-border);
+        border-right: 0;
+        margin-top: 16px;
+        padding-top: 16px;
+    }
+
+    .digital-note { padding: 14px; }
+    .order-files .pull-left {
+        display: block;
+        float: none !important;
+        width: 100%;
+        margin-top: 4px;
+        text-align: left;
+    }
+
+    .plans {
+        margin-right: 0;
+        margin-left: 0;
+        padding: 14px;
+    }
+
+    .plans .plan .plan-content { padding: 16px; }
+
+    .fm-newsletter { padding: 16px 14px; }
+    .fm-newsletter h4 { font-size: 16px; }
+    .fm-newsletter button { padding-right: 12px; padding-left: 12px; }
+}
+
+@media (max-width: 360px) {
+    nav.header-responsive .search-nav { gap: 0; }
+    nav.header-responsive .search-nav ul { gap: 0; }
+    .fm-newsletter form { padding: 5px; }
+    .fm-newsletter input { padding-right: 8px; padding-left: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
