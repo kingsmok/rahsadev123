@@ -9,7 +9,7 @@
 
 {% block content %}
     <main class="cart-page default ">
-        <div class="container"><h1 style="font-size:16px;font-weight:700;color:#46A9AE;margin:0 8px 6px;">تماس با {{ site_name }}</h1></div>
+        {% include 'includes/page_head.html' with title='تماس با ما' subtitle='سوال، پیشنهاد یا مشکلی دارید؟ تیم پشتیبانی پاسخگوی شماست.' %}
         <div class="container">
             <div class="row">
                 <div class="contact_us_content col-12 mx-auto">

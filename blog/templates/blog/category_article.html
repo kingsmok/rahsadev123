@@ -10,7 +10,7 @@
 
 {% block content %}
     <main class="category-blog default space-top-30">
-        <div class="container"><h1 style="font-size:16px;font-weight:700;color:#46A9AE;margin:0 8px 6px;">مقالات {{ category.title }}</h1></div>
+        {% include 'includes/page_head.html' with title=category.title parent='وبلاگ' parent_url='/blog/' %}
         <div class="container ">
             <div class="row">
                 <div class="col-12">

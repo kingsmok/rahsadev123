@@ -73,8 +73,8 @@
         }
     </style>
     <main class="main default space-top-10">
-        <!-- H1 اصلی صفحه برای سئو -->
-        <h1 class="container" style="font-size:16px;font-weight:700;color:#46A9AE;margin:0 8px 6px;">{{ site_name }} | فروش فایل، نرم‌افزار، قالب و محصولات مجازی با دانلود آنی</h1>
+        {# H1 اصلی صفحه برای سئو — روی صفحه خانه بصری نیست تا اسلایدر در صدر بماند #}
+        <h1 class="fm-sr-only">{{ site_name }} | فروش فایل، نرم‌افزار، قالب و محصولات مجازی با دانلود آنی</h1>
         <div class="container-fluid">
             <div class="slider_main owl-carousel owl-theme">
                 {% for slider in main_sliders %}

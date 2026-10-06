@@ -5,30 +5,8 @@
 {% load custom_filters %}
 
 {% block content %}
-    <style>
-        .badge-cancelled {
-            background: linear-gradient(135deg, #F44336, #C62828);
-            color: white;
-        }
-
-        .badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-            display: inline-block;
-            min-width: 80px;
-            text-align: center;
-        }
-
-        @media (max-width: 768px) {
-            .badge {
-                font-size: 12px;
-                padding: 6px 12px;
-            }
-        }
-    </style>
-    <main class="order-delivered default space-top-30">
+    <main class="order-delivered default">
+        {% include 'includes/page_head.html' with title='سفارش‌های لغو شده' subtitle='سفارش‌هایی که لغو یا ناموفق بوده‌اند.' parent='پنل کاربری' parent_url='/dashboard/' %}
         <div class="container">
             <div class="row">
                 <div class="col-xl-9 col-lg-8 col-md-12 order-2">

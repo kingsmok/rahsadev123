@@ -193,4 +193,27 @@
             el.textContent = year.replace(/[^۰-۹0-9]/g, '');
         } catch (e) { el.textContent = '۱۴۰۵'; }
     });
+
+    /* ---------- ۶) نمایش/پنهان‌کردن رمز عبور ---------- */
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.fm-pass-toggle');
+        if (!btn) return;
+        var input = document.getElementById(btn.getAttribute('data-target'));
+        if (!input) return;
+        var show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        btn.setAttribute('aria-label', show ? 'پنهان‌کردن رمز عبور' : 'نمایش رمز عبور');
+        var icon = btn.querySelector('i');
+        if (icon) icon.className = show ? 'fa fa-eye-slash' : 'fa fa-eye';
+    });
+
+    /* ---------- ۷) بستن خودکار پیام‌های موفقیت ---------- */
+    document.querySelectorAll('.fm-messages .alert-success').forEach(function (el) {
+        setTimeout(function () {
+            el.style.transition = 'opacity .4s ease, transform .4s ease';
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(-6px)';
+            setTimeout(function () { el.remove(); }, 420);
+        }, 6000);
+    });
 })();

@@ -10,7 +10,7 @@
 
 {% block content %}
     <main class="search-page default space-top-30">
-        <div class="container"><h1 style="font-size:16px;font-weight:700;color:#46A9AE;margin:0 8px 6px;">دانلود فایل‌های {{ category.title }}</h1></div>
+        {% include 'includes/page_head.html' with title=category.title subtitle='همه فایل‌های این دسته با لایسنس رسمی، پشتیبانی فنی و دانلود آنی پس از پرداخت.' parent='همه فایل‌ها' parent_url='/products/' %}
         <div class="container">
             <div class="row">
                 <div class="col-12 hidden-xs">

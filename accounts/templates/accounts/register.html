@@ -1,97 +1,118 @@
 {% extends 'base.html' %}
-{% block title %}عضویت{% endblock %}
 {% load static %}
 
+{% block title %}ساخت حساب کاربری | {{ site_name }}{% endblock %}
+{% block meta_description %}ثبت‌نام رایگان در {{ site_name }} و دسترسی به خرید و دانلود آنی فایل‌ها{% endblock %}
+
 {% block content %}
-    <main class="wrapper default ">
+    <main class="fm-auth-page">
         <div class="container">
-            <div class="row">
-                <div class="main-content login_content  col-12 col-md-7 col-lg-5 mx-auto ">
-                    <header class="card-header">
-                        <h3 class="card-title"><span>ایجاد به حساب کاربری</span></h3>
-                    </header>
-                    <div class="login_box">
-                        <form class="" method="post">
-                            {% csrf_token %}
-                            <div class="row">
-                                <div class="col-md-12 col-sm-12">
-                                    <div class="form-account-title"><span>*</span> نام</div>
-                                    <div class="form-account-row">
-                                        <input type="text" class="input_second input_all" name="first_name" placeholder=" نام">
-                                    </div>
-                                </div>
-                                <div class="col-md-12 col-sm-12">
-                                    <div class="form-account-title"><span>*</span> نام خانوادگی</div>
-                                    <div class="form-account-row">
-                                        <input type="text" class="input_second input_all" name="last_name" placeholder=" نام خانوادگی">
-                                    </div>
-                                </div>
-                                {% for error_username in form.username.errors %}
-                                    {% if error_username %}
-                                        <p style="font-size: 12px;" class="alert alert-danger mb-2">{{ error_username }}</p>
-                                    {% endif %}
-                                {% endfor %}
-                                <div class="col-md-12 col-sm-12">
-                                    <div class="form-account-title"><span>*</span> نام کاربری</div>
-                                    <div class="form-account-row">
-                                        <input type="text" class="input_second input_all" name="username" placeholder=" نام کاربری">
-                                    </div>
-                                </div>
-                                {% for error_email in form.email.errors %}
-                                    {% if error_email %}
-                                        <p style="font-size: 12px;" class="alert alert-danger mb-2">{{ error_email }}</p>
-                                    {% endif %}
-                                {% endfor %}
-                                <div class="col-md-12 col-sm-12">
-                                    <div class="form-account-title"><span>*</span> ایمیل</div>
-                                    <div class="form-account-row">
-                                        <input type="email" class="input_second input_all" name="email" placeholder=" ایمیل">
-                                    </div>
-                                </div>
-                                {% for error_password in form.password.errors %}
-                                    {% if error_password %}
-                                        <p style="font-size: 12px;" class="alert alert-danger mb-2">{{ error_password }}</p>
-                                    {% endif %}
-                                {% endfor %}
-                                <div class="col-md-12 col-sm-12">
-                                    <div class="form-account-title"><span>*</span> رمز عبور</div>
-                                    <div class="form-account-row">
-                                        <input type="password" class="input_second input_all" name="password" placeholder=" رمز عبور">
-                                    </div>
-                                </div>
-
-                                <div class="col-12">
-                                    <div class="form-account-agree">
-                                        <label class="checkbox-form checkbox-primary">
-                                            <input type="checkbox" id="agree">
-                                            <span class="checkbox-check"></span>
-                                        </label>
-                                        <label for="agree">
-                                            تمامی <a href="{% url 'pages:detail' 'قوانین-و-مقررات' %}">شرایط و قوانین</a> استفاده از سرویس‌های {{ site_name }} را به دقت مطالعه کرده و با آنها موافقت کامل دارم
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div class="col-12 text--center">
-                                    <button class="btn big_btn btn-main-masai">عضویت  </button>
-                                </div>
-                                <div class="col-12 footer_login_reg text--center">
-                                    <p>
-                                        <span>قبلا ثبت نام کرده اید؟</span>
-                                        <a href="{% url 'account:login' %}">ورود</a>
-
-                                    </p>
-
-                                </div>
-                                <div class="col-12 ">
-
-                                </div>
-                            </div>
-                        </form>
+            <div class="fm-auth">
+                <div class="fm-auth__card fm-auth__card--wide">
+                    <div class="fm-auth__head">
+                        <div class="fm-auth__icon"><i class="fa fa-user-plus" aria-hidden="true"></i></div>
+                        <h1>ساخت حساب کاربری</h1>
+                        <p>ثبت‌نام رایگان است و کمتر از یک دقیقه طول می‌کشد.</p>
                     </div>
+
+                    {% if form.non_field_errors %}
+                        <div class="fm-messages">
+                            {% for error in form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    <i class="fa fa-circle-exclamation" aria-hidden="true"></i>
+                                    <span>{{ error }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <form method="post" novalidate class="fm-form">
+                        {% csrf_token %}
+
+                        <div class="fm-form__row">
+                            <div class="fm-field">
+                                <label for="id_first_name">نام <span aria-hidden="true">*</span></label>
+                                <input type="text" id="id_first_name" name="first_name" required
+                                       autocomplete="given-name"
+                                       value="{{ form.first_name.value|default:'' }}"
+                                       class="fm-input {% if form.first_name.errors %}is-invalid{% endif %}"
+                                       placeholder="نام">
+                                {% for e in form.first_name.errors %}<span class="fm-field__err">{{ e }}</span>{% endfor %}
+                            </div>
+
+                            <div class="fm-field">
+                                <label for="id_last_name">نام خانوادگی <span aria-hidden="true">*</span></label>
+                                <input type="text" id="id_last_name" name="last_name" required
+                                       autocomplete="family-name"
+                                       value="{{ form.last_name.value|default:'' }}"
+                                       class="fm-input {% if form.last_name.errors %}is-invalid{% endif %}"
+                                       placeholder="نام خانوادگی">
+                                {% for e in form.last_name.errors %}<span class="fm-field__err">{{ e }}</span>{% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="fm-field">
+                            <label for="id_username">نام کاربری <span aria-hidden="true">*</span></label>
+                            <input type="text" id="id_username" name="username" required
+                                   autocomplete="username"
+                                   value="{{ form.username.value|default:'' }}"
+                                   class="fm-input {% if form.username.errors %}is-invalid{% endif %}"
+                                   placeholder="با حروف انگلیسی، مثلاً ali_dev">
+                            {% for e in form.username.errors %}<span class="fm-field__err">{{ e }}</span>{% endfor %}
+                        </div>
+
+                        <div class="fm-field">
+                            <label for="id_email">ایمیل <span aria-hidden="true">*</span></label>
+                            <input type="email" id="id_email" name="email" required
+                                   autocomplete="email" dir="ltr"
+                                   value="{{ form.email.value|default:'' }}"
+                                   class="fm-input {% if form.email.errors %}is-invalid{% endif %}"
+                                   placeholder="name@example.com">
+                            {% for e in form.email.errors %}<span class="fm-field__err">{{ e }}</span>{% endfor %}
+                            <span class="fm-field__hint">لینک دانلود سفارش‌ها به این ایمیل ارسال می‌شود.</span>
+                        </div>
+
+                        <div class="fm-field">
+                            <label for="id_password">رمز عبور <span aria-hidden="true">*</span></label>
+                            <div class="fm-input-group">
+                                <input type="password" id="id_password" name="password" required
+                                       autocomplete="new-password" minlength="8" maxlength="20"
+                                       class="fm-input {% if form.password.errors %}is-invalid{% endif %}"
+                                       placeholder="حداقل ۸ کاراکتر">
+                                <button type="button" class="fm-pass-toggle" data-target="id_password"
+                                        aria-label="نمایش رمز عبور">
+                                    <i class="fa fa-eye" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            {% for e in form.password.errors %}<span class="fm-field__err">{{ e }}</span>{% endfor %}
+                            <span class="fm-field__hint">بین ۸ تا ۲۰ کاراکتر.</span>
+                        </div>
+
+                        <div class="fm-check">
+                            <input type="checkbox" id="agree" name="agree" required>
+                            <label for="agree">
+                                <a href="{% url 'pages:detail' 'قوانین-و-مقررات' %}" target="_blank" rel="noopener">شرایط و قوانین</a>
+                                استفاده از سرویس‌های {{ site_name }} را مطالعه کرده‌ام و می‌پذیرم.
+                            </label>
+                        </div>
+
+                        <button type="submit" class="fm-btn fm-btn--primary fm-btn--block">
+                            <i class="fa fa-user-plus" aria-hidden="true"></i> ساخت حساب کاربری
+                        </button>
+                    </form>
+
+                    <p class="fm-auth__alt">
+                        قبلاً ثبت‌نام کرده‌اید؟
+                        <a href="{% url 'account:login' %}">ورود به حساب</a>
+                    </p>
                 </div>
+
+                <ul class="fm-auth__perks">
+                    <li><i class="fa fa-bolt" aria-hidden="true"></i> دانلود آنی پس از پرداخت</li>
+                    <li><i class="fa fa-cloud-arrow-down" aria-hidden="true"></i> دسترسی همیشگی به فایل‌های خریداری‌شده</li>
+                    <li><i class="fa fa-shield-halved" aria-hidden="true"></i> پرداخت امن از درگاه بانکی</li>
+                </ul>
             </div>
         </div>
-
     </main>
 {% endblock %}

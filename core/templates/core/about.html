@@ -9,51 +9,37 @@
 {% load custom_filters %}
 
 {% block content %}
-    <main class="cart-page default space-top-30">
-        <div class="container"><h1 style="font-size:16px;font-weight:700;color:#46A9AE;margin:0 8px 6px;">درباره {{ site_name }}</h1></div>
+    <main class="cart-page default">
+        {% include 'includes/page_head.html' with title='درباره ما' subtitle='داستان، تعهدها و تیم پشت '|add:site_name %}
         <div class="container">
             <div class="row">
                 <div class="contact_us_content col-12 mx-auto">
-                    <header class="card-header">
-                        <h3 class="card-title"><span>درباره ما</span></h3>
-                    </header>
-                    <div class="account-box contact_us_page">
+                    {% comment %}محتوای درباره ما متن ایستاست — قبلاً داخل یک فرم پیچیده شده بود
+                       و استایل فرم را به ارث می‌برد. حالا به‌صورت محتوای متنی رندر می‌شود.{% endcomment %}
+                    <article class="fm-panel fm-prose">
+                        {{ site_settings.text_about_us|safe }}
+                    </article>
 
-                        <div class="account-box-content">
-                            <form class="form-account">
-                                <div class="row">
-                                    {{ site_settings.text_about_us|safe }}
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    <div class="row space-top-30">
-                        <div class="col-12 col-md-4 text-center space-bottom-15">
-                            <div class="card border_all" style="padding: 25px 15px;">
-                                <i class="fa fa-file-shield colormain" style="font-size: 34px;margin-bottom: 10px;"></i>
-                                <h4 style="font-weight: 800;">لایسنس رسمی و اورجینال</h4>
-                                <p style="font-size: 13px;color: #6b7a8c;line-height: 2;">
-                                    تمام فایل‌ها با لایسنس معتبر ارائه می‌شوند و صحت هر فایل پیش از انتشار توسط تیم فنی بررسی شده است.
-                                </p>
+                    <div class="row space-top-30 fm-feature-grid">
+                        <div class="col-12 col-md-4 space-bottom-15">
+                            <div class="fm-feature">
+                                <div class="fm-feature__icon"><i class="fa fa-file-shield" aria-hidden="true"></i></div>
+                                <h3>لایسنس رسمی و اورجینال</h3>
+                                <p>تمام فایل‌ها با لایسنس معتبر ارائه می‌شوند و صحت هر فایل پیش از انتشار توسط تیم فنی بررسی شده است.</p>
                             </div>
                         </div>
-                        <div class="col-12 col-md-4 text-center space-bottom-15">
-                            <div class="card border_all" style="padding: 25px 15px;">
-                                <i class="fa fa-bolt colormain" style="font-size: 34px;margin-bottom: 10px;"></i>
-                                <h4 style="font-weight: 800;">تحویل آنی</h4>
-                                <p style="font-size: 13px;color: #6b7a8c;line-height: 2;">
-                                    بلافاصله پس از پرداخت، لینک دانلود اختصاصی شما فعال می‌شود؛ بدون انتظار و بدون مراجعه حضوری.
-                                </p>
+                        <div class="col-12 col-md-4 space-bottom-15">
+                            <div class="fm-feature">
+                                <div class="fm-feature__icon"><i class="fa fa-bolt" aria-hidden="true"></i></div>
+                                <h3>تحویل آنی</h3>
+                                <p>بلافاصله پس از پرداخت، لینک دانلود اختصاصی شما فعال می‌شود؛ بدون انتظار و بدون مراجعه حضوری.</p>
                             </div>
                         </div>
-                        <div class="col-12 col-md-4 text-center space-bottom-15">
-                            <div class="card border_all" style="padding: 25px 15px;">
-                                <i class="fa fa-headset colormain" style="font-size: 34px;margin-bottom: 10px;"></i>
-                                <h4 style="font-weight: 800;">پشتیبانی واقعی</h4>
-                                <p style="font-size: 13px;color: #6b7a8c;line-height: 2;">
-                                    تیم فنی ما در نصب، راه‌اندازی و استفاده از فایل‌ها همراه شماست؛ پاسخگوی خریداران هستیم، نه رهاکننده.
-                                </p>
+                        <div class="col-12 col-md-4 space-bottom-15">
+                            <div class="fm-feature">
+                                <div class="fm-feature__icon"><i class="fa fa-headset" aria-hidden="true"></i></div>
+                                <h3>پشتیبانی واقعی</h3>
+                                <p>تیم فنی ما در نصب، راه‌اندازی و استفاده از فایل‌ها همراه شماست؛ پاسخگوی خریداران هستیم، نه رهاکننده.</p>
                             </div>
                         </div>
                     </div>

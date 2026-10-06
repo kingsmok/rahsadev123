@@ -1,1 +1,12 @@
-{% extends 'base.html' %}{% block meta_robots %}<meta name="robots" content="noindex, follow">{% endblock %}{% block title %}خطای 404{% endblock %}{% block content %}<main class="container py-5 text-center"><h1>404</h1><p>متأسفانه مشکلی رخ داده است. لطفاً دوباره تلاش کنید.</p><a class="btn btn-primary" href="{% url 'core:home' %}">بازگشت به فروشگاه</a></main>{% endblock %}
+{% extends 'errors/_base_error.html' %}
+
+{% block title %}این صفحه پیدا نشد | خطای 404{% endblock %}
+
+{% block err_code %}404{% endblock %}
+{% block err_title %}این صفحه پیدا نشد{% endblock %}
+{% block err_text %}نشانی‌ای که دنبالش بودید وجود ندارد یا جابه‌جا شده است. می‌توانید از جست‌وجو استفاده کنید یا از میان‌برهای زیر ادامه دهید.{% endblock %}
+{% block err_actions %}
+                            <a class="fm-btn fm-btn--primary" href="{% url 'core:home' %}"><i class="fa fa-home" aria-hidden="true"></i> بازگشت به فروشگاه</a>
+                            <a class="fm-btn fm-btn--ghost" href="{% url 'product:product_list' %}"><i class="fa fa-folder-open" aria-hidden="true"></i> مشاهده همه فایل‌ها</a>
+                            <a class="fm-btn fm-btn--ghost" href="{% url 'blog:article_list' %}"><i class="fa fa-newspaper" aria-hidden="true"></i> وبلاگ</a>
+{% endblock %}

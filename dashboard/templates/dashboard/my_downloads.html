@@ -5,7 +5,8 @@
 {% load jalali_tags %}
 
 {% block content %}
-    <main class="cart-page default space-top-30">
+    <main class="cart-page default">
+        {% include 'includes/page_head.html' with title='دانلودهای من' subtitle='فایل‌هایی که خریده‌اید، همراه با اعتبار و تعداد دانلود باقی‌مانده.' parent='پنل کاربری' parent_url='/dashboard/' %}
         <div class="container">
             <div class="row">
                 <div class="col-12">

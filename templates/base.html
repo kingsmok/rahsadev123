@@ -68,17 +68,20 @@
     <link href="{% static 'css/icon.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/plugins/owl.carousel.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/plugins/owl.theme.default.min.css' %}" rel="stylesheet"/>
-    <link href="{% static 'css/mainc74d.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/style.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/nouislider.min.css' %}" rel="stylesheet"/>
     <!-- only single -->
     <link href="{% static 'css/plugins/prettyphoto/css/prettyPhoto.css' %}" rel="stylesheet"/>
     <!-- only single -->
-    <link href="{% static 'css/mainc81e.css' %}" rel="stylesheet"/>
+    {# قالب فروشگاه (یکپارچه‌شده از mainc74d.css + mainc81e.css که نسخه تکراری یکدیگر بودند) #}
+    <link href="{% static 'css/theme.css' %}" rel="stylesheet"/>
     <!-- SweetAlert2 (local) -->
     <link href="{% static 'css/plugins/sweetalert2.min.css' %}" rel="stylesheet"/>
     <!-- به‌روزرسانی ۲۰۲۶: وزیرمتن + حالت شب + پولیش مدرن -->
     <link href="{% static 'css/modern-2026.css' %}" rel="stylesheet"/>
+    <!-- لایه نهایی ۲۰۲۶: توکن‌های رنگ، تایپوگرافی، کامپوننت‌های مشترک -->
+    <link href="{% static 'css/fm-design-system.css' %}" rel="stylesheet"/>
+    <link href="{% static 'css/fm-dashboard.css' %}" rel="stylesheet"/>
 </head>
 
 <body class="index-page sidebar-collapse">
@@ -319,6 +322,23 @@
         </nav>
     </header>
     <!-- end pc header -->
+
+    {% comment %}پیام‌های سراسری جنگو. صفحاتی که پیام را خودشان جای دیگری نشان می‌دهند
+       (مثل سبد خرید) این بلاک را خالی بازنویسی می‌کنند.{% endcomment %}
+    {% block messages %}
+        {% if messages %}
+            <div class="container fm-messages-wrap">
+                <div class="fm-messages" role="status" aria-live="polite">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags|default:'info' }}">
+                            <i class="fa {% if message.tags == 'success' %}fa-circle-check{% elif message.tags == 'error' or message.tags == 'danger' %}fa-circle-exclamation{% elif message.tags == 'warning' %}fa-triangle-exclamation{% else %}fa-circle-info{% endif %}" aria-hidden="true"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    {% endblock %}
 
     {% block content %}{% endblock %}
 

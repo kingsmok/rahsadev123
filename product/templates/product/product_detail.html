@@ -51,26 +51,20 @@
         <div class="container">
             <div class="row">
                 <div class="col-12">
-                    <nav>
-                        <ul class="breadcrumb">
+                    <nav aria-label="مسیر راهنما">
+                        <ol class="fm-crumbs fm-crumbs--product">
                             <li>
-                                <a href="{% url 'core:home' %}" style="color: #61BEC3"><i class="fa fa-home"
-                                                                                          aria-hidden="true"></i></a>
+                                <a href="{% url 'core:home' %}"><i class="fa fa-home" aria-hidden="true"></i> خانه</a>
                             </li>
+                            <li><a href="{% url 'product:product_list' %}">همه فایل‌ها</a></li>
                             {% for category in products.category.all %}
-                                <li>
-                                    <a href="{% url 'product:category_product_list' category.slug %}"><span>{{ category.title }}</span></a>
-                                </li>
+                                <li><a href="{% url 'product:category_product_list' category.slug %}">{{ category.title }}</a></li>
                             {% endfor %}
                             {% for brand in products.brand.all %}
-                                <li>
-                                    <a href="{% url 'product:brand_product_list' brand.slug %}"><span>{{ brand.title }}</span></a>
-                                </li>
+                                <li><a href="{% url 'product:brand_product_list' brand.slug %}">{{ brand.title }}</a></li>
                             {% endfor %}
-                            <li>
-                                <span>  {{ products.title|truncatewords:5 }}  </span>
-                            </li>
-                        </ul>
+                            <li aria-current="page">{{ products.title|truncatewords:5 }}</li>
+                        </ol>
                     </nav>
                 </div>
             </div>
@@ -360,8 +354,9 @@
                                                 </h3>
                                             </header>
                                             <div class="parent-expert default">
-                                                <div class="content-expert">
-                                                    <p>{{ products.description|safe }}</p>
+                                                {# توضیحات محصول HTML است و نباید داخل <p> قرار گیرد #}
+                                                <div class="content-expert fm-prose">
+                                                    {{ products.description|safe }}
                                                 </div>
                                             </div>
 

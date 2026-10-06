@@ -4,6 +4,9 @@
 {% load custom_filters %}
 {% load jalali_tags %}
 
+{# پیام‌ها در همین صفحه کنار فرم کد تخفیف نمایش داده می‌شوند #}
+{% block messages %}{% endblock %}
+
 {% block content %}
     <style>
         .coupon-message {
@@ -27,7 +30,8 @@
             color: #856404;
         }
     </style>
-    <main class="cart-page default space-top-30">
+    <main class="cart-page default">
+        {% include 'includes/page_head.html' with title='سبد خرید' subtitle='فایل‌های انتخابی خود را بررسی و سفارش را نهایی کنید.' %}
         <div class="container">
             <div class="row">
                 <div class="col-12 text-center">

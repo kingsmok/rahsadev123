@@ -332,7 +332,10 @@
             }
         }
     </style>
-    <main class="order-delivered default space-top-30">
+    <main class="order-delivered default">
+        {% with order_title='فاکتور سفارش '|add:order.order_number %}
+            {% include 'includes/page_head.html' with title=order_title subtitle='جزئیات سفارش، فایل‌های خریداری‌شده و لینک‌های دانلود.' parent='پنل کاربری' parent_url='/dashboard/' parent2='سفارش‌های من' parent2_url='/dashboard/orders/' %}
+        {% endwith %}
         <div class="container">
             <div class="row">
                 <div class="col-xl-9 col-lg-8 col-md-12 order-2">
