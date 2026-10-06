@@ -41,6 +41,7 @@ th{color:#8795a5;font-weight:600;font-size:11.5px}
 <a href="{% url 'admin:cart_order_changelist' %}">▤ سفارش‌ها</a>
 <a href="{% url 'admin:payments_paymenttransaction_changelist' %}">৳ تراکنش‌ها</a>
 <a href="{% url 'admin:payments_gatewaysettings_changelist' %}">⚙ درگاه‌های پرداخت</a>
+<a href="{% url 'admin:core_redirect_changelist' %}">↪ ریدایرکت‌ها{% if redirects_count %} ({{ redirects_count }}){% endif %}</a>
 <a href="{% url 'admin:downloads_downloadtoken_changelist' %}">↧ توکن‌های دانلود</a>
 <div class="sep">خدمات طراحی سایت</div>
 <a href="{% url 'admin:services_servicepackage_changelist' %}">▣ پکیج‌های طراحی</a>

@@ -88,3 +88,48 @@ class ContactUs(models.Model):
 
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
+
+
+class Redirect(models.Model):
+    """ریدایرکت قابل مدیریت از پنل — هدایت آدرس‌های قدیمی به جدید.
+
+    نوع ۳۰۱ (دائمی) برای سئو استفاده می‌شود تا اعتبار آدرس قدیمی به جدید منتقل شود.
+    """
+
+    STATUS_CODES = (
+        ('301', 'دائمی (301)'),
+        ('302', 'موقت (302)'),
+    )
+
+    old_path = models.CharField(max_length=500, unique=True, verbose_name='آدرس قدیمی')
+    new_path = models.CharField(max_length=500, verbose_name='آدرس جدید')
+    status_code = models.CharField(max_length=3, choices=STATUS_CODES, default='301', verbose_name='نوع ریدایرکت')
+    is_active = models.BooleanField(default=True, verbose_name='فعال')
+    hits = models.PositiveIntegerField(default=0, editable=False, verbose_name='دفعات استفاده')
+    note = models.CharField(max_length=255, blank=True, verbose_name='توضیح')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='تاریخ به‌روزرسانی')
+
+    class Meta:
+        verbose_name = 'ریدایرکت'
+        verbose_name_plural = 'ریدایرکت‌ها'
+        ordering = ['old_path']
+
+    def __str__(self):
+        return f'{self.old_path} → {self.new_path}'
+
+    @staticmethod
+    def normalize_path(path):
+        """نرمال‌سازی مسیر: بدون فاصله اضافه، با اسلش ابتدا."""
+        path = (path or '').strip()
+        if not path:
+            return '/'
+        if not path.startswith('/') and not path.startswith(('http://', 'https://')):
+            path = '/' + path
+        return path
+
+    def save(self, *args, **kwargs):
+        self.old_path = self.normalize_path(self.old_path)
+        if not self.new_path.startswith(('http://', 'https://')):
+            self.new_path = self.normalize_path(self.new_path)
+        super().save(*args, **kwargs)

@@ -12,6 +12,12 @@ from core.sitemaps import (
 from core import views as core_views
 from dashboard.admin_views import admin_home
 
+# هندلر خطاهای سفارشی (قالب اختصاصی + noindex)
+handler400 = 'core.views.custom_400'
+handler403 = 'core.views.custom_403'
+handler404 = 'core.views.custom_404'
+handler500 = 'core.views.custom_500'
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('admin-panel/', admin_home, name='admin_home'),

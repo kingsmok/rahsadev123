@@ -728,6 +728,18 @@ class Command(BaseCommand):
             )
         self.stdout.write('تنظیمات درگاه‌های پرداخت ثبت شد (زرین‌پال فعال؛ مرچنت کد را از پنل مدیریت وارد کنید).')
 
+        # ------------------------------------------------------------------ ریدایرکت‌های نمونه
+        from core.models import Redirect
+        sample_redirects = [
+            ('/shop/', '/products/', 'نمونه: مسیر قدیمی فروشگاه'),
+            ('/faq/', '/pages/سوالات-متداول/', 'نمونه: مسیر کوتاه سوالات متداول'),
+            ('/about-us/', '/about/', 'نمونه: مسیر قدیمی درباره ما'),
+            ('/blog/posts/', '/blog/', 'نمونه: مسیر قدیمی وبلاگ'),
+        ]
+        for old, new, note in sample_redirects:
+            Redirect.objects.get_or_create(old_path=old, defaults={'new_path': new, 'status_code': '301', 'is_active': True, 'note': note})
+        self.stdout.write('ریدایرکت‌های نمونه ثبت شد (قابل مدیریت از پنل → ریدایرکت‌ها).')
+
         # ------------------------------------------------------------------ کد تخفیف خوش‌آمدگویی
         from datetime import timedelta
         if not Coupon.objects.filter(code='WELCOME10').exists():

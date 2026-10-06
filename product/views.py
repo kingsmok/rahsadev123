@@ -23,7 +23,11 @@ def _products_per_page():
 
 
 def redirect_to_home(request):
-    return redirect('core:home')
+    """هدایت مسیرهای خالی (بدون نامک) به صفحه مرتبط، نه صفحه اصلی."""
+    path = request.path
+    if path.startswith('/blog'):
+        return redirect('blog:article_list')
+    return redirect('product:product_list')
 
 
 def get_pages_to_show(current_page, total_pages):

@@ -62,3 +62,16 @@ class ContactUsAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
     @admin.display(description='تاریخ ارسال', ordering='date_send')
     def get_date_send_jalali(self, obj):
         return datetime2jalali(obj.date_send).strftime('%a, %d %b %Y')
+
+
+@admin.register(models.Redirect)
+class RedirectAdmin(admin.ModelAdmin):
+    list_display = ['old_path', 'new_path', 'status_code', 'is_active', 'hits', 'note', 'get_updated_jalali']
+    list_editable = ['status_code', 'is_active']
+    list_filter = ['status_code', 'is_active']
+    search_fields = ['old_path', 'new_path', 'note']
+    list_per_page = 50
+
+    @admin.display(description='آخرین استفاده', ordering='updated_at')
+    def get_updated_jalali(self, obj):
+        return datetime2jalali(obj.updated_at).strftime('%Y/%m/%d - %H:%M')

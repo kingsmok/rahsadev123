@@ -35,6 +35,28 @@ class ProductCategory(models.Model):
     icon = models.CharField(max_length=100, blank=True, help_text='نام آیکون Font Awesome مثلاً fa-wordpress', verbose_name='آیکون')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
 
+    def save(self, *args, **kwargs):
+        """ریدایرکت خودکار ۳۰۱ هنگام تغییر نامک دسته‌بندی (حفظ اعتبار سئو)."""
+        from core.models import Redirect
+        if self.pk:
+            try:
+                old_slug = ProductCategory.objects.filter(pk=self.pk).values_list('slug', flat=True).first()
+                if old_slug and old_slug != self.slug:
+                    # جلوگیری از حلقه: ریدایرکت معکوس قبلی حذف شود
+                    Redirect.objects.filter(old_path=f'/products/category/{self.slug}/').delete()
+                    Redirect.objects.update_or_create(
+                        old_path=f'/products/category/{old_slug}/',
+                        defaults={
+                            'new_path': f'/products/category/{self.slug}/',
+                            'status_code': '301',
+                            'is_active': True,
+                            'note': 'تغییر نامک دسته‌بندی: ' + str(self.title),
+                        },
+                    )
+            except Exception:
+                pass
+        super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = 'دسته بندی'
         verbose_name_plural = 'دسته بندی ها'
@@ -55,6 +77,28 @@ class ProductBrand(models.Model):
     image = models.ImageField(upload_to='images/brands', null=True, blank=True, verbose_name='تصویر برند')
     views = models.IntegerField(default=0, verbose_name='بازدید ها')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
+
+    def save(self, *args, **kwargs):
+        """ریدایرکت خودکار ۳۰۱ هنگام تغییر نامک برند (حفظ اعتبار سئو)."""
+        from core.models import Redirect
+        if self.pk:
+            try:
+                old_slug = ProductBrand.objects.filter(pk=self.pk).values_list('slug', flat=True).first()
+                if old_slug and old_slug != self.slug:
+                    # جلوگیری از حلقه: ریدایرکت معکوس قبلی حذف شود
+                    Redirect.objects.filter(old_path=f'/products/brand/{self.slug}/').delete()
+                    Redirect.objects.update_or_create(
+                        old_path=f'/products/brand/{old_slug}/',
+                        defaults={
+                            'new_path': f'/products/brand/{self.slug}/',
+                            'status_code': '301',
+                            'is_active': True,
+                            'note': 'تغییر نامک برند: ' + str(self.title),
+                        },
+                    )
+            except Exception:
+                pass
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'برند / سازنده'
@@ -107,6 +151,28 @@ class Product(models.Model):
     operating_system = models.CharField(max_length=100, blank=True, null=True, verbose_name='سیستم عامل سازگار')
     support_duration = models.CharField(max_length=60, blank=True, verbose_name='مدت پشتیبانی')
     update_duration = models.CharField(max_length=60, blank=True, verbose_name='مدت دریافت به‌روزرسانی')
+
+    def save(self, *args, **kwargs):
+        """ریدایرکت خودکار ۳۰۱ هنگام تغییر نامک محصول (حفظ اعتبار سئو)."""
+        from core.models import Redirect
+        if self.pk:
+            try:
+                old_slug = Product.objects.filter(pk=self.pk).values_list('slug', flat=True).first()
+                if old_slug and old_slug != self.slug:
+                    # جلوگیری از حلقه: ریدایرکت معکوس قبلی حذف شود
+                    Redirect.objects.filter(old_path=f'/products/{self.pid}/{self.slug}/').delete()
+                    Redirect.objects.update_or_create(
+                        old_path=f'/products/{self.pid}/{old_slug}/',
+                        defaults={
+                            'new_path': f'/products/{self.pid}/{self.slug}/',
+                            'status_code': '301',
+                            'is_active': True,
+                            'note': 'تغییر نامک محصول: ' + str(self.title),
+                        },
+                    )
+            except Exception:
+                pass
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'محصول'
