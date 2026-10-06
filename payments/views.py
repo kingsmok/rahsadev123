@@ -66,8 +66,9 @@ def start_payment(request, order_number):
 
     # فقط درگاه‌های فعال‌شده در پنل مدیریت قابل استفاده‌اند
     gs = GatewaySettings.objects.filter(key=gateway).first()
-    if gs and not gs.is_enabled:
-        messages.error(request, f'درگاه «{gs.title}» در حال حاضر غیرفعال است.')
+    if not gs or not gs.is_enabled:
+        gateway_title = gs.title if gs else 'انتخاب‌شده'
+        messages.error(request, f'درگاه «{gateway_title}» در حال حاضر غیرفعال است.')
         return redirect('cart:shopping_payment')
 
     tx = PaymentTransaction.objects.create(order=order, gateway=gateway, amount=order.final_price)
@@ -87,7 +88,7 @@ def start_payment(request, order_number):
 @login_required
 def callback(request):
     authority = request.GET.get('Authority', '')
-    tx = get_object_or_404(PaymentTransaction, authority=authority)
+    tx = get_object_or_404(PaymentTransaction, authority=authority, order__user=request.user)
     if request.GET.get('Status') != 'OK':
         tx.status = 'failed'; tx.save(update_fields=['status', 'updated_at'])
         return HttpResponse('پرداخت لغو شد.', status=400)

@@ -89,11 +89,12 @@
                         </div>
 
                         <div class="fm-check">
-                            <input type="checkbox" id="agree" name="agree" required>
+                            <input type="checkbox" id="agree" name="agree" required {% if form.agree.value %}checked{% endif %} aria-describedby="agree-error">
                             <label for="agree">
                                 <a href="{% url 'pages:detail' 'قوانین-و-مقررات' %}" target="_blank" rel="noopener">شرایط و قوانین</a>
                                 استفاده از سرویس‌های {{ site_name }} را مطالعه کرده‌ام و می‌پذیرم.
                             </label>
+                            {% for e in form.agree.errors %}<span id="agree-error" class="fm-field__err">{{ e }}</span>{% endfor %}
                         </div>
 
                         <button type="submit" class="fm-btn fm-btn--primary fm-btn--block">

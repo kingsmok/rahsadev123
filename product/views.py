@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal, InvalidOperation
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -43,22 +44,42 @@ def get_pages_to_show(current_page, total_pages):
     return [1, '...', current_page - 1, current_page, current_page + 1, '...', total_pages]
 
 
+def _positive_decimal(value):
+    """Return a non-negative decimal filter value or ``None`` for malformed input."""
+    if value in (None, ''):
+        return None
+    try:
+        parsed = Decimal(str(value).replace(',', '').strip())
+    except (InvalidOperation, ValueError):
+        return None
+    return parsed if parsed >= 0 else None
+
+
 def _apply_digital_filters(request, products):
-    """فیلترهای مخصوص محصولات دیجیتال: قیمت، نوع محصول، سازنده و دانلود آنی."""
-    min_price = request.GET.get('min_price')
-    max_price = request.GET.get('max_price')
-    selected_types = request.GET.getlist('type')
-    selected_brands = request.GET.getlist('brand')
+    """فیلترهای مخصوص محصولات دیجیتال: قیمت، نوع محصول، سازنده و دانلود آنی.
+
+    Query strings are user input: invalid prices and brand ids must be ignored,
+    rather than causing a database conversion error or a 500 response.
+    """
+    min_price = _positive_decimal(request.GET.get('min_price'))
+    max_price = _positive_decimal(request.GET.get('max_price'))
+    selected_types = [value for value in request.GET.getlist('type') if value in dict(PRODUCT_TYPES)]
+    selected_brands = [value for value in request.GET.getlist('brand') if value.isdigit()]
     instant_only = request.GET.get('instant')
 
-    if min_price and max_price:
-        products = products.filter(price__gte=min_price, price__lte=max_price)
+    if min_price is not None:
+        products = products.filter(price__gte=min_price)
+    if max_price is not None:
+        products = products.filter(price__lte=max_price)
+    if min_price is not None and max_price is not None and min_price > max_price:
+        # An inverted range cannot match anything but should remain a valid request.
+        products = products.none()
 
     if selected_types:
         products = products.filter(product_type__in=selected_types)
 
     if selected_brands:
-        products = products.filter(brand__id__in=selected_brands)
+        products = products.filter(brand__id__in=[int(value) for value in selected_brands])
 
     if instant_only == '1':
         products = products.filter(is_unlimited=True)
@@ -233,13 +254,20 @@ def product_detail(request, pid, slug):
     products = get_object_or_404(Product.objects.prefetch_related('product_images'), pid=pid, slug=slug)
     product_image = products.product_images.all()
 
-    if request.method == 'POST' and request.headers.get('Content-Type') == 'application/json':
-        data = json.loads(request.body)
-        body = data.get('body')
-        if request.user.is_authenticated and body:
-            comment = ProductComment.objects.create(body=body, product=products, author=request.user)
-            return JsonResponse({'status': 'success', 'comment_id': comment.id})
-        return JsonResponse({'status': 'fail'}, status=400)
+    if request.method == 'POST' and request.headers.get('Content-Type', '').startswith('application/json'):
+        try:
+            data = json.loads(request.body or '{}')
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return JsonResponse({'status': 'fail', 'message': 'درخواست دیدگاه نامعتبر است.'}, status=400)
+        body = (data.get('body') or '').strip()
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'fail', 'message': 'برای ثبت دیدگاه وارد حساب شوید.'}, status=403)
+        if not body:
+            return JsonResponse({'status': 'fail', 'message': 'متن دیدگاه را وارد کنید.'}, status=400)
+        if len(body) > 2000:
+            return JsonResponse({'status': 'fail', 'message': 'متن دیدگاه بیش از حد طولانی است.'}, status=400)
+        comment = ProductComment.objects.create(body=body, product=products, author=request.user)
+        return JsonResponse({'status': 'success', 'comment_id': comment.id})
 
     comments = products.product_comments.filter(status='published').order_by('-created_at')
 

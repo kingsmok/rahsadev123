@@ -11,7 +11,8 @@ from .models import Wishlist, Address, Notification
 from .forms import AddressForm, ProfileEditForm
 from django.db.models import Q
 from accounts.forms import ChangePasswordForm
-from django.contrib.auth import logout, update_session_auth_hash
+from django.contrib.auth import update_session_auth_hash
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 
 
@@ -206,44 +207,41 @@ def orders_return(request):
     user = request.user
     profile = Profile.objects.get(user=user)
 
+    def respond(success, message):
+        """Use JSON for the enhanced form and a useful redirect without JavaScript."""
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': success, 'message': message})
+        if success:
+            messages.success(request, message)
+        else:
+            messages.error(request, message)
+        return redirect('dashboard:orders_return')
+
     if request.method == 'POST':
-        order_number = request.POST.get('order_number')
+        order_number = (request.POST.get('order_number') or '').strip()
+        if not order_number:
+            return respond(False, 'لطفاً کد سفارش را وارد کنید.')
 
         try:
             order = Order.objects.get(order_number=order_number, user=user)
-
-            if not profile.card_number:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'برای لغو سفارش باید شماره کارت خود را در پروفایل ثبت کنید.'
-                })
-
-            time_since_order = timezone.now() - order.created_at
-            if time_since_order.total_seconds() > 48 * 3600:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'زمان لغو سفارش گذشته است. فقط تا 48 ساعت پس از ثبت سفارش امکان لغو وجود دارد.'
-                })
-
-            if order.status not in ['paid', 'shipped', 'pending']:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'این سفارش قابل لغو نیست. فقط سفارشات با وضعیت "پرداخت شده"، "ارسال شده" یا "در انتظار پرداخت" قابل لغو هستند.'
-                })
-
-            order.status = 'processing'
-            order.save()
-
-            return JsonResponse({
-                'success': True,
-                'message': 'سفارش شما در حال پردازش است. پس از تایید لغو سفارش، در بخش اعلان ها اطلاع خواهیم داد.'
-            })
-
         except Order.DoesNotExist:
-            return JsonResponse({
-                'success': False,
-                'message': 'سفارشی با این شماره یافت نشد.'
-            })
+            return respond(False, 'سفارشی با این شماره یافت نشد.')
+
+        if not profile.card_number:
+            return respond(False, 'برای لغو سفارش باید شماره کارت خود را در پروفایل ثبت کنید.')
+
+        time_since_order = timezone.now() - order.created_at
+        if time_since_order.total_seconds() > 48 * 3600:
+            return respond(False, 'زمان لغو سفارش گذشته است. فقط تا 48 ساعت پس از ثبت سفارش امکان لغو وجود دارد.')
+
+        # FileMarket delivers digital purchases from the account dashboard; a
+        # legacy physical-shipping state must never be presented as cancellable.
+        if order.status not in ['paid', 'pending']:
+            return respond(False, 'این سفارش قابل لغو نیست. فقط سفارش‌های پرداخت‌شده یا در انتظار پرداخت قابل بررسی هستند.')
+
+        order.status = 'processing'
+        order.save(update_fields=['status', 'updated_at'])
+        return respond(True, 'درخواست لغو سفارش شما ثبت شد. پس از بررسی، نتیجه در بخش اعلان‌ها اطلاع‌رسانی می‌شود.')
 
     context = {
         'profile': profile,
@@ -273,6 +271,7 @@ def wishlist_products(request):
 
 
 @login_required
+@require_POST
 def add_to_wishlist(request, product_id):
     product = get_object_or_404(Product, pk=product_id)
     wishlist_item, created = Wishlist.objects.get_or_create(user=request.user, product=product)
@@ -290,6 +289,7 @@ def add_to_wishlist(request, product_id):
 
 
 @login_required
+@require_POST
 def remove_from_wishlist(request, product_id):
     product = get_object_or_404(Product, pk=product_id)
     wishlist_item = get_object_or_404(Wishlist, user=request.user, product=product)
@@ -309,11 +309,13 @@ def user_addresses(request):
     profile = Profile.objects.get(user=user)
     addresses = Address.objects.filter(user=user).order_by('-created_at')
 
+    show_address_modal = False
     if request.method == 'POST':
         if 'delete_address' in request.POST:
             address_id = request.POST.get('delete_address')
             address = get_object_or_404(Address, pk=address_id, user=user)
             address.delete()
+            messages.success(request, 'آدرس با موفقیت حذف شد.')
             return redirect('dashboard:user_addresses')
 
         if 'set_default' in request.POST:
@@ -321,6 +323,7 @@ def user_addresses(request):
             address = get_object_or_404(Address, pk=address_id, user=user)
             address.is_default = True
             address.save()
+            messages.success(request, 'آدرس پیش‌فرض شما به‌روزرسانی شد.')
             return redirect('dashboard:user_addresses')
 
         form = AddressForm(request.POST)
@@ -328,7 +331,9 @@ def user_addresses(request):
             address = form.save(commit=False)
             address.user = user
             address.save()
+            messages.success(request, 'آدرس جدید با موفقیت ثبت شد.')
             return redirect('dashboard:user_addresses')
+        show_address_modal = True
     else:
         form = AddressForm()
 
@@ -343,6 +348,7 @@ def user_addresses(request):
 
         'addresses': object_list,
         'form': form,
+        'show_address_modal': show_address_modal,
         'pages_to_show': pages_to_show,
     }
     return render(request, 'dashboard/user_addresses.html', context)
@@ -385,24 +391,33 @@ def user_profile(request):
 
 @login_required
 def edit_profile(request, username):
+    """Edit only the authenticated user's profile.
+
+    The username remains in the historical URL for compatibility, but must never
+    be used to select another customer's profile.
+    """
     user = request.user
-    profile = Profile.objects.get(user=user)
+    profile = get_object_or_404(Profile, user=user)
+    if username != user.username:
+        messages.error(request, 'شما فقط می‌توانید اطلاعات حساب خودتان را ویرایش کنید.')
+        return redirect('dashboard:user_profile')
 
-    user_profile = get_object_or_404(Profile, user__username=username)
     if request.method == 'POST':
-        form = ProfileEditForm(request.POST or None, request.FILES or None, instance=user_profile)
+        form = ProfileEditForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
-            form.save()
-            return redirect('dashboard:home')
+            updated_profile = form.save()
+            # Keep Django's canonical user data in sync with the profile shown
+            # throughout the storefront and admin panel.
+            user.first_name = updated_profile.first_name
+            user.last_name = updated_profile.last_name
+            user.email = updated_profile.email
+            user.save(update_fields=['first_name', 'last_name', 'email'])
+            messages.success(request, 'اطلاعات حساب کاربری شما ذخیره شد.')
+            return redirect('dashboard:user_profile')
     else:
-        form = ProfileEditForm(instance=user_profile)
+        form = ProfileEditForm(instance=profile)
 
-    context = {
-        'profile': profile,
-
-        'form': form,
-    }
-    return render(request, 'dashboard/edit_profile.html', context)
+    return render(request, 'dashboard/edit_profile.html', {'profile': profile, 'form': form})
 
 
 @login_required
@@ -411,26 +426,15 @@ def change_password(request):
     profile = Profile.objects.get(user=user)
 
     if request.method == 'POST':
-        form = ChangePasswordForm(request.POST)
+        form = ChangePasswordForm(request.POST, user=user)
         if form.is_valid():
-            old_password = form.cleaned_data['old_password']
-            new_password = form.cleaned_data['new_password']
-
-            if request.user.check_password(old_password):
-                request.user.set_password(new_password)
-                request.user.save()
-                update_session_auth_hash(request, request.user)
-                logout(request)
-                messages.success(request, 'رمز عبور شما با موفقیت تغییر یافت. لطفاً با رمز عبور جدید وارد شوید.')
-                return redirect('account:login')
-            else:
-                form.add_error('old_password', 'رمز عبور فعلی نادرست است.')
+            user.set_password(form.cleaned_data['new_password'])
+            user.save(update_fields=['password'])
+            # Preserve the current session after a successful password change.
+            update_session_auth_hash(request, user)
+            messages.success(request, 'رمز عبور شما با موفقیت تغییر یافت.')
+            return redirect('dashboard:user_profile')
     else:
-        form = ChangePasswordForm()
+        form = ChangePasswordForm(user=user)
 
-    context = {
-        'profile': profile,
-
-        'form': form,
-    }
-    return render(request, 'dashboard/change_password.html', context)
+    return render(request, 'dashboard/change_password.html', {'profile': profile, 'form': form})

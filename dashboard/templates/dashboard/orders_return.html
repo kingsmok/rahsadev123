@@ -19,19 +19,19 @@
                                 <form id="returnOrderForm" method="post">
                                     {% csrf_token %}
                                     <p>جهت لغو سفارش، ابتدا کد سفارش خود را وارد کرده و سپس دکمه بررسی سفارش را بزنید تا سفارشتان مورد بررسی قرار بگیرد.</p>
-                                    <p class="text-danger"><i class="fa fa-exclamation-circle"></i> توجه: فقط تا 48 ساعت پس از ثبت سفارش امکان لغو وجود دارد.</p>
-                                    <p class="text-danger"><i class="fa fa-exclamation-circle"></i> توجه: در صورت لغو سفارش، هزینه ارسال (50,000 تومان) از مبلغ بازگشتی کسر خواهد شد.</p>
+                                    <p class="text-danger"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> توجه: فقط تا 48 ساعت پس از ثبت سفارش امکان لغو وجود دارد.</p>
+                                    <p class="text-danger"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> توجه: پس از ثبت درخواست، وضعیت سفارش توسط تیم پشتیبانی بررسی و نتیجه در بخش اعلان‌ها اطلاع‌رسانی می‌شود.</p>
                                     <div class="row">
                                         <div class="col-md-3 col-12"></div>
-                                        <div class="col-md-6 col-12 text--center">
+                                        <div class="col-md-6 col-12 text-center">
                                             <div>
-                                                <label class="ui-input">
-                                                    <input class="input_second input_all" type="text" name="order_number" placeholder="2569854710" maxlength="10" required>
-                                                </label>
+                                                <label class="ui-input" for="return-order-number">کد سفارش</label>
+                                                <input class="input_second input_all" id="return-order-number" type="text" name="order_number" placeholder="2569854710" maxlength="20" autocomplete="off" required>
                                             </div>
 
                                             <div>
                                                 <button type="submit" class="btn big_btn btn-main-masai">بررسی سفارش</button>
+                                                <p id="return-order-status" class="fm-form-status" role="status" aria-live="polite"></p>
                                             </div>
                                         </div>
                                         <div class="col-md-3 col-12"></div>
@@ -51,44 +51,31 @@
     </main>
 
     <script>
-        document.getElementById('returnOrderForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            const formData = new FormData(this);
-
-            fetch("{% url 'dashboard:orders_return' %}", {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}'
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({
-                            text: data.message,
-                            icon: 'success',
-                            confirmButtonText: 'تایید',
-                            confirmButtonColor: '#46A9AE'
-                        });
-                    } else {
-                        Swal.fire({
-                            title: 'خطا',
-                            text: data.message,
-                            icon: 'error',
-                            confirmButtonColor: '#e74c3c'
-                        });
-                    }
-                })
-                .catch(error => {
-                    Swal.fire({
-                        title: 'خطا',
-                        text: 'خطایی در ارتباط با سرور رخ داده است.',
-                        icon: 'error',
-                        confirmButtonColor: '#e74c3c'
-                    });
+        document.getElementById('returnOrderForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const form = event.currentTarget;
+            if (!form.checkValidity()) { form.reportValidity(); return; }
+            const button = form.querySelector('[type="submit"]');
+            const status = document.getElementById('return-order-status');
+            button.disabled = true;
+            status.textContent = 'در حال بررسی سفارش…';
+            try {
+                const response = await fetch("{% url 'dashboard:orders_return' %}", {
+                    method: 'POST', body: new FormData(form),
+                    headers: {'X-CSRFToken': '{{ csrf_token }}', 'X-Requested-With': 'XMLHttpRequest'}
                 });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) throw new Error(data.message || 'بررسی سفارش انجام نشد.');
+                status.textContent = data.message;
+                status.className = 'fm-form-status is-success';
+                if (window.Swal) Swal.fire({text: data.message, icon: 'success', confirmButtonText: 'تأیید', confirmButtonColor: '#46a9ae'});
+            } catch (error) {
+                status.textContent = error.message || 'خطایی در ارتباط با سرور رخ داده است.';
+                status.className = 'fm-form-status is-error';
+                if (window.Swal) Swal.fire({title: 'خطا', text: status.textContent, icon: 'error', confirmButtonColor: '#d94848'});
+            } finally {
+                button.disabled = false;
+            }
         });
     </script>
 {% endblock %}

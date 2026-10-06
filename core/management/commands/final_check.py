@@ -217,7 +217,7 @@ class Command(BaseCommand):
         User.objects.filter(username='finaltest').delete()
         r = anon.post('/account/register/', {
             'first_name': 'تست', 'last_name': 'نهایی', 'username': 'finaltest',
-            'email': 'final@test.ir', 'password': 'Xk9Final77'
+            'email': 'final@test.ir', 'password': 'Xk9Final77', 'agree': 'on'
         }, follow=True)
         ok('ثبت‌نام کاربر جدید', User.objects.filter(username='finaltest').exists(),
            'کاربر ساخته شد' if User.objects.filter(username='finaltest').exists() else 'فرم نامعتبر: ' + str(r.context.get('form').errors if r.context and r.context.get('form') else ''))

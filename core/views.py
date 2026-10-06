@@ -1,5 +1,6 @@
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
+from django.contrib import messages
 from .forms import ContactUsForm
 from product.models import ProductBrand, Product
 from django.db import models
@@ -52,14 +53,12 @@ def contact(request):
         form = ContactUsForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('core:home')
+            messages.success(request, 'پیام شما با موفقیت ثبت شد. تیم پشتیبانی در اولین فرصت با شما تماس می‌گیرد.')
+            return redirect('core:contact')
     else:
         form = ContactUsForm()
 
-    context = {
-        'form': form
-    }
-    return render(request, 'core/contact.html', context)
+    return render(request, 'core/contact.html', {'form': form})
 
 
 def about(request):

@@ -50,8 +50,8 @@
                                     <li><i class="fa fa-circle-check" aria-hidden="true"></i> {{ feature }}</li>
                                 {% endfor %}
                             </ul>
-                            <a href="#request-form" class="btn-order {% if not package.is_featured %}outline{% endif %}"
-                               onclick="selectPackage({{ package.id }})">سفارش {{ package.title }}</a>
+                            <button type="button" class="btn-order js-select-package {% if not package.is_featured %}outline{% endif %}"
+                                    data-package-id="{{ package.id }}">سفارش {{ package.title }}</button>
                         </div>
                     </div>
                 {% empty %}
@@ -99,9 +99,13 @@
                     {% for item in portfolio %}
                         <div class="col-12 col-md-4 space-bottom-30">
                             <div class="portfolio-card">
-                                <a href="{{ item.url|default:'#' }}" {% if item.url %}target="_blank" rel="nofollow"{% endif %}>
+                                {% if item.url %}
+                                    <a href="{{ item.url }}" target="_blank" rel="noopener nofollow" aria-label="مشاهده {{ item.title }} در پنجره جدید">
+                                        <img src="{{ item.image.url }}" alt="{{ item.title }}">
+                                    </a>
+                                {% else %}
                                     <img src="{{ item.image.url }}" alt="{{ item.title }}">
-                                </a>
+                                {% endif %}
                                 <div class="body">
                                     <h4>{{ item.title }}</h4>
                                     <span class="cat">{{ item.category }}</span>
@@ -132,19 +136,19 @@
                         <form id="service-request-form">
                             <div class="row">
                                 <div class="col-12 col-md-6 form-group">
-                                    <label>نام و نام خانوادگی *</label>
-                                    <input type="text" name="full_name" class="form-control" required placeholder="مثلاً: علی رضایی">
+                                    <label for="service-full-name">نام و نام خانوادگی <span aria-hidden="true">*</span></label>
+                                    <input type="text" id="service-full-name" name="full_name" class="form-control" required autocomplete="name" minlength="3" placeholder="مثلاً: علی رضایی">
                                 </div>
                                 <div class="col-12 col-md-3 form-group">
-                                    <label>شماره تماس *</label>
-                                    <input type="text" name="phone" class="form-control" required placeholder="09xxxxxxxxx">
+                                    <label for="service-phone">شماره تماس <span aria-hidden="true">*</span></label>
+                                    <input type="tel" id="service-phone" name="phone" class="form-control" required autocomplete="tel" inputmode="tel" dir="ltr" pattern="(?:\+98|0098|0)?9[0-9]{9}" placeholder="09123456789">
                                 </div>
                                 <div class="col-12 col-md-3 form-group">
-                                    <label>ایمیل</label>
-                                    <input type="email" name="email" class="form-control" placeholder="you@example.com">
+                                    <label for="service-email">ایمیل</label>
+                                    <input type="email" id="service-email" name="email" class="form-control" autocomplete="email" dir="ltr" placeholder="you@example.com">
                                 </div>
                                 <div class="col-12 col-md-4 form-group">
-                                    <label>پکیج مورد نظر</label>
+                                    <label for="package-select">پکیج مورد نظر</label>
                                     <select name="package" id="package-select" class="form-control">
                                         <option value="">هنوز تصمیم نگرفته‌ام (مشاوره)</option>
                                         {% for package in packages %}
@@ -153,20 +157,21 @@
                                     </select>
                                 </div>
                                 <div class="col-12 col-md-4 form-group">
-                                    <label>نوع پروژه</label>
-                                    <input type="text" name="project_type" class="form-control" placeholder="مثلاً: فروشگاه اینترنتی پوشاک">
+                                    <label for="service-project-type">نوع پروژه</label>
+                                    <input type="text" id="service-project-type" name="project_type" class="form-control" placeholder="مثلاً: فروشگاه اینترنتی پوشاک">
                                 </div>
                                 <div class="col-12 col-md-4 form-group">
-                                    <label>بودجه تقریبی</label>
-                                    <input type="text" name="budget" class="form-control" placeholder="مثلاً: ۳۰ تا ۵۰ میلیون تومان">
+                                    <label for="service-budget">بودجه تقریبی</label>
+                                    <input type="text" id="service-budget" name="budget" class="form-control" placeholder="مثلاً: ۳۰ تا ۵۰ میلیون تومان">
                                 </div>
                                 <div class="col-12 form-group">
-                                    <label>توضیحات پروژه *</label>
-                                    <textarea name="message" rows="4" class="form-control" required
+                                    <label for="service-message">توضیحات پروژه <span aria-hidden="true">*</span></label>
+                                    <textarea name="message" id="service-message" rows="4" class="form-control" required minlength="10"
                                               placeholder="لطفاً هدف سایت، بخش‌های مورد نیاز و نمونه سایت‌های موردعلاقه‌تان را بنویسید..."></textarea>
                                 </div>
                                 <div class="col-12 text-center">
                                     <button type="submit" class="btn btn-main-masai big_btn">ارسال درخواست</button>
+                                    <p id="service-form-status" class="fm-form-status" role="status" aria-live="polite"></p>
                                 </div>
                             </div>
                         </form>
@@ -177,49 +182,50 @@
     </main>
 
     <script>
-        function selectPackage(packageId) {
+        (function () {
+            const form = document.getElementById('service-request-form');
             const select = document.getElementById('package-select');
-            if (select && packageId) {
-                select.value = String(packageId);
-            }
-        }
+            const status = document.getElementById('service-form-status');
 
-        document.getElementById('service-request-form').addEventListener('submit', function (e) {
-            e.preventDefault();
-            const form = e.target;
-            const submitBtn = form.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-
-            fetch("{% url 'services:request_service' %}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                },
-                body: new FormData(form)
-            })
-                .then(response => response.json())
-                .then(data => {
-                    submitBtn.disabled = false;
-                    Swal.fire({
-                        title: data.success ? 'ثبت شد' : 'خطا',
-                        text: data.message,
-                        icon: data.success ? 'success' : 'error',
-                        confirmButtonText: 'تایید',
-                        confirmButtonColor: '#46A9AE'
-                    });
-                    if (data.success) {
-                        form.reset();
-                    }
-                })
-                .catch(() => {
-                    submitBtn.disabled = false;
-                    Swal.fire({
-                        title: 'خطا',
-                        text: 'مشکلی در ارتباط با سرور پیش آمد.',
-                        icon: 'error',
-                        confirmButtonColor: '#e74c3c'
-                    });
+            document.querySelectorAll('.js-select-package').forEach(button => {
+                button.addEventListener('click', () => {
+                    select.value = button.dataset.packageId;
+                    document.getElementById('request-form').scrollIntoView({behavior: 'smooth', block: 'start'});
+                    select.focus({preventScroll: true});
                 });
-        });
+            });
+
+            if (!form) return;
+            form.addEventListener('submit', async event => {
+                event.preventDefault();
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+                const submitBtn = form.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                status.textContent = 'در حال ثبت درخواست…';
+                status.className = 'fm-form-status';
+                try {
+                    const response = await fetch("{% url 'services:request_service' %}", {
+                        method: 'POST',
+                        headers: {'X-CSRFToken': '{{ csrf_token }}', 'X-Requested-With': 'XMLHttpRequest'},
+                        body: new FormData(form)
+                    });
+                    const data = await response.json();
+                    if (!response.ok || !data.success) throw new Error(data.message || 'اطلاعات فرم معتبر نیست.');
+                    form.reset();
+                    status.textContent = data.message;
+                    status.className = 'fm-form-status is-success';
+                    if (window.Swal) Swal.fire({title: 'ثبت شد', text: data.message, icon: 'success', confirmButtonText: 'تأیید', confirmButtonColor: '#46a9ae'});
+                } catch (error) {
+                    status.textContent = error.message || 'مشکلی در ارتباط با سرور پیش آمد.';
+                    status.className = 'fm-form-status is-error';
+                    if (window.Swal) Swal.fire({title: 'خطا', text: status.textContent, icon: 'error', confirmButtonColor: '#d94848'});
+                } finally {
+                    submitBtn.disabled = false;
+                }
+            });
+        })();
     </script>
 {% endblock %}

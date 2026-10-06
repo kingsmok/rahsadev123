@@ -5,6 +5,11 @@
 {% load custom_filters %}
 {% load jalali_tags %}
 
+{% block extra_css %}
+    <link href="{% static 'css/plugins/owl.carousel.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/owl.theme.default.min.css' %}" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
     <main class="main default space-top-10">
         {# H1 اصلی صفحه برای سئو — روی صفحه خانه بصری نیست تا اسلایدر در صدر بماند #}
@@ -245,9 +250,9 @@
                                                     {% endif %}
                                                 </div>
                                                 <div class="product-seller-details product-seller-details-item-grid">
-                                                    <span class="search_prod_btn">
-                                                        <i class="fa fa fa-cart-arrow-down search_icon_cart" aria-hidden="true" data-product-id="{{ product.id }}" onclick="addToCart(this)"></i>
-                                                    </span>
+                                                    <button type="button" class="search_prod_btn js-add-to-cart" data-product-id="{{ product.id }}" aria-label="افزودن {{ product.title }} به سبد خرید">
+                                                        <i class="fa fa-cart-arrow-down search_icon_cart" aria-hidden="true"></i>
+                                                    </button>
                                                 </div>
                                             </div>
                                         {% endfor %}
@@ -319,9 +324,9 @@
                                                     {% endif %}
                                                 </div>
                                                 <div class="product-seller-details product-seller-details-item-grid">
-                                                    <span class="search_prod_btn">
-                                                        <i class="fa fa fa-cart-arrow-down search_icon_cart" aria-hidden="true" data-product-id="{{ product.id }}" onclick="addToCart(this)"></i>
-                                                    </span>
+                                                    <button type="button" class="search_prod_btn js-add-to-cart" data-product-id="{{ product.id }}" aria-label="افزودن {{ product.title }} به سبد خرید">
+                                                        <i class="fa fa-cart-arrow-down search_icon_cart" aria-hidden="true"></i>
+                                                    </button>
                                                 </div>
                                             </div>
                                         {% endfor %}
@@ -484,55 +489,8 @@
             </div>
         {% endif %}
     </main>
+{% endblock %}
 
-    <script>
-        function addToCart(element) {
-            {% if not request.user.is_authenticated %}
-                Swal.fire({
-                    title: 'ورود به سیستم',
-                    text: 'برای افزودن فایل به سبد خرید، ابتدا باید وارد حساب کاربری خود شوید.',
-                    icon: 'warning',
-                    confirmButtonText: 'ورود',
-                    confirmButtonColor: '#46A9AE',
-                    showCancelButton: true,
-                    cancelButtonText: 'انصراف',
-                    cancelButtonColor: '#e74c3c'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = "{% url 'account:login' %}?next={{ request.path }}";
-                    }
-                });
-                return;
-            {% endif %}
-
-            const productId = element.getAttribute('data-product-id');
-
-            fetch(`/cart/add/${productId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({quantity: 1})
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({
-                            text: 'فایل با موفقیت به سبد خرید اضافه شد',
-                            icon: 'success',
-                            confirmButtonText: 'تایید',
-                            confirmButtonColor: '#46A9AE'
-                        });
-                    } else {
-                        Swal.fire({
-                            title: 'خطا',
-                            text: data.message,
-                            icon: 'error',
-                            confirmButtonColor: '#e74c3c'
-                        });
-                    }
-                });
-        }
-    </script>
+{% block extra_js %}
+    <script src="{% static 'js/plugins/owl.carousel.min.js' %}"></script>
 {% endblock %}

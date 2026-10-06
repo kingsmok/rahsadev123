@@ -22,9 +22,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="javascript:void(0)" class="disabled">
-                                <span>پایان خرید و دانلود</span>
-                            </a>
+                            <span class="disabled" aria-disabled="true">پایان خرید و دانلود</span>
                         </li>
                     </ul>
                 </div>
@@ -61,8 +59,8 @@
                             {% if enabled_gateways %}
                                 <div class="plans">
                                     {% for gateway in enabled_gateways %}
-                                        <label class="plan basic-plan" for="pay1">
-                                            <input {% if forloop.first %}checked{% endif %} type="radio" name="plan" id="pay1"/>
+                                        <label class="plan basic-plan" for="gateway_{{ gateway.key }}">
+                                            <input {% if forloop.first %}checked{% endif %} type="radio" name="gateway" value="{{ gateway.key }}" id="gateway_{{ gateway.key }}" form="payment-start-form" required>
                                             <div class="plan-content">
                                                 <img loading="lazy" src="{% static 'img/ico/png-10.png' %}" alt=""/>
                                                 <div class="plan-details">
@@ -89,7 +87,7 @@
                                 <tr>
                                     <td>تخفیف:</td>
                                     <td id="coupon-discount">
-                                        {% if cart.coupon and cart.items.count > 0 %}
+                                        {% if cart and cart.coupon and cart_items %}
                                             {{ cart.coupon_discount|format_price }} <span>تومان</span>
                                         {% else %}
                                             0 <span>تومان</span>
@@ -106,15 +104,8 @@
                                 </tr>
                                 <tr>
                                     <td colspan="2">
-                                        <form method="post" action="{% url 'payments:start' 'new' %}">
+                                        <form id="payment-start-form" method="post" action="{% url 'payments:start' 'new' %}">
                                             {% csrf_token %}
-                                            <select name="gateway" class="form-control mb-2" aria-label="درگاه پرداخت">
-                                                {% for gateway in enabled_gateways %}
-                                                    <option value="{{ gateway.key }}">{{ gateway.title }}</option>
-                                                {% empty %}
-                                                    <option value="">درگاهی فعال نیست</option>
-                                                {% endfor %}
-                                            </select>
                                             <button type="submit" class="btn big_btn btn-main-masai" {% if not enabled_gateways %}disabled{% endif %}>اتصال به درگاه و پرداخت</button>
                                         </form>
                                     </td>

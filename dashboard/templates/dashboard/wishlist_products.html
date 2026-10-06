@@ -43,8 +43,8 @@
                                                         </h4>
                                                     </div>
                                                     <div class="col-6 text-right">
-                                                        <button class="btn btn-second-masai remove-wishlist-item"
-                                                                data-product-id="{{ item.product.id }}">
+                                                        <button type="button" class="btn btn-second-masai remove-wishlist-item"
+                                                                data-product-id="{{ item.product.id }}" aria-label="حذف {{ item.product.title }} از علاقه‌مندی‌ها">
                                                             <i class="fa fa-trash" aria-hidden="true"></i> حذف از لیست
                                                         </button>
                                                     </div>
@@ -88,32 +88,5 @@
         </div>
     </main>
 
-    <script src="{% static 'js/core/jquery.min.js' %}"></script>
-    <script>
-        $(document).ready(function () {
-            $('.remove-wishlist-item').click(function (e) {
-                e.preventDefault();
-                var productId = $(this).data('product-id');
-                var button = $(this);
 
-                $.ajax({
-                    url: '/dashboard/wishlist/remove/' + productId + '/',
-                    method: 'POST',
-                    data: {
-                        csrfmiddlewaretoken: '{{ csrf_token }}'
-                    },
-                    success: function (response) {
-                        if (response.status === 'success') {
-                            button.closest('.order_delivered_sec').fadeOut(300, function () {
-                                $(this).remove();
-                                if ($('.order_delivered_sec').length === 0) {
-                                    $('.content-section .row').html('<div class=""><p>محصول مورد علاقه ‌ای یافت نشد</p></div>');
-                                }
-                            });
-                        }
-                    }
-                });
-            });
-        });
-    </script>
 {% endblock %}

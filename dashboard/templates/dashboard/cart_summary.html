@@ -69,7 +69,7 @@
                                                         </div>
                                                     </div>
                                                     <div class="col-12 text-left">
-                                                        <button class="btn btn-error-masai remove-cart-item" aria-hidden="true" data-item-id="{{ item.id }}">
+                                                        <button type="button" class="btn btn-error-masai remove-cart-item" data-item-id="{{ item.id }}" aria-label="حذف {{ item.product.title }} از سبد خرید">
                                                             <i class="fa fa-trash" aria-hidden="true"></i> حذف از سبد
                                                         </button>
                                                     </div>
@@ -117,25 +117,5 @@
             </div>
         </div>
     </main>
-    <script>
-        $(document).ready(function () {
-            $('.remove-cart-item').click(function (e) {
-                e.preventDefault();
-                var itemId = $(this).data('item-id');
 
-                $.ajax({
-                    url: '/cart/remove/' + itemId + '/',
-                    method: 'POST',
-                    data: {
-                        csrfmiddlewaretoken: '{{ csrf_token }}'
-                    },
-                    success: function (response) {
-                        if (response.success) {
-                            location.reload();
-                        }
-                    }
-                });
-            });
-        });
-    </script>
 {% endblock %}

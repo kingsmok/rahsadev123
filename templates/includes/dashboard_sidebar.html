@@ -89,10 +89,13 @@
                     تغییر رمز عبور
                 </a>
 
-                <a href="{% url "account:logout" %}" class="dropdown-item {% if request.resolver_match.url_name == 'logout' %}active-menu{% endif %}">
-                    <i class="fa fa-sign-out-alt colormain" aria-hidden="true"></i>
-                    خروج از حساب
-                </a>
+                <form method="post" action="{% url 'account:logout' %}" class="fm-logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="dropdown-item">
+                        <i class="fa fa-sign-out-alt colormain" aria-hidden="true"></i>
+                        خروج از حساب
+                    </button>
+                </form>
 
             </div>
         </div>
@@ -175,10 +178,13 @@
             </li>
 
             <li>
-                <a href="{% url "account:logout" %}" class="dropdown-item {% if request.resolver_match.url_name == 'logout' %}active{% endif %}">
-                    <i class="fa fa-sign-out-alt colormain" aria-hidden="true"></i>
-                    خروج از حساب
-                </a>
+                <form method="post" action="{% url 'account:logout' %}" class="fm-logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="dropdown-item">
+                        <i class="fa fa-sign-out-alt colormain" aria-hidden="true"></i>
+                        خروج از حساب
+                    </button>
+                </form>
             </li>
 
         </ul>
