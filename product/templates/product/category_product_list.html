@@ -10,7 +10,7 @@
 
 {% block content %}
     <main class="search-page default space-top-30">
-        <div class="container"><h1 style="font-size:16px;font-weight:700;color:#46A9AE;margin:0 8px 6px;">دانلود فایل‌های {{ category.title }}</h1></div>
+        {% include 'includes/page_head.html' with title=category.title subtitle='همه فایل‌های این دسته با لایسنس رسمی، پشتیبانی فنی و دانلود آنی پس از پرداخت.' parent='همه فایل‌ها' parent_url='/products/' %}
         <div class="container">
             <div class="row">
                 <div class="col-12 hidden-xs">
@@ -173,7 +173,7 @@
                                             </div>
                                         {% endfor %}
                                     {% else %}
-                                        فایلی در این دسته پیدا نشد!
+                                        {% include 'includes/empty_state.html' with icon='fa-folder-open' title='هنوز فایلی در این دسته نیست' text='به‌زودی فایل‌های این دسته اضافه می‌شوند.' cta_url='/products/' cta_label='مشاهده همه فایل‌ها' %}
                                     {% endif %}
                                 </div>
 
@@ -207,18 +207,6 @@
             </div>
         </div>
     </main>
-    <style>
-        .product-type-chip {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #46a9ae;
-            color: #fff;
-            font-size: 11px;
-            padding: 3px 10px;
-            border-radius: 20px;
-        }
-    </style>
     <script>
         const minRange = document.getElementById('minRange');
         const maxRange = document.getElementById('maxRange');

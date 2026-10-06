@@ -4,30 +4,12 @@
 {% load custom_filters %}
 {% load jalali_tags %}
 
+{# پیام‌ها در همین صفحه کنار فرم کد تخفیف نمایش داده می‌شوند #}
+{% block messages %}{% endblock %}
+
 {% block content %}
-    <style>
-        .coupon-message {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 5px;
-        }
-
-        .coupon-success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        .coupon-error {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
-        .coupon-warning {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-    </style>
-    <main class="cart-page default space-top-30">
+    <main class="cart-page default">
+        {% include 'includes/page_head.html' with title='سبد خرید' subtitle='فایل‌های انتخابی خود را بررسی و سفارش را نهایی کنید.' %}
         <div class="container">
             <div class="row">
                 <div class="col-12 text-center">
@@ -108,8 +90,10 @@
                                         <span>تومان</span></td>
                                 </tr>
                             {% empty %}
-                                <tr>
-                                    <td colspan="5" class="text-center">سبد خرید شما خالی است</td>
+                                <tr class="fm-empty-row">
+                                    <td colspan="5">
+                                        {% include 'includes/empty_state.html' with icon='fa-cart-shopping' title='سبد خرید شما خالی است' text='فایل موردنظرتان را انتخاب کنید؛ بلافاصله پس از پرداخت قابل دانلود است.' cta_url='/products/' cta_label='مشاهده فایل‌ها' %}
+                                    </td>
                                 </tr>
                             {% endfor %}
                             </tbody>

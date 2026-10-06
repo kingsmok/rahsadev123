@@ -4,7 +4,8 @@
 {% load jalali_tags %}
 
 {% block content %}
-    <main class="profile-user-page default space-top-30">
+    <main class="profile-user-page default">
+        {% include 'includes/page_head.html' with title='پروفایل من' subtitle='اطلاعات حساب کاربری شما.' parent='پنل کاربری' parent_url='/dashboard/' %}
         <div class="container">
             <div class="row">
                 <div class="profile-page col-xl-9 col-lg-8 col-md-12 order-2">

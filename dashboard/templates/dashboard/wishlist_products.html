@@ -4,7 +4,8 @@
 {% load custom_filters %}
 
 {% block content %}
-    <main class="order-delivered default space-top-30">
+    <main class="order-delivered default">
+        {% include 'includes/page_head.html' with title='لیست علاقه‌مندی' subtitle='فایل‌هایی که برای خرید بعدی ذخیره کرده‌اید.' parent='پنل کاربری' parent_url='/dashboard/' %}
         <div class="container">
             <div class="row">
                 <div class="col-xl-9 col-lg-8 col-md-12 order-2">
@@ -52,7 +53,7 @@
                                         {% endfor %}
                                     {% else %}
                                         <div class="">
-                                            <p>محصول مورد علاقه ای یافت نشد</p>
+                                            {% include 'includes/empty_state.html' with icon='fa-heart' title='لیست علاقه‌مندی شما خالی است' text='فایل‌های موردعلاقه‌تان را ذخیره کنید تا بعداً سریع پیدایشان کنید.' cta_url='/products/' cta_label='مشاهده فایل‌ها' %}
                                         </div>
                                     {% endif %}
                                 </div>

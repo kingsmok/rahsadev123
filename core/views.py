@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from .forms import ContactUsForm
 from product.models import ProductBrand, Product
@@ -95,8 +96,32 @@ def custom_404(request, exception=None):
     return render(request, 'errors/404.html', status=404)
 
 
+#: صفحه جایگزین وقتی حتی رندر قالب ۵۰۰ هم شکست می‌خورد (مثلاً دیتابیس در دسترس نیست).
+_FALLBACK_500 = """<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, follow"><title>خطای سرور</title>
+<style>body{font-family:Tahoma,Arial,sans-serif;background:#f6f8fa;color:#22333f;
+display:grid;place-items:center;min-height:100vh;margin:0;text-align:center;padding:24px}
+h1{font-size:22px;margin:0 0 12px}p{color:#5d7285;line-height:2;margin:0 0 20px}
+a{display:inline-block;background:#46a9ae;color:#fff;text-decoration:none;
+padding:11px 28px;border-radius:999px;font-weight:bold}</style></head>
+<body><div><h1>خطایی در سرور رخ داد</h1>
+<p>مشکل از سمت ماست و تیم فنی در جریان قرار گرفت.<br>لطفاً چند دقیقه بعد دوباره تلاش کنید.</p>
+<a href="/">بازگشت به صفحه اصلی</a></div></body></html>"""
+
+
 def custom_500(request):
-    return render(request, 'errors/500.html', status=500)
+    """صفحه خطای ۵۰۰.
+
+    قالب از base.html ارث می‌برد و base به context processorهایی وابسته است که
+    به دیتابیس می‌زنند. اگر همان دیتابیس عامل خطا باشد، رندر قالب هم می‌شکند و
+    کاربر صفحه سفید می‌بیند؛ بنابراین یک نسخه ساده و بی‌وابستگی هم داریم.
+    """
+    try:
+        return render(request, 'errors/500.html', status=500)
+    except Exception:
+        return HttpResponse(_FALLBACK_500, status=500, content_type='text/html; charset=utf-8')
 
 
 def newsletter_subscribe(request):

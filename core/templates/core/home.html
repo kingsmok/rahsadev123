@@ -6,75 +6,9 @@
 {% load jalali_tags %}
 
 {% block content %}
-    <style>
-        .type_badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #46a9ae;
-            color: #fff;
-            font-size: 11px;
-            padding: 3px 10px;
-            border-radius: 20px;
-            z-index: 5;
-        }
-        .promise-strip i {
-            font-size: 22px;
-            color: #46a9ae;
-            display: block;
-            margin-bottom: 6px;
-        }
-        .home-services-teaser .svc-card {
-            background: #fff;
-            border: 1px solid #e1e2e7;
-            border-radius: 12px;
-            padding: 22px 18px;
-            text-align: center;
-            height: 100%;
-            transition: all .3s ease;
-        }
-        .home-services-teaser .svc-card:hover {
-            border-color: #46a9ae;
-            box-shadow: 0 8px 24px rgba(70, 169, 174, .15);
-            transform: translateY(-4px);
-        }
-        .home-services-teaser .svc-card i {
-            font-size: 30px;
-            color: #46a9ae;
-            margin-bottom: 12px;
-            display: inline-block;
-        }
-        .home-services-teaser .svc-card h4 {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-        .home-services-teaser .svc-card p {
-            font-size: 13px;
-            color: #6b7a8c;
-            line-height: 1.9;
-            margin: 0;
-        }
-        .svc-cta {
-            background: linear-gradient(135deg, #61bec3, #46a9ae);
-            border-radius: 12px;
-            color: #fff;
-            padding: 34px 26px;
-            text-align: center;
-        }
-        .svc-cta h3 { color: #fff; font-weight: 800; margin-bottom: 10px; }
-        .svc-cta p { color: #e9fbfb; margin-bottom: 18px; }
-        .svc-cta a.btn {
-            background: #fff;
-            color: #46a9ae;
-            font-weight: 700;
-            border-radius: 50px;
-            padding: 10px 34px;
-        }
-    </style>
     <main class="main default space-top-10">
-        <!-- H1 اصلی صفحه برای سئو -->
-        <h1 class="container" style="font-size:16px;font-weight:700;color:#46A9AE;margin:0 8px 6px;">{{ site_name }} | فروش فایل، نرم‌افزار، قالب و محصولات مجازی با دانلود آنی</h1>
+        {# H1 اصلی صفحه برای سئو — روی صفحه خانه بصری نیست تا اسلایدر در صدر بماند #}
+        <h1 class="fm-sr-only">{{ site_name }} | فروش فایل، نرم‌افزار، قالب و محصولات مجازی با دانلود آنی</h1>
         <div class="container-fluid">
             <div class="slider_main owl-carousel owl-theme">
                 {% for slider in main_sliders %}

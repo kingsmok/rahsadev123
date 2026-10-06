@@ -5,55 +5,8 @@
 {% load custom_filters %}
 
 {% block content %}
-    <style>
-        .badge-paid {
-            background: linear-gradient(135deg, #4CAF50, #2E7D32);
-            color: white;
-        }
-
-        .badge-shipped {
-            background: linear-gradient(135deg, #2196F3, #0D47A1);
-            color: white;
-        }
-
-        .badge-delivered {
-            background: linear-gradient(135deg, #9C27B0, #6A1B9A);
-            color: white;
-        }
-
-        .badge-pending {
-            background: linear-gradient(135deg, #FF9800, #E65100);
-            color: white;
-        }
-
-        .badge-processing {
-            background: linear-gradient(135deg, #00BCD4, #00838F);
-            color: white;
-        }
-
-        .badge-cancelled {
-            background: linear-gradient(135deg, #F44336, #C62828);
-            color: white;
-        }
-
-        .badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-            display: inline-block;
-            min-width: 80px;
-            text-align: center;
-        }
-
-        @media (max-width: 768px) {
-            .badge {
-                font-size: 12px;
-                padding: 6px 12px;
-            }
-        }
-    </style>
-    <main class="order-delivered default space-top-30">
+    <main class="order-delivered default">
+        {% include 'includes/page_head.html' with title='سفارش‌های من' subtitle='همه سفارش‌های ثبت‌شده و وضعیت فعلی آن‌ها.' parent='پنل کاربری' parent_url='/dashboard/' %}
         <div class="container">
             <div class="row">
                 <div class="col-xl-9 col-lg-8 col-md-12 order-2">
@@ -73,27 +26,27 @@
                                                         <h4 class="profile-recent-fav-name">
                                                             {% if order.status == 'paid' %}
                                                                 <span class="badge badge-paid">
-                                                                    <i class="fa fa-check-circle" style='color: white;' aria-hidden="true"></i> {{ order.get_status_display }}
+                                                                    <i class="fa fa-check-circle" aria-hidden="true"></i> {{ order.get_status_display }}
                                                                 </span>
                                                             {% elif order.status == 'shipped' %}
                                                                 <span class="badge badge-shipped">
-                                                                    <i class="fa fa-truck" style='color: white;' aria-hidden="true"></i> {{ order.get_status_display }}
+                                                                    <i class="fa fa-truck" aria-hidden="true"></i> {{ order.get_status_display }}
                                                                 </span>
                                                             {% elif order.status == 'delivered' %}
                                                                 <span class="badge badge-delivered">
-                                                                    <i class="fa fa-check-square" style='color: white;' aria-hidden="true"></i> {{ order.get_status_display }}
+                                                                    <i class="fa fa-check-square" aria-hidden="true"></i> {{ order.get_status_display }}
                                                                 </span>
                                                             {% elif order.status == 'pending' %}
                                                                 <span class="badge badge-pending">
-                                                                    <i class="fa fa-clock" style='color: white;' aria-hidden="true"></i> {{ order.get_status_display }}
+                                                                    <i class="fa fa-clock" aria-hidden="true"></i> {{ order.get_status_display }}
                                                                 </span>
                                                             {% elif order.status == 'processing' %}
                                                                 <span class="badge badge-processing">
-                                                                    <i class="fa fa-cog fa-spin" style='color: white;' aria-hidden="true"></i> {{ order.get_status_display }}
+                                                                    <i class="fa fa-cog fa-spin" aria-hidden="true"></i> {{ order.get_status_display }}
                                                                 </span>
                                                             {% elif order.status == 'cancelled' %}
                                                                 <span class="badge badge-cancelled">
-                                                                    <i class="fa fa-times-circle" style='color: white;' aria-hidden="true"></i> {{ order.get_status_display }}
+                                                                    <i class="fa fa-times-circle" aria-hidden="true"></i> {{ order.get_status_display }}
                                                                 </span>
                                                             {% endif %}
                                                         </h4>
@@ -122,7 +75,7 @@
                                         {% endfor %}
                                     {% else %}
                                         <div class="">
-                                            <p>سفارشی یافت نشد</p>
+                                            {% include 'includes/empty_state.html' with icon='fa-receipt' title='هنوز سفارشی ثبت نکرده‌اید' text='اولین فایل خود را انتخاب کنید و بلافاصله دانلود کنید.' cta_url='/products/' cta_label='شروع خرید' %}
                                         </div>
                                     {% endif %}
 

@@ -5,30 +5,8 @@
 {% load custom_filters %}
 
 {% block content %}
-    <style>
-        .badge-delivered {
-            background: linear-gradient(135deg, #9C27B0, #6A1B9A);
-            color: white;
-        }
-
-        .badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-            display: inline-block;
-            min-width: 80px;
-            text-align: center;
-        }
-
-        @media (max-width: 768px) {
-            .badge {
-                font-size: 12px;
-                padding: 6px 12px;
-            }
-        }
-    </style>
-    <main class="order-delivered default space-top-30">
+    <main class="order-delivered default">
+        {% include 'includes/page_head.html' with title='سفارش‌های تکمیل‌شده' subtitle='سفارش‌هایی که پرداخت و تحویل آن‌ها نهایی شده است.' parent='پنل کاربری' parent_url='/dashboard/' %}
         <div class="container">
             <div class="row">
                 <div class="col-xl-9 col-lg-8 col-md-12 order-2">
@@ -47,7 +25,7 @@
                                                     <div class="col-12">
                                                         <h4 class="profile-recent-fav-name">
                                                             <span class="badge badge-delivered">
-                                                                <i class="fa fa-check-square" style='color: white;' aria-hidden="true"></i> {{ order.get_status_display }}
+                                                                <i class="fa fa-check-square" aria-hidden="true"></i> {{ order.get_status_display }}
                                                             </span>
                                                         </h4>
                                                         <ul>
@@ -76,7 +54,7 @@
                                         {% endfor %}
                                     {% else %}
                                         <div class="">
-                                            <p>سفارشی یافت نشد</p>
+                                            {% include 'includes/empty_state.html' with icon='fa-circle-check' title='سفارش تکمیل‌شده‌ای ندارید' text='پس از اولین خرید موفق، سفارش‌ها اینجا ظاهر می‌شوند.' cta_url='/products/' cta_label='مشاهده فایل‌ها' %}
                                         </div>
                                     {% endif %}
 

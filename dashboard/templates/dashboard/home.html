@@ -5,56 +5,10 @@
 {% load custom_filters %}
 
 {% block content %}
-    <style>
-        .badge-paid {
-            background: linear-gradient(135deg, #4CAF50, #2E7D32);
-            color: white;
-        }
 
-        .badge-shipped {
-            background: linear-gradient(135deg, #2196F3, #0D47A1);
-            color: white;
-        }
+    <main class="order-delivered default">
 
-        .badge-delivered {
-            background: linear-gradient(135deg, #9C27B0, #6A1B9A);
-            color: white;
-        }
-
-        .badge-pending {
-            background: linear-gradient(135deg, #FF9800, #E65100);
-            color: white;
-        }
-
-        .badge-processing {
-            background: linear-gradient(135deg, #00BCD4, #00838F);
-            color: white;
-        }
-
-        .badge-cancelled {
-            background: linear-gradient(135deg, #F44336, #C62828);
-            color: white;
-        }
-
-        .badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-            display: inline-block;
-            min-width: 80px;
-            text-align: center;
-        }
-
-        @media (max-width: 768px) {
-            .status-badges .badge {
-                font-size: 12px;
-                padding: 6px 12px;
-            }
-        }
-    </style>
-
-    <main class="order-delivered default space-top-30">
+        {% include 'includes/page_head.html' with title='داشبورد' subtitle='نمای کلی حساب، سفارش‌ها و فایل‌های شما.' %}
         <div class="container">
             <div class="row">
                 <div class="col-xl-9 col-lg-8 col-md-12 order-2">
@@ -103,7 +57,7 @@
                                     <!-- Comments Count -->
                                     <div class="col-md-4 col-sm-6 col-6 space-bottom-15">
                                         <div class="bg-light p-3 rounded">
-                                            <div class="font-20" style="color: #ff9800">
+                                            <div class="font-20" class="fm-ico-warn">
                                                 <i class="fa fa-comment"></i>
                                             </div>
                                             <div class="font-16">نظرات ثبت شده</div>
@@ -185,8 +139,10 @@
                                                 </tr>
                                             {% endfor %}
                                         {% else %}
-                                            <tr>
-                                                <td colspan="5" class="text-center">سفارشی یافت نشد</td>
+                                            <tr class="fm-empty-row">
+                                                <td colspan="5">
+                                                    {% include 'includes/empty_state.html' with icon='fa-receipt' title='هنوز سفارشی ثبت نکرده‌اید' text='اولین فایل خود را انتخاب کنید و بلافاصله دانلود کنید.' cta_url='/products/' cta_label='شروع خرید' %}
+                                                </td>
                                             </tr>
                                         {% endif %}
                                         </tbody>
@@ -226,7 +182,7 @@
                                         </div>
                                     {% endfor %}
                                 {% else %}
-                                    محصولی وجود ندارد!
+                                    {% include 'includes/empty_state.html' with icon='fa-heart' title='لیست علاقه‌مندی شما خالی است' text='فایل‌های موردعلاقه‌تان را ذخیره کنید تا بعداً سریع پیدایشان کنید.' cta_url='/products/' cta_label='مشاهده فایل‌ها' %}
                                 {% endif %}
 
                             </div>

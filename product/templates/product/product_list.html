@@ -10,7 +10,7 @@
 
 {% block content %}
     <main class="search-page default space-top-30">
-        <div class="container"><h1 style="font-size:16px;font-weight:700;color:#46A9AE;margin:0 8px 6px;">همه فایل‌ها و محصولات دیجیتال</h1></div>
+        {% include 'includes/page_head.html' with title='همه فایل‌ها و محصولات دیجیتال' subtitle='فهرست کامل قالب‌ها، افزونه‌ها، اسکریپت‌ها، نرم‌افزارها و فایل‌های طراحی — همه با لایسنس رسمی و دانلود آنی.' %}
         <div class="container">
             <div class="row">
                 <div class="col-12 hidden-xs">
@@ -159,7 +159,7 @@
                                             </div>
                                         {% endfor %}
                                     {% else %}
-                                        فایلی با این مشخصات پیدا نشد!
+                                        {% include 'includes/empty_state.html' with icon='fa-magnifying-glass' title='فایلی با این فیلترها پیدا نشد' text='فیلترها را تغییر دهید یا همه فایل‌ها را ببینید.' cta_url='/products/' cta_label='حذف فیلترها' %}
                                     {% endif %}
                                 </div>
 
@@ -193,18 +193,6 @@
             </div>
         </div>
     </main>
-    <style>
-        .product-type-chip {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #46a9ae;
-            color: #fff;
-            font-size: 11px;
-            padding: 3px 10px;
-            border-radius: 20px;
-        }
-    </style>
     <script>
         const minRange = document.getElementById('minRange');
         const maxRange = document.getElementById('maxRange');

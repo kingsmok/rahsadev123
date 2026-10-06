@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% comment %}
+قالب پایهٔ صفحات خطا. هر صفحه فقط بلاک‌های زیر را پر می‌کند:
+  err_code     کد خطا (نمایش بزرگ)
+  err_title    عنوان قابل فهم برای کاربر
+  err_text     توضیح کوتاه و راهکار
+  err_actions  دکمه‌های پیشنهادی (پیش‌فرض: بازگشت به فروشگاه)
+{% endcomment %}
+{% block meta_robots %}<meta name="robots" content="noindex, follow">{% endblock %}
+
+{% block content %}
+    <main class="fm-error-page">
+        <div class="container">
+            <div class="fm-error">
+                <div>
+                    <div class="fm-error__code">{% block err_code %}خطا{% endblock %}</div>
+                    <h1>{% block err_title %}مشکلی پیش آمد{% endblock %}</h1>
+                    <p>{% block err_text %}متأسفانه مشکلی رخ داده است. لطفاً دوباره تلاش کنید.{% endblock %}</p>
+                    <div class="fm-error__actions">
+                        {% block err_actions %}
+                            <a class="fm-btn fm-btn--primary" href="{% url 'core:home' %}">
+                                <i class="fa fa-home" aria-hidden="true"></i> بازگشت به فروشگاه
+                            </a>
+                            <a class="fm-btn fm-btn--ghost" href="{% url 'product:product_list' %}">
+                                <i class="fa fa-folder-open" aria-hidden="true"></i> مشاهده همه فایل‌ها
+                            </a>
+                        {% endblock %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+{% endblock %}

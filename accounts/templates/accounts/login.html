@@ -1,60 +1,76 @@
 {% extends 'base.html' %}
-{% block title %}ورود{% endblock %}
 {% load static %}
 
+{% block title %}ورود به حساب کاربری | {{ site_name }}{% endblock %}
+{% block meta_description %}ورود به حساب کاربری {{ site_name }} برای دسترسی به سفارش‌ها و دانلودهای خریداری‌شده{% endblock %}
+
 {% block content %}
-    <main class="wrapper default">
+    <main class="fm-auth-page">
         <div class="container">
-            <div class="row">
-                <div class="main-content login_content  col-12 col-md-7 col-lg-5 mx-auto">
-                    <header class="card-header">
-                        <h3 class="card-title"><span>ورود به حساب کاربری</span></h3>
-                    </header>
-                    <div class="login_box">
-
-
-                        <form class="" method="post">
-                            {% csrf_token %}
-                            <div class="row">
-                                {% for error in form.non_field_errors %}
-                                    {% if error %}
-                                        <p class="alert alert-danger mb-2">{{ error }}</p>
-                                    {% endif %}
-                                {% endfor %}
-                                <div class="col-md-12 col-sm-12">
-                                    <div class="form-account-title"><span>*</span> نام کاربری</div>
-                                    <div class="form-account-row">
-                                        <input type="text" class="input_second input_all" name="username" placeholder=" نام کاربری">
-                                    </div>
-                                </div>
-                                <div class="col-md-12 col-sm-12">
-                                    <div class="form-account-title"><span>*</span> رمز عبور</div>
-                                    <div class="form-account-row">
-                                        <input type="password" class="input_second input_all" name="password" placeholder=" رمز عبور">
-                                    </div>
-                                </div>
-
-
-                                <div class="col-12 text--center">
-                                    <button type="submit" class="btn big_btn btn-main-masai">ورود </button>
-                                </div>
-                                <div class="col-12 footer_login_reg text--center">
-                                    <p>
-                                        <span>کاربر جدید هستید؟</span>
-                                        <a href="{% url 'account:register' %}">ثبت نام</a>
-
-                                    </p>
-
-                                </div>
-                                <div class="col-12 ">
-
-                                </div>
-                            </div>
-                        </form>
-
-
+            <div class="fm-auth">
+                <div class="fm-auth__card">
+                    <div class="fm-auth__head">
+                        <div class="fm-auth__icon"><i class="fa fa-right-to-bracket" aria-hidden="true"></i></div>
+                        <h1>ورود به حساب کاربری</h1>
+                        <p>برای دیدن سفارش‌ها و دانلود فایل‌هایتان وارد شوید.</p>
                     </div>
+
+                    {% if form.non_field_errors %}
+                        <div class="fm-messages">
+                            {% for error in form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    <i class="fa fa-circle-exclamation" aria-hidden="true"></i>
+                                    <span>{{ error }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <form method="post" novalidate class="fm-form">
+                        {% csrf_token %}
+                        {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}">{% endif %}
+
+                        <div class="fm-field">
+                            <label for="id_username">نام کاربری <span aria-hidden="true">*</span></label>
+                            <input type="text" id="id_username" name="username" required
+                                   autocomplete="username" autofocus
+                                   value="{{ form.username.value|default:'' }}"
+                                   class="fm-input {% if form.username.errors %}is-invalid{% endif %}"
+                                   placeholder="نام کاربری خود را وارد کنید">
+                            {% for e in form.username.errors %}<span class="fm-field__err">{{ e }}</span>{% endfor %}
+                        </div>
+
+                        <div class="fm-field">
+                            <label for="id_password">رمز عبور <span aria-hidden="true">*</span></label>
+                            <div class="fm-input-group">
+                                <input type="password" id="id_password" name="password" required
+                                       autocomplete="current-password"
+                                       class="fm-input {% if form.password.errors %}is-invalid{% endif %}"
+                                       placeholder="رمز عبور خود را وارد کنید">
+                                <button type="button" class="fm-pass-toggle" data-target="id_password"
+                                        aria-label="نمایش رمز عبور">
+                                    <i class="fa fa-eye" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            {% for e in form.password.errors %}<span class="fm-field__err">{{ e }}</span>{% endfor %}
+                        </div>
+
+                        <button type="submit" class="fm-btn fm-btn--primary fm-btn--block">
+                            <i class="fa fa-right-to-bracket" aria-hidden="true"></i> ورود
+                        </button>
+                    </form>
+
+                    <p class="fm-auth__alt">
+                        کاربر جدید هستید؟
+                        <a href="{% url 'account:register' %}">ساخت حساب کاربری</a>
+                    </p>
                 </div>
+
+                <ul class="fm-auth__perks">
+                    <li><i class="fa fa-bolt" aria-hidden="true"></i> دانلود آنی پس از پرداخت</li>
+                    <li><i class="fa fa-cloud-arrow-down" aria-hidden="true"></i> دسترسی همیشگی به فایل‌های خریداری‌شده</li>
+                    <li><i class="fa fa-shield-halved" aria-hidden="true"></i> پرداخت امن از درگاه بانکی</li>
+                </ul>
             </div>
         </div>
     </main>

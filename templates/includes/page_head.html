@@ -1,0 +1,48 @@
+{% comment %}
+سربرگ مشترک صفحات — عنوان + مسیر راهنما (بردکرامب) + توضیح اختیاری.
+
+پارامترها:
+  title        عنوان صفحه (الزامی) — به‌صورت <h1> رندر می‌شود
+  subtitle     توضیح کوتاه زیر عنوان (اختیاری)
+  parent       عنوان سطح میانی مسیر راهنما (اختیاری)
+  parent_url   لینک سطح میانی (اختیاری)
+  parent2      عنوان سطح میانی دوم (اختیاری)
+  parent2_url  لینک سطح میانی دوم (اختیاری)
+  heading_tag  'div'  → به‌جای h1 با div رندر می‌شود (صفحاتی که h1 دیگری دارند)
+               'none' → فقط مسیر راهنما نمایش داده می‌شود (صفحاتی با هیروی اختصاصی)
+
+نمونه:
+  {% include 'includes/page_head.html' with title='سبد خرید' subtitle='...' %}
+  {% include 'includes/page_head.html' with title=category.title parent='همه فایل‌ها' parent_url='/products/' %}
+{% endcomment %}
+<section class="fm-page-head{% if heading_tag == 'none' %} fm-page-head--crumbs{% endif %}">
+    <div class="container">
+        <nav aria-label="مسیر راهنما">
+            <ol class="fm-crumbs">
+                <li><a href="{% url 'core:home' %}"><i class="fa fa-home" aria-hidden="true"></i> خانه</a></li>
+                {% if parent %}
+                    <li>{% if parent_url %}<a href="{{ parent_url }}">{{ parent }}</a>{% else %}{{ parent }}{% endif %}</li>
+                {% endif %}
+                {% if parent2 %}
+                    <li>{% if parent2_url %}<a href="{{ parent2_url }}">{{ parent2 }}</a>{% else %}{{ parent2 }}{% endif %}</li>
+                {% endif %}
+                <li aria-current="page">{{ title }}</li>
+            </ol>
+        </nav>
+        {% if heading_tag != 'none' %}
+        <div class="fm-page-head__inner">
+            <div class="fm-page-head__text">
+                {% if heading_tag == 'div' %}
+                    <div class="fm-title" style="font-size:clamp(20px,2.4vw,28px);font-weight:800;line-height:1.6;">{{ title }}</div>
+                {% else %}
+                    <h1>{{ title }}</h1>
+                {% endif %}
+                {% if subtitle %}<p class="fm-page-sub">{{ subtitle }}</p>{% endif %}
+            </div>
+            {% if head_aside %}
+                <div class="fm-page-head__aside">{{ head_aside }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</section>

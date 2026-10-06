@@ -5,7 +5,8 @@
 {% load jalali_tags %}
 
 {% block content %}
-    <main class="cart-page default space-top-30">
+    <main class="cart-page default">
+        {% include 'includes/page_head.html' with title='دانلودهای من' subtitle='فایل‌هایی که خریده‌اید، همراه با اعتبار و تعداد دانلود باقی‌مانده.' parent='پنل کاربری' parent_url='/dashboard/' %}
         <div class="container">
             <div class="row">
                 <div class="col-12">
@@ -65,12 +66,12 @@
                                         <td>{{ token.created_at|to_jalali:'%d %B %Y' }}</td>
                                         <td>
                                             {% if token.is_valid %}
-                                                <span class="item_property" style="color:#2e9e44;">
+                                                <span class="item_property" class="fm-ico-ok">
                                                     {{ token.remaining_downloads }} دانلود باقی‌مانده
                                                 </span>
                                                 <div><small class="text-muted">انقضا: {{ token.expires_at|to_jalali:'%d %B %Y' }}</small></div>
                                             {% else %}
-                                                <span style="color:#c62828;">لینک منقضی شده</span>
+                                                <span class="fm-ico-bad">لینک منقضی شده</span>
                                             {% endif %}
                                         </td>
                                         <td>

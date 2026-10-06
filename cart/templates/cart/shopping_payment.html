@@ -5,51 +5,8 @@
 {% load jalali_tags %}
 
 {% block content %}
-    <style>
-        .digital-note {
-            background: #f0fbfb;
-            border: 1px dashed #46a9ae;
-            border-radius: 10px;
-            padding: 18px 20px;
-            margin-bottom: 25px;
-        }
-
-        .digital-note h5 {
-            font-weight: 800;
-            color: #2e8b90;
-            margin-bottom: 8px;
-        }
-
-        .digital-note ul {
-            margin: 0;
-            padding-right: 18px;
-        }
-
-        .digital-note li {
-            font-size: 13px;
-            color: #4b5a68;
-            line-height: 2.2;
-        }
-
-        .payment-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #252f42;
-            margin: 0 0 15px;
-        }
-
-        .order-files li {
-            font-size: 13px;
-            color: #4b5a68;
-            padding: 6px 0;
-            border-bottom: 1px dashed #e1e2e7;
-        }
-
-        .order-files li:last-child {
-            border-bottom: none;
-        }
-    </style>
     <main class="cart-page default">
+        {% include 'includes/page_head.html' with title='پرداخت سفارش' subtitle='درگاه پرداخت را انتخاب کنید و خرید را کامل کنید.' parent='سبد خرید' parent_url='/cart/' %}
         <div class="container">
             <div class="row">
                 <div class="col-12 text-center">

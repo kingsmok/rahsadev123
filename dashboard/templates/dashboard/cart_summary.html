@@ -5,74 +5,10 @@
 {% load custom_filters %}
 
 {% block content %}
-    <style>
-        .status-badges {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
 
-        .status-badges .badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s ease-out;
-        }
+    <main class="order-delivered default">
 
-        .status-badges .badge i {
-            margin-left: 8px;
-            font-size: 14px;
-        }
-
-        .status-badges .badge.bg-light {
-            background-color: #fff;
-            color: #515151;
-            border: 1px solid #e0e0e0;
-        }
-
-        .status-badges .badge.bg-light:hover {
-            background-color: #f1f9fa;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .status-badges .badge.badge-paid {
-            background: linear-gradient(135deg, #4CAF50, #2E7D32);
-            color: #fff;
-            border: none;
-        }
-
-        .status-badges .badge.badge-paid:hover {
-            background: linear-gradient(135deg, #2E7D32, #4CAF50);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .badge-pending {
-            background: linear-gradient(135deg, #FF9800, #E65100);
-            color: white;
-        }
-
-        .badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-            display: inline-block;
-            min-width: 80px;
-            text-align: center;
-        }
-
-        @media (max-width: 768px) {
-            .status-badges .badge {
-                font-size: 12px;
-                padding: 6px 12px;
-            }
-        }
-    </style>
-
-    <main class="order-delivered default space-top-30">
+        {% include 'includes/page_head.html' with title='سفارش‌های در سبد' subtitle='سبدهایی که هنوز پرداخت نشده‌اند.' parent='پنل کاربری' parent_url='/dashboard/' %}
         <div class="container">
             <div class="row">
                 <div class="col-xl-9 col-lg-8 col-md-12 order-2">
@@ -98,7 +34,7 @@
                                                     <div class="col-12">
                                                         <h4 class="profile-recent-fav-name">
                                                             <span class="badge badge-pending">
-                                                                <i class="fa fa-spinner" style='color: white;' aria-hidden="true"></i> در انتظار پرداخت
+                                                                <i class="fa fa-spinner" aria-hidden="true"></i> در انتظار پرداخت
                                                             </span>
                                                         </h4>
                                                         <ul>
@@ -134,7 +70,7 @@
                                                     </div>
                                                     <div class="col-12 text-left">
                                                         <button class="btn btn-error-masai remove-cart-item" aria-hidden="true" data-item-id="{{ item.id }}">
-                                                            <i class="fa fa-trash" style='color: white;' aria-hidden="true"></i> حذف از سبد
+                                                            <i class="fa fa-trash" aria-hidden="true"></i> حذف از سبد
                                                         </button>
                                                     </div>
                                                 </div>
@@ -142,7 +78,7 @@
                                         {% endfor %}
                                     {% else %}
                                         <div class="">
-                                            <p>سبد خرید شما خالی است.</p>
+                                            {% include 'includes/empty_state.html' with icon='fa-cart-shopping' title='سبد خرید شما خالی است' text='فایل موردنظرتان را انتخاب کنید و بلافاصله پس از پرداخت دانلود کنید.' cta_url='/products/' cta_label='مشاهده فایل‌ها' %}
                                             <a href="{% url 'product:product_list' %}" class="btn btn-primary">مشاهده محصولات</a>
                                         </div>
                                     {% endif %}

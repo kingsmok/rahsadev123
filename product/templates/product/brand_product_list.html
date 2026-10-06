@@ -8,7 +8,7 @@
 
 {% block content %}
     <main class="search-page default space-top-30">
-        <div class="container"><h1 style="font-size:16px;font-weight:700;color:#46A9AE;margin:0 8px 6px;">محصولات {{ brand.title }}</h1></div>
+        {% include 'includes/page_head.html' with title=brand.title subtitle='فایل‌ها و محصولات دیجیتال این سازنده.' parent='همه فایل‌ها' parent_url='/products/' %}
         <div class="container">
             <div class="row">
                 <div class="col-12 hidden-xs">
@@ -115,7 +115,7 @@
                                         </div>
                                     {% endfor %}
                                     {% else %}
-                                        محصولی وجود ندارد!
+                                        {% include 'includes/empty_state.html' with icon='fa-box-open' title='فایلی از این سازنده موجود نیست' text='سایر فایل‌های فروشگاه را ببینید.' cta_url='/products/' cta_label='مشاهده همه فایل‌ها' %}
                                     {% endif %}
                                 </div>
 

@@ -19,58 +19,25 @@
 {% load custom_filters %}
 
 {% block content %}
-    <style>
-        .favorites_heart.active i {
-            color: #e74c3c !important;
-        }
-        .digital-spec-badge {
-            display: inline-block;
-            background: #e9f8f8;
-            color: #2e8b90;
-            border: 1px solid #bfe5e7;
-            border-radius: 8px;
-            padding: 4px 12px;
-            font-size: 12px;
-            font-weight: 700;
-            margin-left: 6px;
-            margin-bottom: 4px;
-        }
-        .download-box {
-            background: #f0fbfb;
-            border: 1px dashed #46a9ae;
-            border-radius: 10px;
-            padding: 14px 16px;
-            margin-bottom: 10px;
-        }
-        .download-box a {
-            font-weight: 700;
-        }
-    </style>
 
     <main class="single-product default">
         <div class="container">
             <div class="row">
                 <div class="col-12">
-                    <nav>
-                        <ul class="breadcrumb">
+                    <nav aria-label="مسیر راهنما">
+                        <ol class="fm-crumbs fm-crumbs--product">
                             <li>
-                                <a href="{% url 'core:home' %}" style="color: #61BEC3"><i class="fa fa-home"
-                                                                                          aria-hidden="true"></i></a>
+                                <a href="{% url 'core:home' %}"><i class="fa fa-home" aria-hidden="true"></i> خانه</a>
                             </li>
+                            <li><a href="{% url 'product:product_list' %}">همه فایل‌ها</a></li>
                             {% for category in products.category.all %}
-                                <li>
-                                    <a href="{% url 'product:category_product_list' category.slug %}"><span>{{ category.title }}</span></a>
-                                </li>
+                                <li><a href="{% url 'product:category_product_list' category.slug %}">{{ category.title }}</a></li>
                             {% endfor %}
                             {% for brand in products.brand.all %}
-                                <li>
-                                    <a href="{% url 'product:brand_product_list' brand.slug %}"><span>{{ brand.title }}</span></a>
-                                </li>
+                                <li><a href="{% url 'product:brand_product_list' brand.slug %}">{{ brand.title }}</a></li>
                             {% endfor %}
-                            <li>
-                                <span>  {{ products.title|truncatewords:5 }}  </span>
-                            </li>
-                        </ul>
+                            <li aria-current="page">{{ products.title|truncatewords:5 }}</li>
+                        </ol>
                     </nav>
                 </div>
             </div>
@@ -234,22 +201,19 @@
                                                     <div class="stock-info">
                                                         <p>وضعیت فایل:
                                                             {% if products.is_unlimited %}
-                                                                <span style="color: #46A9AE; font-weight: bold;">نامحدود</span>
+                                                                <span class="fm-stock fm-stock--ok">نامحدود</span>
                                                             {% elif products.stock_count > 0 %}
-                                                                <span style="color: #46A9AE; font-weight: bold;">{{ products.stock_count }} لایسنس فعال</span>
+                                                                <span class="fm-stock fm-stock--ok">{{ products.stock_count }} لایسنس فعال</span>
                                                             {% else %}
-                                                                <span style="color: #FF0000; font-weight: bold;">ناموجود</span>
+                                                                <span class="fm-stock fm-stock--out">ناموجود</span>
                                                             {% endif %}
                                                         </p>
-                                                        <div class="progress"
-                                                             style="height: 14px; background: #f5f5f5;">
+                                                        <div class="progress fm-stock-bar">
                                                             <div class="progress-bar"
-                                                                 style="width: {% if products.is_unlimited %}100{% elif products.stock_count %}{{ products.stock_count }}{% else %}0{% endif %}%;
-                                                                         background-color: #46A9AE;
-                                                                         border-radius: 5px;">
+                                                                 style="width: {% if products.is_unlimited %}100{% elif products.stock_count %}{{ products.stock_count }}{% else %}0{% endif %}%;">
                                                             </div>
                                                         </div>
-                                                        <small style="color: {% if products.is_available %}#46A9AE{% else %}#FF0000{% endif %};">
+                                                        <small class="fm-stock {% if products.is_available %}fm-stock--ok{% else %}fm-stock--out{% endif %}">
                                                             {% if products.is_unlimited %}
                                                                 بدون محدودیت تعداد دانلود و فروش
                                                             {% elif products.stock_count > 0 %}
@@ -274,7 +238,7 @@
                                                     <div class="col-12 timer-title text--center">
                                                         {% if user_tokens %}
                                                             <div class="download-box">
-                                                                <b><i class="fa fa-circle-check" style="color:#2e9e44" aria-hidden="true"></i>
+                                                                <b><i class="fa fa-circle-check fm-ico-ok" aria-hidden="true"></i>
                                                                     این فایل را قبلاً خریداری کرده‌اید</b>
                                                                 {% for token in user_tokens %}
                                                                     {% if token.is_valid %}
@@ -360,8 +324,9 @@
                                                 </h3>
                                             </header>
                                             <div class="parent-expert default">
-                                                <div class="content-expert">
-                                                    <p>{{ products.description|safe }}</p>
+                                                {# توضیحات محصول HTML است و نباید داخل <p> قرار گیرد #}
+                                                <div class="content-expert fm-prose">
+                                                    {{ products.description|safe }}
                                                 </div>
                                             </div>
 
@@ -476,7 +441,7 @@
                                                     </ol>
                                                 </div>
                                             {% else %}
-                                                <p>دیدگاهی وجود ندارد!</p>
+                                                {% include 'includes/empty_state.html' with icon='fa-comments' title='هنوز دیدگاهی ثبت نشده' text='اولین نفری باشید که تجربه خود را از این فایل می‌نویسد.' %}
                                             {% endif %}
 
                                         </div>

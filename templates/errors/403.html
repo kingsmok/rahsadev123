@@ -1,1 +1,11 @@
-{% extends 'base.html' %}{% block meta_robots %}<meta name="robots" content="noindex, follow">{% endblock %}{% block title %}خطای 403{% endblock %}{% block content %}<main class="container py-5 text-center"><h1>403</h1><p>متأسفانه مشکلی رخ داده است. لطفاً دوباره تلاش کنید.</p><a class="btn btn-primary" href="{% url 'core:home' %}">بازگشت به فروشگاه</a></main>{% endblock %}
+{% extends 'errors/_base_error.html' %}
+
+{% block title %}دسترسی شما به این بخش مجاز نیست | خطای 403{% endblock %}
+
+{% block err_code %}403{% endblock %}
+{% block err_title %}دسترسی شما به این بخش مجاز نیست{% endblock %}
+{% block err_text %}برای دیدن این صفحه باید وارد حساب کاربری خود شوید یا دسترسی لازم را داشته باشید.{% endblock %}
+{% block err_actions %}
+                            <a class="fm-btn fm-btn--primary" href="{% url 'account:login' %}"><i class="fa fa-right-to-bracket" aria-hidden="true"></i> ورود به حساب کاربری</a>
+                            <a class="fm-btn fm-btn--ghost" href="{% url 'core:home' %}"><i class="fa fa-home" aria-hidden="true"></i> بازگشت به فروشگاه</a>
+{% endblock %}

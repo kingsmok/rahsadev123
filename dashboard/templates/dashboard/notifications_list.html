@@ -4,7 +4,8 @@
 {% load jalali_tags %}
 
 {% block content %}
-    <main class="order-delivered  default space-top-30">
+    <main class="order-delivered default">
+        {% include 'includes/page_head.html' with title='اعلان‌ها' subtitle='پیام‌ها و اطلاع‌رسانی‌های حساب شما.' parent='پنل کاربری' parent_url='/dashboard/' %}
         <div class="container">
             <div class="row">
                 <div class="col-xl-9 col-lg-8 col-md-12 order-2">
@@ -34,7 +35,7 @@
                                         {% endfor %}
                                     {% else %}
                                         <div class="">
-                                            <p>اعلانی یافت نشد</p>
+                                            {% include 'includes/empty_state.html' with icon='fa-bell' title='اعلان جدیدی ندارید' text='اطلاع‌رسانی‌های مربوط به سفارش‌ها اینجا نمایش داده می‌شود.' %}
                                         </div>
                                     {% endif %}
                                 </div>

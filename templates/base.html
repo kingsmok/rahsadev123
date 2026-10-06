@@ -45,11 +45,6 @@
     {% if site_settings.google_site_verification %}<meta name="google-site-verification" content="{{ site_settings.google_site_verification }}">{% endif %}
     {% if site_settings.bing_site_verification %}<meta name="msvalidate.01" content="{{ site_settings.bing_site_verification }}">{% endif %}
 
-    <style>
-        .text-logo{display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:24px;color:#46A9AE;}
-        .text-logo i{background:linear-gradient(135deg,#61bec3,#46a9ae);color:#fff;border-radius:12px;padding:8px 12px;font-size:20px;}
-        .text-logo small{display:block;font-size:11px;font-weight:400;color:#8a97a8;line-height:1.4;}
-    </style>
     <meta name="author" content="{{ site_name }}">
     {# اسکیمای سراسری: سازمان و وب‌سایت (همه صفحات) #}
     {% organization_schema %}
@@ -57,7 +52,8 @@
     {# اسکیمای اختصاصی هر صفحه #}
     {% block extra_schema %}{% endblock %}
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
-    <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no'
+    {# maximum-scale و user-scalable=0 زوم با دو انگشت را غیرفعال می‌کردند (نقض WCAG 1.4.4) #}
+    <meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no'
           name='viewport'/>
 
     <!-- CSS Files -->
@@ -68,17 +64,21 @@
     <link href="{% static 'css/icon.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/plugins/owl.carousel.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/plugins/owl.theme.default.min.css' %}" rel="stylesheet"/>
-    <link href="{% static 'css/mainc74d.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/style.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/nouislider.min.css' %}" rel="stylesheet"/>
     <!-- only single -->
     <link href="{% static 'css/plugins/prettyphoto/css/prettyPhoto.css' %}" rel="stylesheet"/>
     <!-- only single -->
-    <link href="{% static 'css/mainc81e.css' %}" rel="stylesheet"/>
+    {# قالب فروشگاه (یکپارچه‌شده از mainc74d.css + mainc81e.css که نسخه تکراری یکدیگر بودند) #}
+    <link href="{% static 'css/theme.css' %}" rel="stylesheet"/>
     <!-- SweetAlert2 (local) -->
     <link href="{% static 'css/plugins/sweetalert2.min.css' %}" rel="stylesheet"/>
     <!-- به‌روزرسانی ۲۰۲۶: وزیرمتن + حالت شب + پولیش مدرن -->
     <link href="{% static 'css/modern-2026.css' %}" rel="stylesheet"/>
+    <!-- لایه نهایی ۲۰۲۶: توکن‌های رنگ، تایپوگرافی، کامپوننت‌های مشترک -->
+    <link href="{% static 'css/fm-design-system.css' %}" rel="stylesheet"/>
+    <link href="{% static 'css/fm-pages.css' %}" rel="stylesheet"/>
+    <link href="{% static 'css/fm-dashboard.css' %}" rel="stylesheet"/>
 </head>
 
 <body class="index-page sidebar-collapse">
@@ -320,6 +320,23 @@
     </header>
     <!-- end pc header -->
 
+    {% comment %}پیام‌های سراسری جنگو. صفحاتی که پیام را خودشان جای دیگری نشان می‌دهند
+       (مثل سبد خرید) این بلاک را خالی بازنویسی می‌کنند.{% endcomment %}
+    {% block messages %}
+        {% if messages %}
+            <div class="container fm-messages-wrap">
+                <div class="fm-messages" role="status" aria-live="polite">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags|default:'info' }}">
+                            <i class="fa {% if message.tags == 'success' %}fa-circle-check{% elif message.tags == 'error' or message.tags == 'danger' %}fa-circle-exclamation{% elif message.tags == 'warning' %}fa-triangle-exclamation{% else %}fa-circle-info{% endif %}" aria-hidden="true"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    {% endblock %}
+
     {% block content %}{% endblock %}
 
 
@@ -557,8 +574,6 @@
     });
 </script>
 
+{% block extra_js %}{% endblock %}
 </body>
-
-
-<!-- Mirrored from garzak.ir/garzak_them/Masai/M_01/Masai/template_01/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 27 Mar 2025 20:20:37 GMT -->
 </html>

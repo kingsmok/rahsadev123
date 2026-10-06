@@ -190,8 +190,12 @@ class Command(BaseCommand):
         order.delete()
 
         print('════════ ۷) دانلودهای دمو + کوپن ════════')
+        # شماره سفارش نمونه تصادفی ساخته می‌شود؛ به‌جای مقدار ثابت، از خود دیتابیس خوانده می‌شود.
+        demo_order = Order.objects.filter(user__username='demo', status='paid').order_by('created_at').first()
         html = demo.get('/dashboard/downloads/').content.decode()
-        ok('دانلودهای من: سفارش دمو', '0443419286' in html)
+        ok('دانلودهای من: سفارش دمو',
+           demo_order is not None and demo_order.order_number in html,
+           (demo_order.order_number if demo_order else 'سفارش نمونه وجود ندارد — python manage.py seed_demo را اجرا کنید'))
         Cart.objects.filter(user__username='demo').delete()
         demo.post(f'/cart/add/{prod.id}/', data=json.dumps({'quantity': 1}), content_type='application/json')
         r = demo.post('/cart/apply_coupon/', {'code': 'WELCOME10'}, follow=True)
