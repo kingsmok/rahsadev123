@@ -63,3 +63,19 @@ def contact(request):
 
 def about(request):
     return render(request, 'core/about.html')
+
+
+def llms_txt(request):
+    """راهنمای محتوا برای مدل‌های زبانی (استاندارد llmstxt.org).
+
+    خلاصه‌ای ساخت‌یافته از سایت به‌صورت مارک‌داون تا دستیارهای هوش مصنوعی
+    بتوانند محتوا، محصولات و سیاست‌های سایت را دقیق درک و ارجاع دهند.
+    """
+    context = {
+        'top_products': Product.objects.filter(status='published')
+            .order_by('-sales_count', '-views')[:15],
+        'latest_articles': Article.objects.filter(status='published')
+            .order_by('-created_at')[:10],
+        'packages': ServicePackage.objects.filter(is_active=True),
+    }
+    return render(request, 'core/llms.txt', context, content_type='text/plain; charset=utf-8')

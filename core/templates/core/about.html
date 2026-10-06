@@ -1,11 +1,16 @@
 {% extends 'base.html' %}
 {% block title %}درباره {{ site_name }}{% endblock %}
 {% block meta_description %}درباره {{ site_name }}؛ مرجع تخصصی فروش فایل‌های نرم‌افزاری، قالب وب سایت، اسکریپت، فایل‌های طراحی و محصولات مجازی{% endblock %}
+{% load seo_tags %}
+{% block og_title %}درباره {{ site_name }}{% endblock %}
+{% block og_description %}درباره {{ site_name }}؛ مرجع تخصصی فروش فایل‌های نرم‌افزاری، قالب وب سایت، اسکریپت، فایل‌های طراحی و محصولات مجازی{% endblock %}
+{% block extra_schema %}{% page_breadcrumb 'درباره ما' %}{% endblock %}
 {% load static %}
 {% load custom_filters %}
 
 {% block content %}
     <main class="cart-page default space-top-30">
+        <div class="container"><h1 style="font-size:16px;font-weight:700;color:#46A9AE;margin:0 8px 6px;">درباره {{ site_name }}</h1></div>
         <div class="container">
             <div class="row">
                 <div class="contact_us_content col-12 mx-auto">

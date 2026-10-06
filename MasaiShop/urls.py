@@ -5,14 +5,26 @@ from . import settings
 from product import views
 from django.views.generic import TemplateView
 from django.contrib.sitemaps.views import sitemap
-from core.sitemaps import ProductSitemap, CategorySitemap, ArticleSitemap, PageSitemap
+from core.sitemaps import (
+    ProductSitemap, CategorySitemap, BrandSitemap, ArticleSitemap,
+    StaticPageSitemap, SectionSitemap,
+)
+from core import views as core_views
 from dashboard.admin_views import admin_home
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('admin-panel/', admin_home, name='admin_home'),
-    path('sitemap.xml', sitemap, {'sitemaps': {'products': ProductSitemap, 'categories': CategorySitemap, 'articles': ArticleSitemap, 'pages': PageSitemap}}, name='sitemap'),
+    path('sitemap.xml', sitemap, {'sitemaps': {
+        'sections': SectionSitemap,
+        'products': ProductSitemap,
+        'categories': CategorySitemap,
+        'brands': BrandSitemap,
+        'articles': ArticleSitemap,
+        'pages': StaticPageSitemap,
+    }}, name='sitemap'),
     path('robots.txt', TemplateView.as_view(template_name='robots.txt', content_type='text/plain'), name='robots'),
+    path('llms.txt', core_views.llms_txt, name='llms_txt'),
     path('payments/', include('payments.urls')),
     path('downloads/', include('downloads.urls')),
     path('services/', include('services.urls')),

@@ -24,7 +24,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
             'fields': ('enamad_link', 'samandehi_link')
         }),
         ('سئو', {
-            'fields': ('default_meta_title', 'default_meta_description')
+            'fields': ('default_meta_title', 'default_meta_description', 'google_site_verification', 'bing_site_verification')
         }),
         ('متن کپی رایت', {
             'fields': ('copy_right',)

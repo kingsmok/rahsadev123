@@ -1,10 +1,14 @@
 {% extends 'base.html' %}
 {% block title %}محصولات {{ brand.title }}{% endblock %}
+{% load seo_tags %}
+{% block og_title %}محصولات {{ brand.title }} | {{ site_name }}{% endblock %}
+{% block extra_schema %}{% brand_breadcrumb brand %}{% item_list_schema products %}{% endblock %}
 {% load static %}
 {% load custom_filters %}
 
 {% block content %}
     <main class="search-page default space-top-30">
+        <div class="container"><h1 style="font-size:16px;font-weight:700;color:#46A9AE;margin:0 8px 6px;">محصولات {{ brand.title }}</h1></div>
         <div class="container">
             <div class="row">
                 <div class="col-12 hidden-xs">
@@ -87,7 +91,7 @@
                                                         <img src="{% static 'img/product_image_not_found.jpg' %}" alt="{{ product.title|truncatewords:10 }}">
                                                     {% endif %}
                                                     {% if not product.is_available %}
-                                                        <img src="{% static 'img/sell.png' %}" class="type_icon_finished">
+                                                        <img src="{% static 'img/sell.png' %}" class="type_icon_finished" alt="فروش ویژه">
                                                     {% endif %}
                                                     <span class="product-type-chip">{{ product.get_product_type_display }}</span>
                                                 </a>

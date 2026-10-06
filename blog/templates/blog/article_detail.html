@@ -1,9 +1,20 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}{% if article.meta_title %}{{ article.meta_title }}{% else %}{{ article.title }}{% endif %}{% endblock %}
 {% block meta_description %}{{ article.meta_description|default:article.description|striptags|truncatechars:160 }}{% endblock %}
 {% block canonical %}<link rel="canonical" href="{% if article.canonical_url %}{{ article.canonical_url }}{% else %}{{ request.build_absolute_uri }}{% endif %}">{% endblock %}
-{% block structured_data %}<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"{{ article.title|escapejs }}","datePublished":"{{ article.created_at|date:'c' }}","dateModified":"{{ article.updated_at|date:'c' }}","author":{"@type":"Person","name":"{{ article.author.get_full_name|default:article.author.username|escapejs }}"}}</script>{% endblock %}
-{% load static %}
+{% load seo_tags %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ article.meta_title|default:article.title }}{% endblock %}
+{% block og_description %}{{ article.meta_description|default:article.description|striptags|truncatechars:200 }}{% endblock %}
+{% block og_image %}{% if article.image %}{{ request.scheme }}://{{ request.get_host }}{{ article.image.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}{% endif %}{% endblock %}
+{% block twitter_image %}{% if article.image %}{{ request.scheme }}://{{ request.get_host }}{{ article.image.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}{% endif %}{% endblock %}
+{% block twitter_title %}{{ article.meta_title|default:article.title }}{% endblock %}
+{% block twitter_description %}{{ article.meta_description|default:article.description|striptags|truncatechars:200 }}{% endblock %}
+{% block extra_schema %}
+    {% article_schema article %}
+    {% article_breadcrumb article %}
+{% endblock %}
 {% load jalali_tags %}
 
 {% block content %}
@@ -12,7 +23,7 @@
             <div class="row">
                 <div class="single_blog_content col-12 col-lg-9 mx-auto order-1 order-sm-1 ">
                     <header class="card-header">
-                        <h3 class="card-title"><span>{{ article.title }}</span></h3>
+                        <h1 class="card-title" style="font-size:1.35rem;"><span>{{ article.title }}</span></h1>
                     </header>
                     <div class="single_blog_page">
 

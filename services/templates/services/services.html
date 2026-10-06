@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 {% block title %}خدمات طراحی وب سایت | تعرفه‌ها و نمونه کارها | {{ site_name }}{% endblock %}
 {% block meta_description %}سفارش طراحی وب سایت شرکتی، فروشگاهی و شخصی؛ تعرفه‌های شفاف، تحویل به‌موقع، سئوی قوی و پشتیبانی یک‌ساله همراه با نمونه کارهای واقعی{% endblock %}
+{% load seo_tags %}
+{% block og_title %}خدمات طراحی وب سایت | تعرفه‌ها و نمونه کارها | {{ site_name }}{% endblock %}
+{% block og_description %}سفارش طراحی وب سایت شرکتی، فروشگاهی و شخصی؛ تعرفه‌های شفاف، تحویل به‌موقع و پشتیبانی یک‌ساله{% endblock %}
+{% block extra_schema %}{% service_schema packages %}{% page_breadcrumb 'خدمات طراحی وب' %}{% endblock %}
 {% load static %}
 {% load custom_filters %}
 {% load jalali_tags %}

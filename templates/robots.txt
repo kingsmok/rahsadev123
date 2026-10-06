@@ -1,5 +1,17 @@
+# robots.txt — {{ site_name }}
+# قوانین خزش ربات‌های موتورهای جست‌وجو و دستیارهای هوش مصنوعی
+#
+# محتوای عمومی سایت آزاد است؛ بخش‌های خصوصی (پنل کاربری، پرداخت، دانلود) برای همه بسته‌اند.
+
+# ------------------------------------------------------------
+# ۱) قانون عمومی همه ربات‌ها
+# ------------------------------------------------------------
 User-agent: *
 Allow: /
+Allow: /products/
+Allow: /blog/
+Allow: /services/
+Allow: /pages/
 Disallow: /admin/
 Disallow: /admin-panel/
 Disallow: /account/
@@ -8,4 +20,119 @@ Disallow: /cart/
 Disallow: /payments/
 Disallow: /downloads/
 Disallow: /ckeditor/
+Disallow: /products/product_search/
+Disallow: /*?sort=
+Disallow: /*?min_price=
+Disallow: /*?max_price=
+Disallow: /*?product_type=
+Disallow: /*?q=
+
+# ------------------------------------------------------------
+# ۲) موتورهای جست‌وجو
+# ------------------------------------------------------------
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+Disallow: /admin-panel/
+Disallow: /account/
+Disallow: /dashboard/
+Disallow: /cart/
+Disallow: /payments/
+Disallow: /downloads/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /admin-panel/
+Disallow: /account/
+Disallow: /dashboard/
+Disallow: /cart/
+Disallow: /payments/
+Disallow: /downloads/
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+# ------------------------------------------------------------
+# ۳) ربات‌های هوش مصنوعی (AI) — دسترسی آزاد به محتوای عمومی
+#    تا دستیارها و موتورهای جست‌وجوی هوش مصنوعی بتوانند
+#    محتوای سایت را بخوانند و در پاسخ‌ها ارجاع دهند.
+# ------------------------------------------------------------
+# OpenAI — ChatGPT و جست‌وجوی ChatGPT
+User-agent: GPTBot
+Allow: /
+Disallow: /admin/
+Disallow: /admin-panel/
+Disallow: /account/
+Disallow: /dashboard/
+Disallow: /cart/
+Disallow: /payments/
+Disallow: /downloads/
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+# Anthropic — Claude
+User-agent: ClaudeBot
+Allow: /
+Disallow: /admin/
+Disallow: /admin-panel/
+Disallow: /account/
+Disallow: /dashboard/
+Disallow: /cart/
+Disallow: /payments/
+Disallow: /downloads/
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-Chat
+Allow: /
+
+# Google — Gemini
+User-agent: Google-Extended
+Allow: /
+
+# Apple — Siri و Apple Intelligence
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# دیگر دستیارها و ایندکس‌کننده‌های AI
+User-agent: Amazonbot
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+User-agent: Bytespider
+Crawl-delay: 10
+Allow: /
+
+# ------------------------------------------------------------
+# ۴) نقشه سایت و راهنمای هوش مصنوعی
+# ------------------------------------------------------------
 Sitemap: {{ request.scheme }}://{{ request.get_host }}/sitemap.xml
+# فایل راهنمای محتوا برای مدل‌های زبانی (مشخصات llmstxt.org)
+# https://{{ request.get_host }}/llms.txt

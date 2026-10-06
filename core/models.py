@@ -43,6 +43,8 @@ class SiteSettings(models.Model):
                                      help_text='اگر خالی باشد نشان در فوتر نمایش داده نمی‌شود')
     default_meta_title = models.CharField(max_length=70, blank=True, verbose_name='عنوان سئوی پیش‌فرض')
     default_meta_description = models.CharField(max_length=160, blank=True, verbose_name='توضیحات سئوی پیش‌فرض')
+    google_site_verification = models.CharField(max_length=120, blank=True, verbose_name='کد تأیید Google Search Console')
+    bing_site_verification = models.CharField(max_length=120, blank=True, verbose_name='کد تأیید Bing Webmaster')
     products_per_page = models.PositiveIntegerField(default=9, verbose_name='تعداد محصول در هر صفحه')
 
     class Meta:

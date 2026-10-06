@@ -1,9 +1,20 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}{% if products.meta_title %}{{ products.meta_title }}{% else %}دانلود {{ products.title|truncatewords:12 }}{% endif %}{% endblock %}
 {% block meta_description %}{{ products.meta_description|default:products.description|striptags|truncatechars:160 }}{% endblock %}
 {% block canonical %}<link rel="canonical" href="{% if products.canonical_url %}{{ products.canonical_url }}{% else %}{{ request.build_absolute_uri }}{% endif %}">{% endblock %}
-{% block structured_data %}<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"{{ products.title|escapejs }}","description":"{{ products.meta_description|default:products.description|striptags|truncatechars:160|escapejs }}","offers":{"@type":"Offer","price":"{{ products.price }}","priceCurrency":"IRR","availability":"{% if products.is_available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}"}}</script>{% endblock %}
-{% load static %}
+{% load seo_tags %}
+{% block og_type %}product{% endblock %}
+{% block og_title %}{{ products.meta_title|default:products.title }}{% endblock %}
+{% block og_description %}{{ products.meta_description|default:products.short_description|default:products.description|striptags|truncatechars:200 }}{% endblock %}
+{% block og_image %}{% if products.image %}{{ request.scheme }}://{{ request.get_host }}{{ products.image.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}{% endif %}{% endblock %}
+{% block twitter_image %}{% if products.image %}{{ request.scheme }}://{{ request.get_host }}{{ products.image.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}{% endif %}{% endblock %}
+{% block twitter_title %}{{ products.meta_title|default:products.title }}{% endblock %}
+{% block twitter_description %}{{ products.meta_description|default:products.short_description|default:products.description|striptags|truncatechars:200 }}{% endblock %}
+{% block extra_schema %}
+    {% product_schema products %}
+    {% product_breadcrumb products %}
+{% endblock %}
 {% load jalali_tags %}
 {% load custom_filters %}
 
@@ -78,7 +89,7 @@
                                              alt="{{ products.title }}"/>
                                     {% endif %}
                                     {% if not products.is_available %}
-                                        <img src="{% static 'img/sell.png' %}" class="type_icon_finished_detail">
+                                        <img src="{% static 'img/sell.png' %}" class="type_icon_finished_detail" alt="فروش ویژه">
                                     {% endif %}
                                     <section class="testimonial py-3" id="testimonial">
                                         <div class="container">
@@ -86,7 +97,7 @@
                                                 {% for image in product_image %}
                                                     <div class="col-4 col-md-3 pd"><a href="{{ image.images.url }}"
                                                                                       rel="prettyPhoto[gallery1]"><img
-                                                            src="{{ image.images.url }}" class="img-thumb"/></a></div>
+                                                            src="{{ image.images.url }}" class="img-thumb" alt="تصویر {{ products.title|truncatewords:4 }}"/></a></div>
                                                 {% endfor %}
                                             </div>
                                         </div>
@@ -139,9 +150,9 @@
                             </div>
                             <div class="col-lg-7 col-md-6 col-sm-12 ">
 
-                                <h2 class="product-title ">
+                                <h1 class="product-title " style="font-size:1.6rem;">
                                     {{ products.title }}
-                                </h2>
+                                </h1>
                                 <hr class="hr-text" data-content="{{ products.get_product_type_display }}">
                                 <div class="row">
                                     <div class="col-6">

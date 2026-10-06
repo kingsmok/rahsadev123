@@ -73,6 +73,8 @@
         }
     </style>
     <main class="main default space-top-10">
+        <!-- H1 اصلی صفحه برای سئو -->
+        <h1 class="container" style="font-size:16px;font-weight:700;color:#46A9AE;margin:0 8px 6px;">{{ site_name }} | فروش فایل، نرم‌افزار، قالب و محصولات مجازی با دانلود آنی</h1>
         <div class="container-fluid">
             <div class="slider_main owl-carousel owl-theme">
                 {% for slider in main_sliders %}
@@ -156,7 +158,7 @@
                                                     {% endif %}
 
                                                     {% if not product.is_available %}
-                                                        <img src="{% static 'img/sell.png' %}" class="imgfinish">
+                                                        <img src="{% static 'img/sell.png' %}" class="imgfinish" alt="فروش ویژه">
                                                     {% endif %}
 
                                                 </a>
@@ -225,7 +227,7 @@
                                                  alt="{{ product.title|truncatewords:7 }}">
                                         {% endif %}
                                         {% if not product.is_available %}
-                                            <img src="{% static 'img/img_icon.png' %}" class="type_icon">
+                                            <img src="{% static 'img/img_icon.png' %}" class="type_icon" alt="">
                                         {% endif %}
 
                                     </a>
@@ -286,7 +288,7 @@
                                                              alt="{{ product.title|truncatewords:10 }}">
                                                     {% endif %}
                                                     {% if not product.is_available %}
-                                                        <img src="{% static 'img/img_icon.png' %}" class="type_icon">
+                                                        <img src="{% static 'img/img_icon.png' %}" class="type_icon" alt="">
                                                     {% endif %}
                                                     <span class="type_badge">{{ product.get_product_type_display }}</span>
                                                 </a>
@@ -360,7 +362,7 @@
                                                              alt="{{ product.title|truncatewords:10 }}">
                                                     {% endif %}
                                                     {% if not product.is_available %}
-                                                        <img src="{% static 'img/img_icon.png' %}" class="type_icon">
+                                                        <img src="{% static 'img/img_icon.png' %}" class="type_icon" alt="">
                                                     {% endif %}
                                                     <span class="type_badge">{{ product.get_product_type_display }}</span>
                                                 </a>

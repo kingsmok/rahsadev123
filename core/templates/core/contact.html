@@ -1,9 +1,15 @@
 {% extends 'base.html' %}
-{% block title %}تماس با ما{% endblock %}
+{% block title %}تماس با ما | {{ site_name }}{% endblock %}
+{% block meta_description %}راه‌های ارتباط با پشتیبانی {{ site_name }}: تلفن، ایمیل، آدرس و فرم پیام — پاسخ‌گویی در ساعات اداری{% endblock %}
+{% load seo_tags %}
+{% block og_title %}تماس با ما | {{ site_name }}{% endblock %}
+{% block og_description %}راه‌های ارتباط با پشتیبانی {{ site_name }}: تلفن، ایمیل، آدرس و فرم پیام{% endblock %}
+{% block extra_schema %}{% contact_page_schema %}{% page_breadcrumb 'تماس با ما' %}{% endblock %}
 {% load static %}
 
 {% block content %}
     <main class="cart-page default ">
+        <div class="container"><h1 style="font-size:16px;font-weight:700;color:#46A9AE;margin:0 8px 6px;">تماس با {{ site_name }}</h1></div>
         <div class="container">
             <div class="row">
                 <div class="contact_us_content col-12 mx-auto">

@@ -1,11 +1,16 @@
 {% extends 'base.html' %}
 {% block title %}{{ category.title }} | دانلود فایل {{ category.title }} | {{ site_name }}{% endblock %}
 {% block meta_description %}خرید و دانلود آنی فایل‌های دسته {{ category.title }} همراه با لایسنس رسمی، به‌روزرسانی و پشتیبانی فنی{% endblock %}
+{% load seo_tags %}
+{% block og_title %}{{ category.title }} | دانلود فایل {{ category.title }} | {{ site_name }}{% endblock %}
+{% block og_description %}خرید و دانلود آنی فایل‌های دسته {{ category.title }} همراه با لایسنس رسمی، به‌روزرسانی و پشتیبانی فنی{% endblock %}
+{% block extra_schema %}{% category_breadcrumb category %}{% item_list_schema products %}{% endblock %}
 {% load static %}
 {% load custom_filters %}
 
 {% block content %}
     <main class="search-page default space-top-30">
+        <div class="container"><h1 style="font-size:16px;font-weight:700;color:#46A9AE;margin:0 8px 6px;">دانلود فایل‌های {{ category.title }}</h1></div>
         <div class="container">
             <div class="row">
                 <div class="col-12 hidden-xs">
@@ -140,7 +145,7 @@
                                                                  alt="{{ product.title|truncatewords:10 }}">
                                                         {% endif %}
                                                         {% if not product.is_available %}
-                                                            <img src="{% static 'img/sell.png' %}" class="type_icon_finished">
+                                                            <img src="{% static 'img/sell.png' %}" class="type_icon_finished" alt="فروش ویژه">
                                                         {% endif %}
                                                         <span class="product-type-chip">{{ product.get_product_type_display }}</span>
                                                     </a>
