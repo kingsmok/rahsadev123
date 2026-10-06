@@ -49,6 +49,10 @@ class DownloadToken(models.Model):
         return bool(self.expires_at and timezone.now() > self.expires_at)
 
     @property
+    def remaining_downloads(self):
+        return max(0, self.max_downloads - self.download_count)
+
+    @property
     def is_valid(self):
         return self.is_active and not self.is_expired and self.download_count < self.max_downloads
 

@@ -40,6 +40,11 @@
                     داشبورد
                 </a>
 
+                <a href="{% url "dashboard:my_downloads" %}" class="dropdown-item {% if request.resolver_match.url_name == 'my_downloads' %}active-menu{% endif %}">
+                    <i class="fa fa-cloud-arrow-down colormain" aria-hidden="true"></i>
+                    دانلودهای من
+                </a>
+
                 <a href="{% url "dashboard:orders" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders' %}active-menu{% endif %}">
                     <i class="fa fa-cart-arrow-down colormain" aria-hidden="true"></i>
                     سفارشات
@@ -47,7 +52,7 @@
 
                 <a href="{% url "dashboard:orders_delivered" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders_delivered' %}active-menu{% endif %}">
                     <i class="fa fa-check-circle colormain" aria-hidden="true"></i>
-                    سفارشات تحویل داده شده
+                    سفارشات تکمیل شده
                 </a>
 
                 <a href="{% url "dashboard:cart_summary" %}" class="dropdown-item {% if request.resolver_match.url_name == 'cart_summary' %}active-menu{% endif %}">
@@ -67,11 +72,6 @@
                 <a href="{% url "dashboard:wishlist_products" %}" class="dropdown-item {% if request.resolver_match.url_name == 'wishlist_products' %}active-menu{% endif %}">
                     <i class="fa fa-heart colormain" aria-hidden="true"></i>
                     محصولات مورد علاقه
-                </a>
-
-                <a href="{% url "dashboard:user_addresses" %}" class="dropdown-item {% if request.resolver_match.url_name == 'user_addresses' %}active-menu{% endif %}">
-                    <i class="fa fa-map icon-icon colormain" aria-hidden="true"></i>
-                    آدرس های من
                 </a>
 
                 <a href="{% url "dashboard:notifications" %}" class="dropdown-item {% if request.resolver_match.url_name == 'notifications' %}active-menu{% endif %}">
@@ -108,6 +108,12 @@
             </li>
 
             <li>
+                <a href="{% url "dashboard:my_downloads" %}" class="dropdown-item {% if request.resolver_match.url_name == 'my_downloads' %}active{% endif %}">
+                    <i class="fa fa-cloud-arrow-down colormain" aria-hidden="true"></i> دانلودهای من
+                </a>
+            </li>
+
+            <li>
                 <a href="{% url "dashboard:orders" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders' %}active{% endif %}">
                     <i class="fa fa-cart-arrow-down colormain" aria-hidden="true"></i> سفارشات
                 </a>
@@ -116,7 +122,7 @@
             <li>
                 <a href="{% url "dashboard:orders_delivered" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders_delivered' %}active{% endif %}">
                     <i class="fa fa-check-circle colormain" aria-hidden="true"></i>
-                    سفارشات تحویل داده شده
+                    سفارشات تکمیل شده
                 </a>
             </li>
 
@@ -144,13 +150,6 @@
                 <a href="{% url "dashboard:wishlist_products" %}" class="dropdown-item {% if request.resolver_match.url_name == 'wishlist_products' %}active{% endif %}">
                     <i class="fa fa-heart colormain" aria-hidden="true"></i>
                     محصولات مورد علاقه
-                </a>
-            </li>
-
-            <li>
-                <a href="{% url "dashboard:user_addresses" %}" class="dropdown-item {% if request.resolver_match.url_name == 'user_addresses' %}active{% endif %}">
-                    <i class="fa fa-map icon-icon colormain" aria-hidden="true"></i>
-                    آدرس های من
                 </a>
             </li>
 

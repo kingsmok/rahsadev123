@@ -1,9 +1,20 @@
 {% extends 'base.html' %}
-{% block title %}{% if products.meta_title %}{{ products.meta_title }}{% else %}قیمت و خرید {{ products.title|truncatewords:12 }}{% endif %}{% endblock %}
+{% load static %}
+{% block title %}{% if products.meta_title %}{{ products.meta_title }}{% else %}دانلود {{ products.title|truncatewords:12 }}{% endif %}{% endblock %}
 {% block meta_description %}{{ products.meta_description|default:products.description|striptags|truncatechars:160 }}{% endblock %}
 {% block canonical %}<link rel="canonical" href="{% if products.canonical_url %}{{ products.canonical_url }}{% else %}{{ request.build_absolute_uri }}{% endif %}">{% endblock %}
-{% block structured_data %}<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"{{ products.title|escapejs }}","description":"{{ products.meta_description|default:products.description|striptags|truncatechars:160|escapejs }}","offers":{"@type":"Offer","price":"{{ products.price }}","priceCurrency":"IRR","availability":"{% if products.stock_count > 0 %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}"}}</script>{% endblock %}
-{% load static %}
+{% load seo_tags %}
+{% block og_type %}product{% endblock %}
+{% block og_title %}{{ products.meta_title|default:products.title }}{% endblock %}
+{% block og_description %}{{ products.meta_description|default:products.short_description|default:products.description|striptags|truncatechars:200 }}{% endblock %}
+{% block og_image %}{% if products.image %}{{ request.scheme }}://{{ request.get_host }}{{ products.image.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}{% endif %}{% endblock %}
+{% block twitter_image %}{% if products.image %}{{ request.scheme }}://{{ request.get_host }}{{ products.image.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-default.jpg' %}{% endif %}{% endblock %}
+{% block twitter_title %}{{ products.meta_title|default:products.title }}{% endblock %}
+{% block twitter_description %}{{ products.meta_description|default:products.short_description|default:products.description|striptags|truncatechars:200 }}{% endblock %}
+{% block extra_schema %}
+    {% product_schema products %}
+    {% product_breadcrumb products %}
+{% endblock %}
 {% load jalali_tags %}
 {% load custom_filters %}
 
@@ -11,6 +22,28 @@
     <style>
         .favorites_heart.active i {
             color: #e74c3c !important;
+        }
+        .digital-spec-badge {
+            display: inline-block;
+            background: #e9f8f8;
+            color: #2e8b90;
+            border: 1px solid #bfe5e7;
+            border-radius: 8px;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: 6px;
+            margin-bottom: 4px;
+        }
+        .download-box {
+            background: #f0fbfb;
+            border: 1px dashed #46a9ae;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+        }
+        .download-box a {
+            font-weight: 700;
         }
     </style>
 
@@ -55,8 +88,8 @@
                                              src="{% static 'img/product_image_not_found.jpg' %}"
                                              alt="{{ products.title }}"/>
                                     {% endif %}
-                                    {% if products.stock_count == 0 %}
-                                        <img src="{% static 'img/sell.png' %}" class="type_icon_finished_detail">
+                                    {% if not products.is_available %}
+                                        <img src="{% static 'img/sell.png' %}" class="type_icon_finished_detail" alt="فروش ویژه">
                                     {% endif %}
                                     <section class="testimonial py-3" id="testimonial">
                                         <div class="container">
@@ -64,7 +97,7 @@
                                                 {% for image in product_image %}
                                                     <div class="col-4 col-md-3 pd"><a href="{{ image.images.url }}"
                                                                                       rel="prettyPhoto[gallery1]"><img
-                                                            src="{{ image.images.url }}" class="img-thumb"/></a></div>
+                                                            src="{{ image.images.url }}" class="img-thumb" alt="تصویر {{ products.title|truncatewords:4 }}"/></a></div>
                                                 {% endfor %}
                                             </div>
                                         </div>
@@ -117,36 +150,36 @@
                             </div>
                             <div class="col-lg-7 col-md-6 col-sm-12 ">
 
-                                <h2 class="product-title ">
+                                <h1 class="product-title " style="font-size:1.6rem;">
                                     {{ products.title }}
-                                </h2>
-                                {% if products.model %}
-                                    <hr class="hr-text" data-content="{{ products.model }}">
-                                {% else %}
-                                    <hr class="hr-text" data-content="مدل ثبت نشده">
-                                {% endif %}
+                                </h1>
+                                <hr class="hr-text" data-content="{{ products.get_product_type_display }}">
                                 <div class="row">
                                     <div class="col-6">
                                         <ul class="list-group space-15">
-                                            {% if products.color.all %}
-                                                <li class="list-group-item">رنگ: {{ products.color.all|join:'، ' }}</li>
-                                            {% endif %}
-                                            {% if products.model %}
-                                                <li class="list-group-item">مدل: {{ products.model }}</li>
-                                            {% endif %}
+                                            <li class="list-group-item">نوع محصول:
+                                                {{ products.get_product_type_display }}</li>
+                                            <li class="list-group-item">لایسنس:
+                                                {{ products.get_license_type_display }}</li>
                                             {% if products.brand.all %}
                                                 <li class="list-group-item">
-                                                    برند: {{ products.brand.all|join:'، ' }}</li>
+                                                    سازنده: {{ products.brand.all|join:'، ' }}</li>
                                             {% endif %}
                                         </ul>
                                     </div>
                                     <div class="col-6">
                                         <ul class="list-group space-15">
-                                            {% if products.weight %}
-                                                <li class="list-group-item">وزن: {{ products.weight }}</li>
-                                            {% endif %}
-                                            {% if products.dimensions %}
-                                                <li class="list-group-item"> ابعاد: {{ products.dimensions }}</li>
+                                            {% if products.digital_info %}
+                                                {% if products.digital_info.file_type %}
+                                                    <li class="list-group-item">فرمت فایل:
+                                                        {{ products.digital_info.file_type }}</li>
+                                                {% endif %}
+                                                {% if products.digital_info.version %}
+                                                    <li class="list-group-item">نسخه:
+                                                        {{ products.digital_info.version }}</li>
+                                                {% endif %}
+                                                <li class="list-group-item">حجم فایل:
+                                                    {{ products.digital_info.file_size_display }}</li>
                                             {% endif %}
                                             {% if products.operating_system %}
                                                 <li class="list-group-item"> سیستم عامل
@@ -154,6 +187,34 @@
                                             {% endif %}
                                         </ul>
                                     </div>
+                                    <div class="col-12">
+                                        {% if products.is_unlimited %}
+                                            <span class="digital-spec-badge"><i class="fa fa-infinity" aria-hidden="true"></i> دانلود نامحدود</span>
+                                        {% endif %}
+                                        <span class="digital-spec-badge"><i class="fa fa-bolt" aria-hidden="true"></i> تحویل آنی پس از پرداخت</span>
+                                        {% if products.support_duration %}
+                                            <span class="digital-spec-badge"><i class="fa fa-headset" aria-hidden="true"></i> {{ products.support_duration }} پشتیبانی</span>
+                                        {% endif %}
+                                        {% if products.update_duration %}
+                                            <span class="digital-spec-badge"><i class="fa fa-rotate" aria-hidden="true"></i> {{ products.update_duration }} به‌روزرسانی</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if products.demo_url or products.documentation_url %}
+                                        <div class="col-12 space-10">
+                                            {% if products.demo_url %}
+                                                <a href="{{ products.demo_url }}" target="_blank" rel="nofollow"
+                                                   class="btn btn-second-masai" style="font-size: 13px;padding: 6px 18px;">
+                                                    <i class="fa fa-eye" aria-hidden="true"></i> پیش‌نمایش زنده (دمو)
+                                                </a>
+                                            {% endif %}
+                                            {% if products.documentation_url %}
+                                                <a href="{{ products.documentation_url }}" target="_blank" rel="nofollow"
+                                                   class="btn btn-second-masai" style="font-size: 13px;padding: 6px 18px;">
+                                                    <i class="fa fa-book" aria-hidden="true"></i> مستندات فایل
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
                                     <div class="col-lg-12 col-md-12 col-sm-12 product_main_pr">
 
                                         <div class="time_pr">
@@ -162,34 +223,39 @@
                                             <div class="row">
                                                 <div class="col-12 upda">
                                                     <b>
-                                                        <i class="fa fa-calendar" aria-hidden="true"></i>
+                                                        <i class="fa fa-cloud-arrow-down" aria-hidden="true"></i>
 
-                                                        زمان ارسال محصول :
+                                                        نحوه تحویل فایل :
                                                     </b>
-                                                    از انبار مَسای کالا طی 5 روز کاری
+                                                    دانلود آنی و مستقیم از پنل کاربری بلافاصله پس از پرداخت موفق
                                                 </div>
 
                                                 <div class="col-12 col-lg-6 col-md-6">
                                                     <div class="stock-info">
-                                                        <p>موجودی انبار:
-                                                            <span style="color: #46A9AE; font-weight: bold;">{{ products.stock_count }}</span>
-                                                            عدد
+                                                        <p>وضعیت فایل:
+                                                            {% if products.is_unlimited %}
+                                                                <span style="color: #46A9AE; font-weight: bold;">نامحدود</span>
+                                                            {% elif products.stock_count > 0 %}
+                                                                <span style="color: #46A9AE; font-weight: bold;">{{ products.stock_count }} لایسنس فعال</span>
+                                                            {% else %}
+                                                                <span style="color: #FF0000; font-weight: bold;">ناموجود</span>
+                                                            {% endif %}
                                                         </p>
                                                         <div class="progress"
                                                              style="height: 14px; background: #f5f5f5;">
                                                             <div class="progress-bar"
-                                                                 style="width: {{ products.stock_count }}%;
+                                                                 style="width: {% if products.is_unlimited %}100{% elif products.stock_count %}{{ products.stock_count }}{% else %}0{% endif %}%;
                                                                          background-color: #46A9AE;
                                                                          border-radius: 5px;">
                                                             </div>
                                                         </div>
-                                                        <small style="color: {% if products.stock_count == 0 %}#FF0000{% elif products.stock_count < 5 and products.stock_count > 0 %}#e74c3c{% else %}#46A9AE{% endif %};">
-                                                            {% if products.stock_count == 0 %}
-                                                                موجود نیست
-                                                            {% elif products.stock_count < 5 and products.stock_count > 0 %}
-                                                                فقط {{ products.stock_count }} عدد باقی مانده
+                                                        <small style="color: {% if products.is_available %}#46A9AE{% else %}#FF0000{% endif %};">
+                                                            {% if products.is_unlimited %}
+                                                                بدون محدودیت تعداد دانلود و فروش
+                                                            {% elif products.stock_count > 0 %}
+                                                                تعداد لایسنس‌های باقی‌مانده
                                                             {% else %}
-                                                                موجود در انبار مَسای
+                                                                فعلاً لایسنسی برای این فایل موجود نیست
                                                             {% endif %}
                                                         </small>
                                                     </div>
@@ -206,26 +272,29 @@
                                                         </ins>
                                                     </div>
                                                     <div class="col-12 timer-title text--center">
-                                                        {% if products.stock_count > 0 %}
-                                                            {% if products.color.all.count > 1 %}
-                                                                <select id="product-color" class="form-control mb-2">
-                                                                    {% for color in products.color.all %}
-                                                                        <option value="{{ color.id }}">{{ color.title }}</option>
-                                                                    {% endfor %}
-                                                                </select>
+                                                        {% if user_tokens %}
+                                                            <div class="download-box">
+                                                                <b><i class="fa fa-circle-check" style="color:#2e9e44" aria-hidden="true"></i>
+                                                                    این فایل را قبلاً خریداری کرده‌اید</b>
+                                                                {% for token in user_tokens %}
+                                                                    {% if token.is_valid %}
+                                                                        <a href="{% url 'downloads:download' token.token %}"
+                                                                           class="btn btn-main-masai big_btn" style="margin-top:8px;">
+                                                                            <i class="fa fa-download" aria-hidden="true"></i> دانلود فایل
+                                                                        </a>
+                                                                    {% endif %}
+                                                                {% endfor %}
+                                                            </div>
+                                                        {% elif products.is_available %}
+                                                            {% if in_cart %}
+                                                                <a href="{% url 'cart:cart' %}" class="btn btn-second-masai big_btn">در سبد خرید شما است - مشاهده سبد</a>
                                                             {% else %}
-                                                                <input type="hidden" id="product-color"
-                                                                       value="{{ products.color.all.first.id }}">
+                                                                <button class="btn btn-main-masai big_btn" id="add-to-cart"
+                                                                        data-product-id="{{ products.id }}">افزودن به سبد
+                                                                </button>
                                                             {% endif %}
-                                                            <input type="number" id="product-quantity" value="1" min="1"
-                                                                   max="{{ products.stock_count }}"
-                                                                   class="form-control mb-2">
-                                                            <button class="btn btn-main-masai big_btn" id="add-to-cart"
-                                                                    data-product-id="{{ products.id }}">افزودن به سبد
-                                                            </button>
                                                         {% else %}
-                                                            <button class="btn btn-main-masai big_btn" disabled>موجود
-                                                                نیست
+                                                            <button class="btn btn-main-masai big_btn" disabled>ناموجود
                                                             </button>
                                                         {% endif %}
                                                     </div>
@@ -237,12 +306,10 @@
                                     </div>
                                     <div class="col-12">
                                         <p class="txt_note">
-                                            <i class="fa fa-info" aria-hidden="true"></i>
-                                            برای کالاهای گروه موبایل، امکان برگشت کالا به دلیل انصراف از خرید تنها در
-                                            صورتی مورد قبول است که کالا بدون هیچگونه استفاده و با تمامی قطعات، متعلقات و
-                                            بسته‌بندی‌های اولیه خود بازگردانده شود. لازم به ذکر است که برای هر کالای
-                                            موبایل، ضمانت رجیستری صادر می‌شود. در صورت بروز اشکال در ضمانت رجیستری، پس
-                                            از انقضای مدت ۳۰ روزه، کالا می‌تواند بازگردانده شود.
+                                            <i class="fa fa-shield-halved" aria-hidden="true"></i>
+                                            تمام فایل‌های {{ site_name }} با لایسنس رسمی و بدون محدودیت ارائه می‌شوند. در صورت
+                                            مغایرت فایل با توضیحات یا خرابی فایل، تا ۷ روز امکان درخواست بازگشت وجه وجود دارد.
+                                            برای نصب و راه‌اندازی فایل‌ها نیز پشتیبانی فنی رایگان در کنار شماست.
                                         </p>
                                     </div>
 
@@ -268,7 +335,7 @@
                                     </li>
                                     <li class="box-tabs-tab">
                                         <a data-toggle="tab" href="#params" role="tab" aria-expanded="false">
-                                            مشخصات محصول
+                                            مشخصات فایل
                                         </a>
                                     </li>
                                     <li class="box-tabs-tab">
@@ -301,98 +368,71 @@
                                         </div>
                                         <div class="tab-pane params" id="params" role="tabpanel" aria-expanded="false">
                                             <header class="card-header">
-                                                <h3 class="card-title"><span>بررسی تخصصی {{ products.title }} </span>
+                                                <h3 class="card-title"><span>مشخصات فایل {{ products.title }} </span>
                                                 </h3>
                                             </header>
 
                                             <div class="col-12">
                                                 <ul class="list-group ">
+                                                    <li class="list-group-item">نوع محصول:
+                                                        {{ products.get_product_type_display }}</li>
+                                                    <li class="list-group-item">نوع لایسنس:
+                                                        {{ products.get_license_type_display }}</li>
                                                     {% if products.brand.all %}
                                                         <li class="list-group-item">
-                                                            برند: {{ products.brand.all|join:'، ' }}</li>
+                                                            برند / سازنده: {{ products.brand.all|join:'، ' }}</li>
                                                     {% endif %}
-                                                    {% if products.model %}
-                                                        <li class="list-group-item">مدل: {{ products.model }}</li>
-                                                    {% endif %}
-                                                    {% if products.color.all %}
-                                                        <li class="list-group-item">
-                                                            رنگ: {{ products.color.all|join:'، ' }}</li>
-                                                    {% endif %}
-                                                    {% if products.weight %}
-                                                        <li class="list-group-item">وزن: {{ products.weight }}</li>
-                                                    {% endif %}
-                                                    {% if products.dimensions %}
-                                                        <li class="list-group-item">
-                                                            ابعاد: {{ products.dimensions }}</li>
+                                                    {% if products.digital_info %}
+                                                        {% if products.digital_info.file_type %}
+                                                            <li class="list-group-item">فرمت فایل:
+                                                                {{ products.digital_info.file_type }}</li>
+                                                        {% endif %}
+                                                        {% if products.digital_info.version %}
+                                                            <li class="list-group-item">نسخه:
+                                                                {{ products.digital_info.version }}</li>
+                                                        {% endif %}
+                                                        <li class="list-group-item">حجم فایل:
+                                                            {{ products.digital_info.file_size_display }}</li>
+                                                        <li class="list-group-item">تعداد دانلود:
+                                                            {{ products.digital_info.download_count }}</li>
                                                     {% endif %}
                                                     {% if products.operating_system %}
                                                         <li class="list-group-item">سیستم
-                                                            عامل: {{ products.operating_system }}</li>
+                                                            عامل سازگار: {{ products.operating_system }}</li>
                                                     {% endif %}
-                                                    {% if products.battery_capacity %}
-                                                        <li class="list-group-item">ظرفیت
-                                                            باتری: {{ products.battery_capacity }}</li>
+                                                    {% if products.requirements %}
+                                                        <li class="list-group-item">پیش‌نیازها:
+                                                            {{ products.requirements|linebreaksbr }}</li>
                                                     {% endif %}
-                                                    {% if products.ram %}
-                                                        <li class="list-group-item">حافظه موقت: {{ products.ram }}</li>
+                                                    {% if products.support_duration %}
+                                                        <li class="list-group-item">مدت پشتیبانی:
+                                                            {{ products.support_duration }}</li>
                                                     {% endif %}
-                                                    {% if products.internal_memory %}
-                                                        <li class="list-group-item">حافظه
-                                                            داخلی: {{ products.internal_memory }}</li>
+                                                    {% if products.update_duration %}
+                                                        <li class="list-group-item">مدت دریافت به‌روزرسانی:
+                                                            {{ products.update_duration }}</li>
                                                     {% endif %}
-                                                    {% if products.camera_resolution %}
-                                                        <li class="list-group-item">رزولوشن
-                                                            دوربین: {{ products.camera_resolution }}</li>
+                                                    {% if products.demo_url %}
+                                                        <li class="list-group-item">
+                                                            <a href="{{ products.demo_url }}" target="_blank" rel="nofollow">لینک پیش‌نمایش (دمو)</a>
+                                                        </li>
                                                     {% endif %}
-                                                    {% if products.connectivity %}
-                                                        <li class="list-group-item">نوع
-                                                            اتصال: {{ products.connectivity }}</li>
-                                                    {% endif %}
-                                                    {% if products.processor_generation %}
-                                                        <li class="list-group-item">نسل
-                                                            پردازنده: {{ products.processor_generation }}</li>
-                                                    {% endif %}
-                                                    {% if products.processor_manufacturer %}
-                                                        <li class="list-group-item">سازنده
-                                                            پردازنده: {{ products.processor_manufacturer }}</li>
-                                                    {% endif %}
-                                                    {% if products.processor_series %}
-                                                        <li class="list-group-item">سری
-                                                            پردازنده: {{ products.processor_series }}</li>
-                                                    {% endif %}
-                                                    {% if products.body_material %}
-                                                        <li class="list-group-item">جنس
-                                                            بدنه: {{ products.body_material }}</li>
-                                                    {% endif %}
-                                                    {% if products.strap_material %}
-                                                        <li class="list-group-item">جنس
-                                                            بند: {{ products.strap_material }}</li>
-                                                    {% endif %}
-                                                    {% if products.display_size %}
-                                                        <li class="list-group-item">اندازه صفحه
-                                                            نمایش: {{ products.display_size }}</li>
-                                                    {% endif %}
-                                                    {% if products.bluetooth_version %}
-                                                        <li class="list-group-item">نسخه
-                                                            بلوتوث: {{ products.bluetooth_version }}</li>
-                                                    {% endif %}
-                                                    {% if products.antenna_count %}
-                                                        <li class="list-group-item">تعداد
-                                                            آنتن: {{ products.antenna_count }}</li>
-                                                    {% endif %}
-                                                    {% if products.antenna_type %}
-                                                        <li class="list-group-item">نوع
-                                                            آنتن: {{ products.antenna_type }}</li>
-                                                    {% endif %}
-                                                    {% if products.power_source %}
-                                                        <li class="list-group-item">منبع
-                                                            تغذیه: {{ products.power_source }}</li>
-                                                    {% endif %}
-                                                    {% if products.os_support %}
-                                                        <li class="list-group-item">قابلیت پشتیبانی از سیستم عامل‌
-                                                            های: {{ products.os_support }}</li>
+                                                    {% if products.documentation_url %}
+                                                        <li class="list-group-item">
+                                                            <a href="{{ products.documentation_url }}" target="_blank" rel="nofollow">لینک مستندات</a>
+                                                        </li>
                                                     {% endif %}
                                                 </ul>
+                                                {% if products.digital_info.changelog %}
+                                                    <header class="card-header space-top-15">
+                                                        <h3 class="card-title"><span>تغییرات نسخه {{ products.digital_info.version|default:'' }}</span></h3>
+                                                    </header>
+                                                    <div class="parent-expert default">
+                                                        <div class="content-expert">
+                                                            <p>{{ products.digital_info.changelog|linebreaksbr }}</p>
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
                                             </div>
                                         </div>
                                         <div class="tab-pane" id="comments" role="tabpanel" aria-expanded="false">
@@ -553,7 +593,7 @@
             {% if not request.user.is_authenticated %}
                 Swal.fire({
                     title: 'ورود به سیستم',
-                    text: 'برای افزودن محصول به سبد خرید، ابتدا باید وارد حساب کاربری خود شوید.',
+                    text: 'برای افزودن فایل به سبد خرید، ابتدا باید وارد حساب کاربری خود شوید.',
                     icon: 'warning',
                     confirmButtonText: 'ورود',
                     confirmButtonColor: '#46A9AE',
@@ -569,9 +609,6 @@
             {% endif %}
 
             const productId = this.getAttribute('data-product-id');
-            const colorSelect = document.getElementById('product-color');
-            const colorId = colorSelect ? colorSelect.value : null;
-            const quantity = document.getElementById('product-quantity').value;
 
             fetch(`/cart/add/${productId}/`, {
                 method: 'POST',
@@ -580,15 +617,14 @@
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    color_id: colorId,
-                    quantity: quantity
+                    quantity: 1
                 })
             })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         Swal.fire({
-                            text: 'محصول با موفقیت به سبد خرید اضافه شد',
+                            text: 'فایل با موفقیت به سبد خرید اضافه شد',
                             icon: 'success',
                             confirmButtonText: 'تایید',
                             confirmButtonColor: '#46A9AE'
@@ -606,12 +642,12 @@
 
 
         document.querySelectorAll('.favorites_heart').forEach(button => {
-            button.addEventListener('click', function() {
+            button.addEventListener('click', function () {
                 {% if not request.user.is_authenticated %}
                     e.preventDefault();
                     Swal.fire({
                         title: 'ورود به سیستم',
-                        text: 'برای افزودن محصول به لیست علاقه ‌مندی ‌ها، ابتدا باید وارد حساب کاربری خود شوید.',
+                        text: 'برای افزودن فایل به لیست علاقه ‌مندی ‌ها، ابتدا باید وارد حساب کاربری خود شوید.',
                         icon: 'warning',
                         confirmButtonText: 'ورود',
                         confirmButtonColor: '#46A9AE',
@@ -659,29 +695,6 @@
                         confirmButtonColor: '#e74c3c'
                     });
                 });
-            });
-        });
-
-        document.querySelectorAll('.favorites_heart').forEach(button => {
-            button.addEventListener('click', function(e) {
-                {% if not request.user.is_authenticated %}
-                    e.preventDefault();
-                    Swal.fire({
-                        title: 'ورود به سیستم',
-                        text: 'برای افزودن محصول به لیست علاقه ‌مندی‌ ها، ابتدا باید وارد حساب کاربری خود شوید.',
-                        icon: 'warning',
-                        confirmButtonText: 'ورود',
-                        confirmButtonColor: '#46A9AE',
-                        showCancelButton: true,
-                        cancelButtonText: 'انصراف',
-                        cancelButtonColor: '#e74c3c'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = "{% url 'account:login' %}?next={{ request.path }}";
-                        }
-                    });
-                    return false;
-                {% endif %}
             });
         });
     </script>

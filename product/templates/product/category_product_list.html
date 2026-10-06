@@ -1,16 +1,22 @@
 {% extends 'base.html' %}
-{% block title %}محصولات {{ category.title }}{% endblock %}
+{% block title %}{{ category.title }} | دانلود فایل {{ category.title }} | {{ site_name }}{% endblock %}
+{% block meta_description %}خرید و دانلود آنی فایل‌های دسته {{ category.title }} همراه با لایسنس رسمی، به‌روزرسانی و پشتیبانی فنی{% endblock %}
+{% load seo_tags %}
+{% block og_title %}{{ category.title }} | دانلود فایل {{ category.title }} | {{ site_name }}{% endblock %}
+{% block og_description %}خرید و دانلود آنی فایل‌های دسته {{ category.title }} همراه با لایسنس رسمی، به‌روزرسانی و پشتیبانی فنی{% endblock %}
+{% block extra_schema %}{% category_breadcrumb category %}{% item_list_schema products %}{% endblock %}
 {% load static %}
 {% load custom_filters %}
 
 {% block content %}
     <main class="search-page default space-top-30">
+        <div class="container"><h1 style="font-size:16px;font-weight:700;color:#46A9AE;margin:0 8px 6px;">دانلود فایل‌های {{ category.title }}</h1></div>
         <div class="container">
             <div class="row">
                 <div class="col-12 hidden-xs">
                     <div class="brand-slider card border_all ">
                         <header class="card-header">
-                            <h3 class="card-title"><span>دسته بندی ها</span></h3>
+                            <h3 class="card-title"><span>دسته‌بندی فایل‌ها</span></h3>
                         </header>
                         <div class="row">
                             <div class="col-12">
@@ -21,10 +27,10 @@
                                                 {% if category.image %}
                                                     <img class="img-responsive imgpad" src="{{ category.image.url }}"
                                                          alt="{{ category.title }}"/>
+                                                {% elif category.icon %}
+                                                    <i class="fa {{ category.icon }} imgpad" style="font-size:42px;color:#46a9ae;"></i>
                                                 {% else %}
-                                                    <img class="img-responsive imgpad"
-                                                         src="{% static 'img/category_image_not_found.png' %}"
-                                                         alt="{{ category.title }}"/>
+                                                    <i class="fa fa-folder imgpad" style="font-size:42px;color:#46a9ae;"></i>
                                                 {% endif %}
                                                 <b class="title-3 light-black">{{ category.title }}</b>
                                             </a>
@@ -36,50 +42,19 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-12">
+                    <header class="card-header space-bottom-15">
+                        <h2 class="card-title" style="font-size:18px;font-weight:800;">
+                            <i class="fa fa-folder-open colormain" aria-hidden="true"></i>
+                            فایل‌های دسته «{{ category.title }}»
+                        </h2>
+                    </header>
+                </div>
                 <aside class="sidebar-page col-12 col-sm-12 col-md-4 col-lg-3 ">
                     <form method="get">
-                        <div class="box">
-                                <header class="card-header">
-                                    <h3 class="card-title"><span class="space-right-10">رنگ</span></h3>
-                                </header>
-                                <div class="box-content">
-                                    <div class="collapse show">
-                                        {% for color in colors %}
-                                            <div class="form-account-agree">
-                                                <label class="checkbox-form checkbox-primary">
-                                                    <input type="checkbox" id="color {{ color.id }}" name="color" value="{{ color.id }}" {% if color.id in selected_colors %}checked{% endif %}>
-                                                    <span class="checkbox-check"></span>
-                                                </label>
-                                                <label for="color {{ color.id }}"> {{ color.title }}</label>
-                                                <span class="color_pro_sel" style=" background-color: {{ color.color_code }};"></span>
-                                            </div>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-
-                        <div class="box">
-                                <header class="card-header">
-                                    <h3 class="card-title"><span class="space-right-10">لیست برند ها</span></h3>
-                                </header>
-                                <div class="box-content">
-                                    <div class="collapse show">
-                                        {% for brand in brands %}
-                                            <div class="form-account-agree">
-                                                <label class="checkbox-form checkbox-primary">
-                                                    <input type="checkbox" id="brand {{ brand.id }}" name="brand" value="{{ brand.id }}" {% if brand.id in selected_brands %}checked{% endif %}>
-                                                    <span class="checkbox-check"></span>
-                                                </label>
-                                                <label for="brand {{ brand.id }}">{{ brand.title }}</label>
-                                            </div>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-
                         <div class="box ">
                             <header class="card-header">
-                                <h3 class="card-title"><span class="space-right-10">قیمت</span></h3>
+                                <h3 class="card-title"><span class="space-right-10">قیمت (تومان)</span></h3>
                             </header>
                             <div class="price-range-wrapper">
                                 <div class="price-values">
@@ -95,9 +70,49 @@
                         </div>
 
                         <div class="box">
+                            <header class="card-header">
+                                <h3 class="card-title"><span class="space-right-10">نوع محصول</span></h3>
+                            </header>
                             <div class="box-content">
-                                <input type="checkbox" class="bootstrap-switch" name="in_stock" value="1" {% if in_stock == '1' %}checked{% endif %}/>
-                                <label for="">موجود در انبار مسای</label>
+                                <div class="collapse show">
+                                    {% for value, label in product_types %}
+                                        <div class="form-account-agree">
+                                            <label class="checkbox-form checkbox-primary">
+                                                <input type="checkbox" id="type_{{ value }}" name="type" value="{{ value }}" {% if value in selected_types %}checked{% endif %}>
+                                                <span class="checkbox-check"></span>
+                                            </label>
+                                            <label for="type_{{ value }}"> {{ label }}</label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if brands %}
+                            <div class="box">
+                                <header class="card-header">
+                                    <h3 class="card-title"><span class="space-right-10">برند / سازنده</span></h3>
+                                </header>
+                                <div class="box-content">
+                                    <div class="collapse show">
+                                        {% for brand in brands %}
+                                            <div class="form-account-agree">
+                                                <label class="checkbox-form checkbox-primary">
+                                                    <input type="checkbox" id="brand_{{ brand.id }}" name="brand" value="{{ brand.id }}" {% if brand.id in selected_brands %}checked{% endif %}>
+                                                    <span class="checkbox-check"></span>
+                                                </label>
+                                                <label for="brand_{{ brand.id }}">{{ brand.title }}</label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="box">
+                            <div class="box-content">
+                                <input type="checkbox" class="bootstrap-switch" name="instant" value="1" {% if instant_only == '1' %}checked{% endif %}/>
+                                <label for="">فقط دانلود آنی و نامحدود</label>
                             </div>
                         </div>
 
@@ -117,7 +132,7 @@
                                                 <div class="product-box">
                                                     <div class="product-seller-details product-seller-details-item-grid">
                                                         <span class="search_prod_btn">
-                                                            <i class="fa fa fa-cart-arrow-down search_icon_cart" aria-hidden="true" data-product-id="{{ product.id }}" data-color-id="{% if product.color.all %}{{ product.color.first.id }}{% else %}null{% endif %}" onclick="addToCart(this)"></i>
+                                                            <i class="fa fa fa-cart-arrow-down search_icon_cart" aria-hidden="true" data-product-id="{{ product.id }}" onclick="addToCart(this)"></i>
                                                         </span>
                                                     </div>
                                                     <a class="product-box-img"
@@ -129,15 +144,10 @@
                                                             <img src="{% static 'img/product_image_not_found.jpg' %}"
                                                                  alt="{{ product.title|truncatewords:10 }}">
                                                         {% endif %}
-                                                        {% if product.stock_count == 0 %}
-                                                            <img src="{% static 'img/sell.png' %}" class="type_icon_finished">
+                                                        {% if not product.is_available %}
+                                                            <img src="{% static 'img/sell.png' %}" class="type_icon_finished" alt="فروش ویژه">
                                                         {% endif %}
-                                                        <ul>
-                                                            {% for color in product.color.all %}
-                                                                <li class="color_pro"
-                                                                    style="background-color: {{ color.color_code }}; top: {{ forloop.counter|multiply:13|add:-6 }}px;"></li>
-                                                            {% endfor %}
-                                                        </ul>
+                                                        <span class="product-type-chip">{{ product.get_product_type_display }}</span>
                                                     </a>
                                                     <div class="product-box-content">
                                                         <div class="product-box-content-row">
@@ -163,7 +173,7 @@
                                             </div>
                                         {% endfor %}
                                     {% else %}
-                                        محصولی وجود ندارد!
+                                        فایلی در این دسته پیدا نشد!
                                     {% endif %}
                                 </div>
 
@@ -197,33 +207,19 @@
             </div>
         </div>
     </main>
+    <style>
+        .product-type-chip {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #46a9ae;
+            color: #fff;
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+    </style>
     <script>
-        // فقط یک رنگ انتخاب شود
-        document.querySelectorAll('input[id^="color"]').forEach(function(checkbox) {
-            checkbox.addEventListener('change', function() {
-                if (this.checked) {
-                    document.querySelectorAll('input[id^="color"]').forEach(function(other) {
-                        if (other !== checkbox) {
-                            other.checked = false;
-                        }
-                    });
-                }
-            });
-        });
-
-        // فقط یک برند انتخاب شود
-        document.querySelectorAll('input[id^="brand"]').forEach(function(checkbox) {
-            checkbox.addEventListener('change', function() {
-                if (this.checked) {
-                    document.querySelectorAll('input[id^="brand"]').forEach(function(other) {
-                        if (other !== checkbox) {
-                            other.checked = false;
-                        }
-                    });
-                }
-            });
-        });
-
         const minRange = document.getElementById('minRange');
         const maxRange = document.getElementById('maxRange');
         const minValue = document.getElementById('min-value');
@@ -243,11 +239,12 @@
 
         updatePriceLabels();
 
+
         function addToCart(element) {
             {% if not request.user.is_authenticated %}
                 Swal.fire({
                     title: 'ورود به سیستم',
-                    text: 'برای افزودن محصول به سبد خرید، ابتدا باید وارد حساب کاربری خود شوید.',
+                    text: 'برای افزودن فایل به سبد خرید، ابتدا باید وارد حساب کاربری خود شوید.',
                     icon: 'warning',
                     confirmButtonText: 'ورود',
                     confirmButtonColor: '#46A9AE',
@@ -263,7 +260,6 @@
             {% endif %}
 
             const productId = element.getAttribute('data-product-id');
-            const colorId = element.getAttribute('data-color-id') === 'null' ? null : element.getAttribute('data-color-id');
 
             fetch(`/cart/add/${productId}/`, {
                 method: 'POST',
@@ -272,7 +268,6 @@
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    color_id: colorId,
                     quantity: 1
                 })
             })
@@ -280,7 +275,7 @@
             .then(data => {
                 if (data.success) {
                     Swal.fire({
-                        text: 'محصول با موفقیت به سبد خرید اضافه شد',
+                        text: 'فایل با موفقیت به سبد خرید اضافه شد',
                         icon: 'success',
                         confirmButtonText: 'تایید',
                         confirmButtonColor: '#46A9AE'

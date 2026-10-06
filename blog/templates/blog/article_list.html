@@ -1,10 +1,16 @@
 {% extends 'base.html' %}
-{% block title %}وبلاگ{% endblock %}
+{% block title %}وبلاگ | آموزش‌ها و اخبار {{ site_name }}{% endblock %}
+{% block meta_description %}آموزش‌های تخصصی، اخبار و ترفندهای وب، طراحی سایت و فروش فایل‌های دیجیتال در وبلاگ {{ site_name }}{% endblock %}
+{% load seo_tags %}
+{% block og_title %}وبلاگ | آموزش‌ها و اخبار {{ site_name }}{% endblock %}
+{% block og_description %}آموزش‌های تخصصی، اخبار و ترفندهای وب، طراحی سایت و فروش فایل‌های دیجیتال در وبلاگ {{ site_name }}{% endblock %}
+{% block extra_schema %}{% blog_breadcrumb %}{% endblock %}
 {% load static %}
 {% load jalali_tags %}
 
 {% block content %}
     <main class="category-blog default space-top-30">
+        <div class="container"><h1 style="font-size:16px;font-weight:700;color:#46A9AE;margin:0 8px 6px;">وبلاگ آموزشی {{ site_name }}</h1></div>
         <div class="container ">
             <div class="row">
                 <div class="col-12">

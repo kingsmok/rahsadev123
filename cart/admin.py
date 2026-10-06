@@ -34,7 +34,7 @@ class CartAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
 
 @admin.register(models.CartItem)
 class CartItemAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
-    list_display = ['cart', 'short_product_title', 'quantity', 'color', 'get_created_at_jalali']
+    list_display = ['cart', 'short_product_title', 'quantity', 'get_created_at_jalali']
 
     def short_product_title(self, obj):
         if len(obj.product.title) > 20:
@@ -54,7 +54,7 @@ class OrderItemAdmin(admin.ModelAdmin):
 
 @admin.register(models.Order)
 class OrderAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
-    list_display = ['user', 'order_number', 'address', 'cart', 'total_price', 'coupon_discount', 'shipping_cost',
+    list_display = ['user', 'order_number', 'cart', 'total_price', 'coupon_discount', 'shipping_cost',
                     'final_price', 'status', 'get_created_at_jalali', 'get_updated_at_jalali']
 
     @admin.display(description='تاریخ ایجاد', ordering='created_at')

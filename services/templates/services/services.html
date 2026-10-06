@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+{% block title %}خدمات طراحی وب سایت | تعرفه‌ها و نمونه کارها | {{ site_name }}{% endblock %}
+{% block meta_description %}سفارش طراحی وب سایت شرکتی، فروشگاهی و شخصی؛ تعرفه‌های شفاف، تحویل به‌موقع، سئوی قوی و پشتیبانی یک‌ساله همراه با نمونه کارهای واقعی{% endblock %}
+{% load seo_tags %}
+{% block og_title %}خدمات طراحی وب سایت | تعرفه‌ها و نمونه کارها | {{ site_name }}{% endblock %}
+{% block og_description %}سفارش طراحی وب سایت شرکتی، فروشگاهی و شخصی؛ تعرفه‌های شفاف، تحویل به‌موقع و پشتیبانی یک‌ساله{% endblock %}
+{% block extra_schema %}{% service_schema packages %}{% page_breadcrumb 'خدمات طراحی وب' %}{% endblock %}
+{% load static %}
+{% load custom_filters %}
+{% load jalali_tags %}
+
+{% block content %}
+    <style>
+        .svc-hero {
+            background: linear-gradient(135deg, #61bec3, #46a9ae);
+            color: #fff;
+            border-radius: 16px;
+            padding: 45px 30px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .svc-hero h1 { color: #fff; font-size: 28px; font-weight: 800; margin-bottom: 12px; }
+        .svc-hero p { color: #e9fbfb; font-size: 15px; line-height: 2.1; max-width: 760px; margin: 0 auto 18px; }
+        .svc-hero .btn {
+            background: #fff; color: #46a9ae; font-weight: 700; border-radius: 50px; padding: 11px 38px; font-size: 15px;
+        }
+        .svc-section-title {
+            font-size: 22px; font-weight: 800; color: #252f42; margin: 45px 0 20px; text-align: center;
+        }
+        .svc-section-title i { color: #46a9ae; margin-left: 8px; }
+        .price-card {
+            background: #fff; border: 1px solid #e1e2e7; border-radius: 14px; padding: 26px 22px; height: 100%;
+            position: relative; transition: all .3s ease;
+        }
+        .price-card.featured {
+            border: 2px solid #46a9ae;
+            box-shadow: 0 10px 30px rgba(70, 169, 174, .16);
+        }
+        .price-card .featured-badge {
+            position: absolute; top: -13px; right: 50%; transform: translateX(50%);
+            background: linear-gradient(135deg, #61bec3, #46a9ae); color: #fff;
+            font-size: 12px; font-weight: 700; padding: 4px 18px; border-radius: 20px; white-space: nowrap;
+        }
+        .price-card h3 { font-size: 19px; font-weight: 800; color: #252f42; text-align: center; }
+        .price-card .sub { text-align: center; font-size: 13px; color: #6b7a8c; margin-bottom: 14px; }
+        .price-card .amount { text-align: center; margin-bottom: 6px; }
+        .price-card .amount b { font-size: 24px; color: #46a9ae; }
+        .price-card .meta { text-align: center; font-size: 12px; color: #8a97a8; margin-bottom: 16px; }
+        .price-card ul { list-style: none; padding: 0; margin: 0 0 20px; }
+        .price-card ul li {
+            font-size: 13px; color: #4b5a68; padding: 7px 0; border-bottom: 1px dashed #eef1f4;
+        }
+        .price-card ul li i { color: #46a9ae; margin-left: 8px; }
+        .price-card .btn-order {
+            display: block; text-align: center; background: linear-gradient(135deg, #61bec3, #46a9ae); color: #fff;
+            border-radius: 50px; padding: 10px; font-weight: 700;
+        }
+        .price-card .btn-order.outline { background: #fff; color: #46a9ae; border: 1px solid #46a9ae; }
+        .step-card {
+            background: #fff; border: 1px solid #e1e2e7; border-radius: 14px; padding: 24px 18px; text-align: center; height: 100%;
+        }
+        .step-card .num {
+            width: 46px; height: 46px; line-height: 46px; border-radius: 50%;
+            background: linear-gradient(135deg, #61bec3, #46a9ae); color: #fff; font-weight: 800; font-size: 18px; margin: 0 auto 12px;
+        }
+        .step-card h4 { font-size: 15px; font-weight: 800; margin-bottom: 8px; }
+        .step-card p { font-size: 13px; color: #6b7a8c; line-height: 2; margin: 0; }
+        .portfolio-card {
+            background: #fff; border: 1px solid #e1e2e7; border-radius: 14px; overflow: hidden; transition: all .3s ease;
+        }
+        .portfolio-card:hover { border-color: #46a9ae; box-shadow: 0 8px 24px rgba(70,169,174,.14); }
+        .portfolio-card img { width: 100%; height: 190px; object-fit: cover; }
+        .portfolio-card .body { padding: 14px 16px; }
+        .portfolio-card h4 { font-size: 15px; font-weight: 800; margin-bottom: 4px; }
+        .portfolio-card .cat { font-size: 12px; color: #46a9ae; font-weight: 700; }
+        .portfolio-card p { font-size: 12.5px; color: #6b7a8c; line-height: 1.9; margin: 6px 0 0; }
+        .req-form {
+            background: #fff; border: 1px solid #e1e2e7; border-radius: 14px; padding: 28px;
+        }
+        .req-form .form-control { border-radius: 10px; font-size: 13px; }
+        .req-form label { font-size: 13px; font-weight: 700; color: #4b5a68; }
+        .tech-item {
+            text-align: center; background: #fff; border: 1px solid #e1e2e7; border-radius: 12px; padding: 16px 8px;
+        }
+        .tech-item i { font-size: 26px; color: #46a9ae; display: block; margin-bottom: 8px; }
+        .tech-item span { font-size: 13px; font-weight: 700; color: #4b5a68; }
+    </style>
+    <main class="default space-top-30">
+        <div class="container">
+            <!-- Hero -->
+            <div class="svc-hero">
+                <h1><i class="fa fa-code" aria-hidden="true"></i> تیم طراحی وب سایت {{ site_name }}</h1>
+                <p>
+                    علاوه بر فروش فایل و قالب آماده، تیم متخصص {{ site_name }} وب سایت اختصاصی شما را از صفر طراحی می‌کند؛
+                    سایت شرکتی، فروشگاه اینترنتی، سایت شخصی یا پرتال سازمانی. طراحی ریسپانسیو، سرعت بالا، سئوی اصولی
+                    و پنل مدیریت ساده فقط بخشی از ویژگی‌های کار ماست.
+                </p>
+                <a href="#request-form" class="btn">استعلام قیمت رایگان</a>
+            </div>
+
+            <!-- Packages -->
+            <h2 class="svc-section-title"><i class="fa fa-tags" aria-hidden="true"></i> تعرفه‌های طراحی سایت</h2>
+            <div class="row">
+                {% for package in packages %}
+                    <div class="col-12 col-md-4 space-bottom-30">
+                        <div class="price-card {% if package.is_featured %}featured{% endif %}">
+                            {% if package.is_featured %}<span class="featured-badge">پیشنهاد ما</span>{% endif %}
+                            <h3>{{ package.title }}</h3>
+                            <div class="sub">{{ package.subtitle }}</div>
+                            <div class="amount">
+                                {% if package.price %}
+                                    <b>{{ package.price|format_price }}</b> <span style="font-size:13px;">تومان</span>
+                                {% else %}
+                                    <b>استعلام قیمت</b>
+                                {% endif %}
+                            </div>
+                            <div class="meta">
+                                <i class="fa fa-clock" aria-hidden="true"></i> تحویل {{ package.delivery_days }} روز
+                                &nbsp;|&nbsp;
+                                <i class="fa fa-rotate" aria-hidden="true"></i> {{ package.revisions }} بازنگری
+                            </div>
+                            <ul>
+                                {% for feature in package.features_list %}
+                                    <li><i class="fa fa-circle-check" aria-hidden="true"></i> {{ feature }}</li>
+                                {% endfor %}
+                            </ul>
+                            <a href="#request-form" class="btn-order {% if not package.is_featured %}outline{% endif %}"
+                               onclick="selectPackage({{ package.id }})">سفارش {{ package.title }}</a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-12 text-center text-muted">به‌زودی تعرفه‌ها در این بخش قرار می‌گیرد.</div>
+                {% endfor %}
+            </div>
+
+            <!-- Process -->
+            <h2 class="svc-section-title"><i class="fa fa-diagram-project" aria-hidden="true"></i> مراحل انجام پروژه</h2>
+            <div class="row">
+                <div class="col-12 col-md-3 space-bottom-15">
+                    <div class="step-card">
+                        <div class="num">۱</div>
+                        <h4>ثبت درخواست و مشاوره</h4>
+                        <p>فرم درخواست را تکمیل می‌کنید و کارشناسان ما برای تحلیل نیاز شما تماس می‌گیرند.</p>
+                    </div>
+                </div>
+                <div class="col-12 col-md-3 space-bottom-15">
+                    <div class="step-card">
+                        <div class="num">۲</div>
+                        <h4>طراحی و تأیید طرح</h4>
+                        <p>پس‌از توافق، طرح اولیه (پروتوتایپ) طراحی و پس از تأیید شما وارد فاز توسعه می‌شود.</p>
+                    </div>
+                </div>
+                <div class="col-12 col-md-3 space-bottom-15">
+                    <div class="step-card">
+                        <div class="num">۳</div>
+                        <h4>توسعه و تست</h4>
+                        <p>سایت ساخته می‌شود، محتوا منتقل می‌گردد و روی موبایل، تبلت و دسکتاپ تست کامل انجام می‌شود.</p>
+                    </div>
+                </div>
+                <div class="col-12 col-md-3 space-bottom-15">
+                    <div class="step-card">
+                        <div class="num">۴</div>
+                        <h4>راه‌اندازی و پشتیبانی</h4>
+                        <p>سایت روی دامنه شما منتشر می‌شود و یک سال پشتیبانی و آموزش پنل مدیریت دریافت می‌کنید.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Portfolio -->
+            {% if portfolio %}
+                <h2 class="svc-section-title"><i class="fa fa-layer-group" aria-hidden="true"></i> نمونه کارهای ما</h2>
+                <div class="row">
+                    {% for item in portfolio %}
+                        <div class="col-12 col-md-4 space-bottom-30">
+                            <div class="portfolio-card">
+                                <a href="{{ item.url|default:'#' }}" {% if item.url %}target="_blank" rel="nofollow"{% endif %}>
+                                    <img src="{{ item.image.url }}" alt="{{ item.title }}">
+                                </a>
+                                <div class="body">
+                                    <h4>{{ item.title }}</h4>
+                                    <span class="cat">{{ item.category }}</span>
+                                    <p>{{ item.description|truncatechars:120 }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Tech stack -->
+            <h2 class="svc-section-title"><i class="fa fa-microchip" aria-hidden="true"></i> تکنولوژی‌هایی که استفاده می‌کنیم</h2>
+            <div class="row">
+                <div class="col-4 col-md-2 space-bottom-15"><div class="tech-item"><i class="fa-brands fa-wordpress"></i><span>وردپرس</span></div></div>
+                <div class="col-4 col-md-2 space-bottom-15"><div class="tech-item"><i class="fa-brands fa-python"></i><span>جنگو</span></div></div>
+                <div class="col-4 col-md-2 space-bottom-15"><div class="tech-item"><i class="fa-brands fa-shopify"></i><span>شاپیفای</span></div></div>
+                <div class="col-4 col-md-2 space-bottom-15"><div class="tech-item"><i class="fa-brands fa-html5"></i><span>HTML / CSS</span></div></div>
+                <div class="col-4 col-md-2 space-bottom-15"><div class="tech-item"><i class="fa-brands fa-js"></i><span>جاوااسکریپت</span></div></div>
+                <div class="col-4 col-md-2 space-bottom-15"><div class="tech-item"><i class="fa-brands fa-react"></i><span>React</span></div></div>
+            </div>
+
+            <!-- Request form -->
+            <h2 class="svc-section-title" id="request-form"><i class="fa fa-paper-plane" aria-hidden="true"></i> درخواست مشاوره و سفارش طراحی</h2>
+            <div class="row">
+                <div class="col-12">
+                    <div class="req-form">
+                        <form id="service-request-form">
+                            <div class="row">
+                                <div class="col-12 col-md-6 form-group">
+                                    <label>نام و نام خانوادگی *</label>
+                                    <input type="text" name="full_name" class="form-control" required placeholder="مثلاً: علی رضایی">
+                                </div>
+                                <div class="col-12 col-md-3 form-group">
+                                    <label>شماره تماس *</label>
+                                    <input type="text" name="phone" class="form-control" required placeholder="09xxxxxxxxx">
+                                </div>
+                                <div class="col-12 col-md-3 form-group">
+                                    <label>ایمیل</label>
+                                    <input type="email" name="email" class="form-control" placeholder="you@example.com">
+                                </div>
+                                <div class="col-12 col-md-4 form-group">
+                                    <label>پکیج مورد نظر</label>
+                                    <select name="package" id="package-select" class="form-control">
+                                        <option value="">هنوز تصمیم نگرفته‌ام (مشاوره)</option>
+                                        {% for package in packages %}
+                                            <option value="{{ package.id }}">{{ package.title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-4 form-group">
+                                    <label>نوع پروژه</label>
+                                    <input type="text" name="project_type" class="form-control" placeholder="مثلاً: فروشگاه اینترنتی پوشاک">
+                                </div>
+                                <div class="col-12 col-md-4 form-group">
+                                    <label>بودجه تقریبی</label>
+                                    <input type="text" name="budget" class="form-control" placeholder="مثلاً: ۳۰ تا ۵۰ میلیون تومان">
+                                </div>
+                                <div class="col-12 form-group">
+                                    <label>توضیحات پروژه *</label>
+                                    <textarea name="message" rows="4" class="form-control" required
+                                              placeholder="لطفاً هدف سایت، بخش‌های مورد نیاز و نمونه سایت‌های موردعلاقه‌تان را بنویسید..."></textarea>
+                                </div>
+                                <div class="col-12 text-center">
+                                    <button type="submit" class="btn btn-main-masai big_btn">ارسال درخواست</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function selectPackage(packageId) {
+            const select = document.getElementById('package-select');
+            if (select && packageId) {
+                select.value = String(packageId);
+            }
+        }
+
+        document.getElementById('service-request-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const form = e.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+
+            fetch("{% url 'services:request_service' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: new FormData(form)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    submitBtn.disabled = false;
+                    Swal.fire({
+                        title: data.success ? 'ثبت شد' : 'خطا',
+                        text: data.message,
+                        icon: data.success ? 'success' : 'error',
+                        confirmButtonText: 'تایید',
+                        confirmButtonColor: '#46A9AE'
+                    });
+                    if (data.success) {
+                        form.reset();
+                    }
+                })
+                .catch(() => {
+                    submitBtn.disabled = false;
+                    Swal.fire({
+                        title: 'خطا',
+                        text: 'مشکلی در ارتباط با سرور پیش آمد.',
+                        icon: 'error',
+                        confirmButtonColor: '#e74c3c'
+                    });
+                });
+        });
+    </script>
+{% endblock %}

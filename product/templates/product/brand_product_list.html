@@ -1,10 +1,14 @@
 {% extends 'base.html' %}
 {% block title %}محصولات {{ brand.title }}{% endblock %}
+{% load seo_tags %}
+{% block og_title %}محصولات {{ brand.title }} | {{ site_name }}{% endblock %}
+{% block extra_schema %}{% brand_breadcrumb brand %}{% item_list_schema products %}{% endblock %}
 {% load static %}
 {% load custom_filters %}
 
 {% block content %}
     <main class="search-page default space-top-30">
+        <div class="container"><h1 style="font-size:16px;font-weight:700;color:#46A9AE;margin:0 8px 6px;">محصولات {{ brand.title }}</h1></div>
         <div class="container">
             <div class="row">
                 <div class="col-12 hidden-xs">
@@ -57,8 +61,8 @@
 
                         <div class="box">
                             <div class="box-content">
-                                <input type="checkbox" class="bootstrap-switch" name="in_stock" value="1" {% if in_stock == '1' %}checked{% endif %}/>
-                                <label for="">موجود در انبار مسای</label>
+                                <input type="checkbox" class="bootstrap-switch" name="instant" value="1" {% if instant_only == '1' %}checked{% endif %}/>
+                                <label for="">فقط دانلود آنی و نامحدود</label>
                             </div>
                         </div>
                         <button type="submit" class="view_more">اعمال فیلتر</button>
@@ -77,7 +81,7 @@
                                             <div class="product-box">
                                                 <div class="product-seller-details product-seller-details-item-grid">
                                                     <span class="search_prod_btn">
-                                                        <i class="fa fa fa-cart-arrow-down search_icon_cart" aria-hidden="true" data-product-id="{{ product.id }}" data-color-id="{% if product.color.all %}{{ product.color.first.id }}{% else %}null{% endif %}" onclick="addToCart(this)"></i>
+                                                        <i class="fa fa fa-cart-arrow-down search_icon_cart" aria-hidden="true" data-product-id="{{ product.id }}" onclick="addToCart(this)"></i>
                                                     </span>
                                                 </div>
                                                 <a class="product-box-img" href="{% url 'product:product_detail' product.pid product.slug %}">
@@ -86,14 +90,10 @@
                                                     {% else %}
                                                         <img src="{% static 'img/product_image_not_found.jpg' %}" alt="{{ product.title|truncatewords:10 }}">
                                                     {% endif %}
-                                                    {% if product.stock_count == 0 %}
-                                                        <img src="{% static 'img/sell.png' %}" class="type_icon_finished">
+                                                    {% if not product.is_available %}
+                                                        <img src="{% static 'img/sell.png' %}" class="type_icon_finished" alt="فروش ویژه">
                                                     {% endif %}
-                                                    <ul>
-                                                        {% for color in product.color.all %}
-                                                            <li class="color_pro" style="background-color: {{ color.color_code }}; top: {{ forloop.counter|multiply:13|add:-6 }}px;"></li>
-                                                        {% endfor %}
-                                                    </ul>
+                                                    <span class="product-type-chip">{{ product.get_product_type_display }}</span>
                                                 </a>
                                                 <div class="product-box-content">
                                                     <div class="product-box-content-row">
@@ -173,7 +173,7 @@
             {% if not request.user.is_authenticated %}
                 Swal.fire({
                     title: 'ورود به سیستم',
-                    text: 'برای افزودن محصول به سبد خرید، ابتدا باید وارد حساب کاربری خود شوید.',
+                    text: 'برای افزودن فایل به سبد خرید، ابتدا باید وارد حساب کاربری خود شوید.',
                     icon: 'warning',
                     confirmButtonText: 'ورود',
                     confirmButtonColor: '#46A9AE',
@@ -189,7 +189,6 @@
             {% endif %}
 
             const productId = element.getAttribute('data-product-id');
-            const colorId = element.getAttribute('data-color-id') === 'null' ? null : element.getAttribute('data-color-id');
 
             fetch(`/cart/add/${productId}/`, {
                 method: 'POST',
@@ -198,7 +197,6 @@
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    color_id: colorId,
                     quantity: 1
                 })
             })
@@ -206,7 +204,7 @@
             .then(data => {
                 if (data.success) {
                     Swal.fire({
-                        text: 'محصول با موفقیت به سبد خرید اضافه شد',
+                        text: 'فایل با موفقیت به سبد خرید اضافه شد',
                         icon: 'success',
                         confirmButtonText: 'تایید',
                         confirmButtonColor: '#46A9AE'

@@ -108,11 +108,9 @@
                                                             <li>
                                                                 <b>قیمت واحد: </b>{{ item.product.price|format_price }}
                                                             </li>
-                                                            {% if item.color %}
-                                                                <li>
-                                                                    <b>رنگ: </b>{{ item.color.title }}
-                                                                </li>
-                                                            {% endif %}
+                                                            <li>
+                                                                <b>نوع فایل: </b>{{ item.product.get_product_type_display }}
+                                                            </li>
                                                             <li>
                                                                 <b>تعداد: </b>{{ item.quantity }}
                                                             </li>

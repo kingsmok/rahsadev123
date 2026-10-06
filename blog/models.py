@@ -46,6 +46,28 @@ class Article(models.Model):
     meta_description = models.CharField(max_length=160, blank=True, verbose_name='توضیحات سئو')
     canonical_url = models.URLField(blank=True, verbose_name='آدرس canonical')
 
+    def save(self, *args, **kwargs):
+        """ریدایرکت خودکار ۳۰۱ هنگام تغییر نامک مقاله (حفظ اعتبار سئو)."""
+        from core.models import Redirect
+        if self.pk:
+            try:
+                old_slug = Article.objects.filter(pk=self.pk).values_list('slug', flat=True).first()
+                if old_slug and old_slug != self.slug:
+                    # جلوگیری از حلقه: ریدایرکت معکوس قبلی حذف شود
+                    Redirect.objects.filter(old_path=f'/blog/{self.slug}/').delete()
+                    Redirect.objects.update_or_create(
+                        old_path=f'/blog/{old_slug}/',
+                        defaults={
+                            'new_path': f'/blog/{self.slug}/',
+                            'status_code': '301',
+                            'is_active': True,
+                            'note': 'تغییر نامک مقاله: ' + str(self.title),
+                        },
+                    )
+            except Exception:
+                pass
+        super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = 'مقاله'
         verbose_name_plural = 'مقالات'

@@ -1,4 +1,8 @@
-from django.urls import path
+from django.urls import path, re_path
 from .views import detail
-app_name='pages'
-urlpatterns=[path('<slug:slug>/', detail, name='detail')]
+
+app_name = 'pages'
+urlpatterns = [
+    # پشتیبانی از نامک‌های فارسی (یونیکد)
+    re_path(r'(?P<slug>[\w-]+)/$', detail, name='detail'),
+]
