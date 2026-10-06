@@ -9,7 +9,7 @@
 body {
     direction: rtl;
     text-align: right;
-    font-family: vazir-fd-wl;
+    font-family: 'Vazirmatn FD', 'Vazirmatn', Tahoma, Arial, sans-serif;
     font-size: 14px;
     background-color: #fff;
     color: #515151;
@@ -61,7 +61,7 @@ input,
 optgroup,
 select,
 textarea {
-    font-family: vazir-fd-wl;
+    font-family: 'Vazirmatn FD', 'Vazirmatn', Tahoma, Arial, sans-serif;
 }
 
 
@@ -103,7 +103,7 @@ header.Masai-header .search-area form.search input {
     height: 100%;
     padding: 10px 50px 9px;
     line-height: 1.833;
-    font-family: vazir-fd-wl;
+    font-family: 'Vazirmatn FD', 'Vazirmatn', Tahoma, Arial, sans-serif;
     font-weight: 300;
     font-size: 13px;
     border-radius: 7px;
@@ -678,7 +678,7 @@ nav.header-responsive form input {
     height: 100%;
     padding: 10px 50px 9px;
     line-height: 1.833;
-    font-family: vazir-fd-wl;
+    font-family: 'Vazirmatn FD', 'Vazirmatn', Tahoma, Arial, sans-serif;
     font-weight: 300;
     font-size: 13px;
     border-radius: 7px;
@@ -1782,7 +1782,7 @@ footer.main-footer .footer-widgets .newsletter form {
 }
 
 footer.main-footer .footer-widgets .newsletter form .form-control {
-    font-family: vazir-fd-wl;
+    font-family: 'Vazirmatn FD', 'Vazirmatn', Tahoma, Arial, sans-serif;
     font-size: 13px;
     border-radius: 7px;
     color: #515151;
@@ -1801,7 +1801,7 @@ footer.main-footer .footer-widgets .newsletter form .btn {
     top: -5px;
     left: -1px;
     border-radius: 7px;
-    font-family: vazir-fd-wl;
+    font-family: 'Vazirmatn FD', 'Vazirmatn', Tahoma, Arial, sans-serif;
     border-top-right-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
     background-color: #00bfd6;
@@ -2029,7 +2029,7 @@ footer.main-footer .copyright p {
     width: 100%;
     letter-spacing: 0px;
     text-align: right;
-    font-family: vazir-fd-wl;
+    font-family: 'Vazirmatn FD', 'Vazirmatn', Tahoma, Arial, sans-serif;
     outline: none;
 }
 
@@ -2063,7 +2063,7 @@ footer.main-footer .copyright p {
 .account-box-content .dk-selectric-input {
     padding-top: 11px;
     padding-bottom: 11px;
-    font-family: vazir-fd-wl;
+    font-family: 'Vazirmatn FD', 'Vazirmatn', Tahoma, Arial, sans-serif;
 }
 
 .form-account-title--inline {
@@ -2398,7 +2398,7 @@ border-radius: 7px;
     padding-bottom: 8px;
     padding-right: 38px;
     outline: none;
-    font-family: vazir-fd-wl;
+    font-family: 'Vazirmatn FD', 'Vazirmatn', Tahoma, Arial, sans-serif;
 }
 
 .ui-input--quick-search .ui-input-field:focus {
@@ -3490,7 +3490,7 @@ background-color: #EFF8F9;
     height: 100%;
      padding: 10px; 
     line-height: 1.833;
-    font-family: vazir-fd-wl;
+    font-family: 'Vazirmatn FD', 'Vazirmatn', Tahoma, Arial, sans-serif;
     font-weight: 300;
     font-size: 14px;
     border-radius: 7px;
@@ -4320,7 +4320,7 @@ ul.gallery-options li:hover .tooltip-option {
     padding: 11px 12px;
     width: 100%;
     letter-spacing: 0px;
-    font-family: vazir-fd-wl;
+    font-family: 'Vazirmatn FD', 'Vazirmatn', Tahoma, Arial, sans-serif;
     outline: none;
 }
 
@@ -4332,7 +4332,7 @@ ul.gallery-options li:hover .tooltip-option {
     text-decoration: none;
     background-color: #00bfd6;
     border: 1px solid #148693;
-    font-family: vazir-fd-wl;
+    font-family: 'Vazirmatn FD', 'Vazirmatn', Tahoma, Arial, sans-serif;
     font-size: 14px;
     padding: 10px;
     cursor: pointer;
@@ -4356,7 +4356,7 @@ ul.gallery-options li:hover .tooltip-option {
 }
 
 .tooltip {
-    font-family: vazir-fd-wl;
+    font-family: 'Vazirmatn FD', 'Vazirmatn', Tahoma, Arial, sans-serif;
 }
 
 .box-tabs>ul {
@@ -4468,12 +4468,12 @@ ul.gallery-options li:hover .tooltip-option {
 }
 
 .tab-content .accordion h5 button {
-    font-family: vazir-fd-wl;
+    font-family: 'Vazirmatn FD', 'Vazirmatn', Tahoma, Arial, sans-serif;
     color: #000;
 }
 
 .box-tabs .card-body {
-    font-family: vazir-fd-wl;
+    font-family: 'Vazirmatn FD', 'Vazirmatn', Tahoma, Arial, sans-serif;
 }
 
 .box-tabs .card-body img {
@@ -4650,7 +4650,7 @@ ul.gallery-options li:hover .tooltip-option {
 
 .form-comment form textarea,
 .form-comment form button {
-    font-family: vazir-fd-wl;
+    font-family: 'Vazirmatn FD', 'Vazirmatn', Tahoma, Arial, sans-serif;
 }
 
 .form-comment form textarea {
@@ -4879,7 +4879,7 @@ ul.profile-avatars li {
 }
 
 .order-delivered .content-section form button.btn-default {
-    font-family: vazir-fd-wl;
+    font-family: 'Vazirmatn FD', 'Vazirmatn', Tahoma, Arial, sans-serif;
 }
 
 .order-delivered .profile-recent-fav-row {
@@ -7539,7 +7539,7 @@ color: #2ec4b1;
 .input_main{
     padding: 10px 50px 9px;
     line-height: 1.833;
-    font-family: vazir-fd-wl;
+    font-family: 'Vazirmatn FD', 'Vazirmatn', Tahoma, Arial, sans-serif;
     font-weight: 300;
     font-size: 13px;
     background-color: #F1F9FA;
@@ -7551,7 +7551,7 @@ color: #2ec4b1;
     width:100%!important;
     padding: 10px 10px;
     line-height: 1.833;
-    font-family: vazir-fd-wl;
+    font-family: 'Vazirmatn FD', 'Vazirmatn', Tahoma, Arial, sans-serif;
     font-weight: 300;
     font-size: 13px;
     background-color: #EAF6F7;
@@ -7790,7 +7790,7 @@ color: #2ec4b1;
 }
 .contact-box .title-1 {
     display: block;
-    font-family:vazir-fd-wl;
+    font-family: 'Vazirmatn FD', 'Vazirmatn', Tahoma, Arial, sans-serif;
     margin: 20px 0 10px;
 }
 .servicesbg{

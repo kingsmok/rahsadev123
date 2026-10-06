@@ -344,3 +344,86 @@
 .fm-ico-ok   { color: var(--fm-success); }
 .fm-ico-warn { color: var(--fm-warning); }
 .fm-ico-bad  { color: var(--fm-danger); }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   رزرو فضای تصویر — جلوگیری از پرش چیدمان و ناهمترازی کارت‌ها
+   ───────────────────────────────────────────────────────────────────────
+   theme.css خط ۲۷۳۶ ارتفاع .product-box-img را ۱۵۰px می‌داد و خط ۲۷۵۲
+   همان را با height:auto خنثی می‌کرد. نتیجه: ارتفاع کارت تابع نسبت تصویر
+   آپلودشده می‌شد و شبکه محصولات ناهمتراز درمی‌آمد. چون هیچ ابعادی هم رزرو
+   نمی‌شد، صفحه هنگام لود تصاویر می‌پرید.
+   aspect-ratio فضا را از قبل رزرو می‌کند و object-fit تصویر را بدون
+   کشیدگی داخلش جا می‌دهد — مستقل از ابعاد فایل آپلودی.
+   ═══════════════════════════════════════════════════════════════════════ */
+.product-box-img,
+.shopping-page .product-box-img {
+    aspect-ratio: 1 / 1;
+    height: auto !important;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: var(--fm-neutral-50);
+    border-radius: var(--fm-r-md);
+}
+
+.product-box-img img,
+.shopping-page .product-box-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 8px;
+}
+
+/* کارت فشرده کناری نسبت متفاوتی دارد */
+.shopping-page .product-box-compact .product-box-img {
+    aspect-ratio: 4 / 3;
+}
+
+/* تصویر شاخص مقاله */
+.blog_tag > a,
+.blog_tag > a img,
+.single_blog_box_img,
+.single_blog_box_img img {
+    display: block;
+    width: 100%;
+}
+
+.blog_tag > a,
+.single_blog_box_img {
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-radius: var(--fm-r-md);
+    background: var(--fm-neutral-50);
+}
+
+.blog_tag > a img,
+.single_blog_box_img img {
+    height: 100%;
+    object-fit: cover;
+}
+
+/* تصویر اصلی گالری محصول */
+.main_img_gallery {
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    object-fit: contain;
+    background: var(--fm-neutral-50);
+    border-radius: var(--fm-r-lg);
+}
+
+/* آواتار نظرات */
+img.avatar {
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+[data-theme="dark"] .product-box-img,
+[data-theme="dark"] .shopping-page .product-box-img,
+[data-theme="dark"] .blog_tag > a,
+[data-theme="dark"] .single_blog_box_img,
+[data-theme="dark"] .main_img_gallery {
+    background: var(--fm-surface-alt);
+}

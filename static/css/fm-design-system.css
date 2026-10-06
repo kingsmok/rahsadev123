@@ -148,17 +148,8 @@ h1.fm-title {
     margin: 0;
 }
 
-main h2, .fm-section-title {
-    font-size: clamp(17px, 1.8vw, 21px);
-    font-weight: 700;
-    line-height: 1.7;
-}
-
 main h3 { font-size: clamp(16px, 1.5vw, 18px); font-weight: 700; line-height: 1.7; }
 main h4 { font-size: 16px; font-weight: 700; line-height: 1.8; }
-
-/* ارقام فارسی در متن‌های عددی لاتین‌نویس */
-.fm-num { font-variant-numeric: tabular-nums; }
 
 /* ───────────── ۴‑الف) سربرگ صفحه + مسیر راهنما (بردکرامب) ───────────── */
 .fm-page-head {
@@ -872,18 +863,6 @@ main h4 { font-size: 16px; font-weight: 700; line-height: 1.8; }
 
 .fm-auth__perks i { color: var(--fm-primary-500); }
 
-/* ───────────── ۴‑چ) نشان‌های وضعیت ───────────── */
-.fm-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 11px;
-    border-radius: var(--fm-r-pill);
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1.8;
-}
-
 .fm-badge--success { background: var(--fm-success-bg); color: var(--fm-success); }
 .fm-badge--warning { background: var(--fm-warning-bg); color: var(--fm-warning); }
 .fm-badge--danger  { background: var(--fm-danger-bg);  color: var(--fm-danger); }
@@ -1102,8 +1081,6 @@ textarea:focus {
 [data-theme="dark"] .widget_blog_headbox,
 [data-theme="dark"] .product-box,
 [data-theme="dark"] .single_blog_content,
-[data-theme="dark"] .single_blog_page,
-[data-theme="dark"] .single_blog_box_content,
 [data-theme="dark"] .sidebar_blog,
 [data-theme="dark"] .Blog-category,
 [data-theme="dark"] .Blog-carousel,
@@ -1154,7 +1131,6 @@ textarea:focus {
 /* متن‌های کم‌رنگ قالب قدیمی */
 [data-theme="dark"] .light-black,
 [data-theme="dark"] .title-1,
-[data-theme="dark"] .title-2,
 [data-theme="dark"] .title-3,
 [data-theme="dark"] .about_footer,
 [data-theme="dark"] .footer-menu a,
@@ -1221,10 +1197,16 @@ textarea:focus {
     color: var(--fm-text);
 }
 
-[data-theme="dark"] .box-tabs-tab.active,
-[data-theme="dark"] .box-tabs .active {
-    background-color: var(--fm-primary-50) !important;
-    color: var(--fm-primary-600) !important;
+/* تب فعال باید در حالت شب هم همان فیل فیروزه‌ای برند را داشته باشد.
+   دقت: کلاس active روی <a> است نه <li>، پس انتخابگر باید a.active باشد. */
+[data-theme="dark"] .box-tabs-tab a.active {
+    background-color: var(--fm-primary-500) !important;
+    color: #fff !important;
+    border-bottom-color: var(--fm-primary-700) !important;
+}
+
+[data-theme="dark"] .box-tabs-tab a {
+    color: var(--fm-text-soft);
 }
 
 [data-theme="dark"] .checkbox-check {
