@@ -13,6 +13,13 @@ from .models import Product, ProductComment, ProductCategory, ProductBrand, PROD
 from downloads.models import DownloadToken
 from dashboard.models import Wishlist
 from cart.models import Order
+from core.models import SiteSettings
+
+
+def _products_per_page():
+    """تعداد محصول در هر صفحه؛ از تنظیمات سایت قابل تغییر است."""
+    settings_row = SiteSettings.objects.first()
+    return settings_row.products_per_page if settings_row and settings_row.products_per_page else 9
 
 
 def redirect_to_home(request):
@@ -59,8 +66,8 @@ def _price_range(qs):
     return qs.aggregate(min=Min('price'), max=Max('price'))
 
 
-def _paginate(request, products, per_page=9):
-    paginator = Paginator(products, per_page)
+def _paginate(request, products, per_page=None):
+    paginator = Paginator(products, per_page or _products_per_page())
     page_number = request.GET.get('page')
     object_list = paginator.get_page(page_number)
     pages_to_show = get_pages_to_show(object_list.number, paginator.num_pages)

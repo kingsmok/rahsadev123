@@ -6,6 +6,7 @@ from product.models import Product
 from blog.models import Article
 from payments.models import PaymentTransaction
 from services.models import ServicePackage, ServiceRequest, PortfolioItem
+from payments.models import GatewaySettings
 
 
 @staff_member_required
@@ -20,6 +21,7 @@ def admin_home(request):
         'new_service_requests': ServiceRequest.objects.filter(status='new').count(),
         'service_requests': ServiceRequest.objects.order_by('-created_at')[:6],
         'packages_count': ServicePackage.objects.count(),
+        'gateways': GatewaySettings.objects.all(),
         'portfolio_count': PortfolioItem.objects.count(),
     }
     return render(request, 'dashboard/admin_home.html', context)

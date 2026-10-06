@@ -19,8 +19,12 @@ STATUS = (
 class SiteSettings(models.Model):
     site_name = models.CharField(max_length=100, default='فایل‌مارکت', verbose_name='نام سایت')
     site_slogan = models.CharField(max_length=200, blank=True, default='مارکت فایل، نرم‌افزار و محصولات مجازی', verbose_name='شعار سایت')
+    logo = models.ImageField(upload_to='settings/', null=True, blank=True, verbose_name='لوگو (اختیاری)',
+                             help_text='اگر خالی باشد لوگوی متنی نمایش داده می‌شود')
     text_about_us = RichTextUploadingField(null=True, blank=True, verbose_name='متن درباره ما')
     text_contact_us = models.TextField(null=True, blank=True, verbose_name='متن تماس با ما')
+    footer_description = models.TextField(blank=True, verbose_name='متن معرفی فوتر',
+                                          help_text='اگر خالی باشد متن پیش‌فرض نمایش داده می‌شود')
     address = models.CharField(max_length=250, null=True, blank=True, verbose_name='آدرس')
     phone1 = models.CharField(max_length=14, null=True, blank=True, verbose_name='شماره تلفن اول')
     phone2 = models.CharField(max_length=14, null=True, blank=True, verbose_name='شماره تلفن دوم')
@@ -29,6 +33,17 @@ class SiteSettings(models.Model):
     copy_right = models.CharField(max_length=255, verbose_name='متن کپی رایت')
     instagram_link = models.CharField(max_length=250, null=True, blank=True, default='https://instagram.com/username', verbose_name='لینک اینستاگرام')
     telegram_link = models.CharField(max_length=250, null=True, blank=True, default='https://t.me/username', verbose_name='لینک تلگرام')
+    whatsapp_link = models.CharField(max_length=250, null=True, blank=True, verbose_name='لینک واتساپ')
+    twitter_link = models.CharField(max_length=250, null=True, blank=True, verbose_name='لینک توییتر (X)')
+    youtube_link = models.CharField(max_length=250, null=True, blank=True, verbose_name='لینک یوتیوب')
+    linkedin_link = models.CharField(max_length=250, null=True, blank=True, verbose_name='لینک لینکدین')
+    enamad_link = models.URLField(blank=True, null=True, verbose_name='لینک نشان اینماد',
+                                  help_text='اگر خالی باشد نشان در فوتر نمایش داده نمی‌شود')
+    samandehi_link = models.URLField(blank=True, null=True, verbose_name='لینک نشان ساماندهی',
+                                     help_text='اگر خالی باشد نشان در فوتر نمایش داده نمی‌شود')
+    default_meta_title = models.CharField(max_length=70, blank=True, verbose_name='عنوان سئوی پیش‌فرض')
+    default_meta_description = models.CharField(max_length=160, blank=True, verbose_name='توضیحات سئوی پیش‌فرض')
+    products_per_page = models.PositiveIntegerField(default=9, verbose_name='تعداد محصول در هر صفحه')
 
     class Meta:
         verbose_name = 'تنظیمات سایت'

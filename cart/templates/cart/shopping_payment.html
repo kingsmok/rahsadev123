@@ -101,18 +101,26 @@
 
                             <!-- Payment Options -->
                             <h4 class="payment-title">روش پرداخت</h4>
-                            <div class="plans">
-                                <label class="plan basic-plan" for="pay1">
-                                    <input checked type="radio" name="plan" id="pay1"/>
-                                    <div class="plan-content">
-                                        <img loading="lazy" src="{% static 'img/ico/png-10.png' %}" alt=""/>
-                                        <div class="plan-details">
-                                            <span>پرداخت اینترنتی</span>
-                                            <p>پرداخت امن از طریق کارت‌های عضو شتاب</p>
-                                        </div>
-                                    </div>
-                                </label>
-                            </div>
+                            {% if enabled_gateways %}
+                                <div class="plans">
+                                    {% for gateway in enabled_gateways %}
+                                        <label class="plan basic-plan" for="pay1">
+                                            <input {% if forloop.first %}checked{% endif %} type="radio" name="plan" id="pay1"/>
+                                            <div class="plan-content">
+                                                <img loading="lazy" src="{% static 'img/ico/png-10.png' %}" alt=""/>
+                                                <div class="plan-details">
+                                                    <span>{{ gateway.title }}</span>
+                                                    <p>{{ gateway.description|default:'پرداخت امن از طریق کارت‌های عضو شتاب' }}</p>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    در حال حاضر هیچ درگاه پرداختی فعال نیست. لطفاً بعداً مراجعه کنید یا با پشتیبانی در تماس باشید.
+                                </div>
+                            {% endif %}
                         </div>
                         <div class="cart-page-aside col-xl-4 col-lg-5 col-md-5 divider_details">
                             <table class="table table_details">
@@ -144,11 +152,13 @@
                                         <form method="post" action="{% url 'payments:start' 'new' %}">
                                             {% csrf_token %}
                                             <select name="gateway" class="form-control mb-2" aria-label="درگاه پرداخت">
-                                                <option value="zarinpal">زرین‌پال</option>
-                                                <option value="snappay">اسنپ‌پی</option>
-                                                <option value="torobpay">ترب‌پی</option>
+                                                {% for gateway in enabled_gateways %}
+                                                    <option value="{{ gateway.key }}">{{ gateway.title }}</option>
+                                                {% empty %}
+                                                    <option value="">درگاهی فعال نیست</option>
+                                                {% endfor %}
                                             </select>
-                                            <button type="submit" class="btn big_btn btn-main-masai">اتصال به درگاه و پرداخت</button>
+                                            <button type="submit" class="btn big_btn btn-main-masai" {% if not enabled_gateways %}disabled{% endif %}>اتصال به درگاه و پرداخت</button>
                                         </form>
                                     </td>
                                 </tr>

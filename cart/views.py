@@ -146,11 +146,13 @@ def shopping_payment(request):
         messages.warning(request, 'سبد خرید شما خالی است')
         return redirect('cart:cart')
 
+    from payments.models import GatewaySettings
     context = {
         'cart': summary['cart'],
         'cart_items': summary['cart_items'],
         'total_price': summary['total_price'],
         'final_price': summary['final_price'],
+        'enabled_gateways': GatewaySettings.objects.filter(is_enabled=True),
     }
     return render(request, 'cart/shopping_payment.html', context)
 

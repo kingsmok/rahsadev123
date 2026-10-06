@@ -23,6 +23,7 @@ from core.models import Banner, SiteSettings
 from pages.models import StaticPage
 from product.models import DigitalAsset, Product, ProductBrand, ProductCategory, ProductComment
 from services.models import PortfolioItem, ServicePackage
+from payments.models import GatewaySettings
 
 SEED_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'media', 'seed')
 PRODUCT_IMAGES = os.path.join(SEED_DIR, 'products')
@@ -96,9 +97,21 @@ class Command(BaseCommand):
                 phone2='02143057070',
                 email1='support@filemarket.ir',
                 email2='info@filemarket.ir',
+                footer_description=(
+                    'فایل‌مارکت مرجع تخصصی خرید و دانلود فایل‌های نرم‌افزاری، قالب و افزونه وب سایت، اسکریپت، '
+                    'فایل‌های طراحی و محصولات مجازی است. همه فایل‌ها با لایسنس رسمی و پشتیبانی فنی ارائه می‌شوند '
+                    'و بلافاصله پس از پرداخت قابل دانلود هستند.'
+                ),
                 copy_right='تمامی حقوق مادی و معنوی این سایت برای فایل‌مارکت محفوظ است.',
                 instagram_link='https://instagram.com/filemarket',
                 telegram_link='https://t.me/filemarket',
+                enamad_link='https://trustseal.enamad.ir',
+                samandehi_link='https://markazsazmani.ir',
+                default_meta_title='فایل‌مارکت | مارکت فایل و محصولات مجازی',
+                default_meta_description=(
+                    'خرید و دانلود آنی فایل‌های نرم‌افزاری، قالب وب سایت، افزونه، اسکریپت، فایل‌های طراحی و '
+                    'محصولات مجازی همراه با لایسنس رسمی، به‌روزرسانی و پشتیبانی فنی.'
+                ),
             )
             self.stdout.write('تنظیمات سایت ثبت شد.')
 
@@ -701,6 +714,19 @@ class Command(BaseCommand):
         ]
         for data in pages_data:
             StaticPage.objects.get_or_create(slug=data['slug'], defaults=data)
+
+        # ------------------------------------------------------------------ تنظیمات درگاه‌های پرداخت
+        gateways_data = [
+            ('zarinpal', 'زرین‌پال', True, 'پرداخت امن با تمام کارت‌های عضو شتاب'),
+            ('snappay', 'اسنپ‌پی', False, 'پرداخت اقساطی اسنپ‌پی'),
+            ('torobpay', 'ترب‌پی', False, 'پرداخت از طریق ترب'),
+        ]
+        for key, title, enabled, description in gateways_data:
+            GatewaySettings.objects.get_or_create(
+                key=key,
+                defaults={'title': title, 'is_enabled': enabled, 'description': description},
+            )
+        self.stdout.write('تنظیمات درگاه‌های پرداخت ثبت شد (زرین‌پال فعال؛ مرچنت کد را از پنل مدیریت وارد کنید).')
 
         # ------------------------------------------------------------------ کد تخفیف خوش‌آمدگویی
         from datetime import timedelta

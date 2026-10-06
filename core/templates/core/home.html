@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ site_name }} | دانلود فایل نرم‌افزار، قالب وب سایت و محصولات مجازی{% endblock %}
+{% block title %}{% if site_settings.default_meta_title %}{{ site_settings.default_meta_title }}{% else %}{{ site_name }} | دانلود فایل نرم‌افزار، قالب وب سایت و محصولات مجازی{% endif %}{% endblock %}
 {% block meta_description %}خرید و دانلود آنی فایل‌های نرم‌افزاری، قالب و افزونه وب سایت، اسکریپت آماده، فایل‌های طراحی و محصولات مجازی همراه با لایسنس رسمی و پشتیبانی فنی{% endblock %}
 {% load static %}
 {% load custom_filters %}
