@@ -53,7 +53,7 @@
                                         {% endfor %}
                                     {% else %}
                                         <div class="">
-                                            <p>سفارشی یافت نشد</p>
+                                            {% include 'includes/empty_state.html' with icon='fa-circle-xmark' title='سفارش لغوشده‌ای ندارید' text='سفارش‌های لغو یا ناموفق اینجا نمایش داده می‌شوند.' %}
                                         </div>
                                     {% endif %}
 

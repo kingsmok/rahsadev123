@@ -190,3 +190,249 @@
     .fm-stat__value { font-size: 16.5px; }
     .status-badges .badge { font-size: 12px; padding: 6px 12px; min-width: auto; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   فاکتور سفارش (order_detail)
+   قبلاً ~۳۲۷ خط <style> داخل خود قالب بود و نشان‌های وضعیت را با گرادیان
+   قدیمی بازنویسی می‌کرد. اینجا با توکن‌های برند و پشتیبانی حالت شب آمده.
+   ═══════════════════════════════════════════════════════════════════════ */
+.product-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--fm-surface);
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-r-lg);
+    overflow: hidden;
+    margin-bottom: var(--fm-sp-5);
+    direction: rtl;
+}
+
+.product-table thead {
+    background: var(--fm-surface-alt);
+    color: var(--fm-text-soft);
+}
+
+.product-table th {
+    padding: 13px 14px;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-align: center;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--fm-border);
+    white-space: nowrap;
+}
+
+.product-table tbody tr { transition: background .2s var(--fm-ease); }
+.product-table tbody tr:hover { background: var(--fm-surface-alt); }
+
+.product-table td {
+    padding: 13px 12px;
+    font-size: 13px;
+    text-align: center;
+    vertical-align: middle;
+    color: var(--fm-text);
+    border-bottom: 1px solid var(--fm-border-soft);
+}
+
+.product-table tbody tr:last-child td { border-bottom: none; }
+
+.product-table .product-image {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: var(--fm-r-sm);
+    border: 1px solid var(--fm-border-soft);
+}
+
+.product-table .product-info { display: flex; flex-direction: column; gap: 4px; }
+.product-table .product-name { font-weight: 700; color: var(--fm-text); }
+.product-table .product-code { font-size: 11px; color: var(--fm-text-faint); }
+
+/* بخش‌های فاکتور */
+.invoice-section {
+    background: var(--fm-surface);
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-r-lg);
+    box-shadow: var(--fm-shadow-sm);
+    padding: var(--fm-sp-5);
+    margin-bottom: var(--fm-sp-5);
+    direction: rtl;
+    text-align: right;
+    color: var(--fm-text);
+}
+
+.invoice-section h3 {
+    font-size: 16.5px;
+    font-weight: 700;
+    color: var(--fm-text);
+    padding-bottom: 11px;
+    margin: 0 0 var(--fm-sp-4);
+    border-bottom: 1px solid var(--fm-border-soft);
+    position: relative;
+}
+
+.invoice-section h3::after {
+    content: '';
+    display: block;
+    width: 48px;
+    height: 3px;
+    background: var(--fm-grad);
+    border-radius: 3px;
+    position: absolute;
+    right: 0;
+    bottom: -1px;
+}
+
+.invoice-section .info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--fm-sp-3);
+}
+
+.invoice-section .info-item {
+    display: flex;
+    align-items: center;
+    padding: 11px;
+    background: var(--fm-surface-alt);
+    border: 1px solid var(--fm-border-soft);
+    border-radius: var(--fm-r-md);
+    transition: border-color .2s var(--fm-ease);
+}
+
+.invoice-section .info-item:hover { border-color: var(--fm-primary-300); }
+
+.invoice-section .info-item i {
+    font-size: 14px;
+    color: var(--fm-primary-600);
+    margin-left: 10px;
+    background: var(--fm-primary-50);
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.invoice-section .info-item span.label {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--fm-text-soft);
+    margin-left: 5px;
+}
+
+.invoice-section .info-item span.value { font-size: 13px; color: var(--fm-text); }
+
+/* جمع‌بندی مبالغ */
+.invoice-section.summary .summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--fm-border);
+}
+
+.invoice-section.summary .summary-item:last-child {
+    border-bottom: none;
+    background: var(--fm-primary-50);
+    border-radius: var(--fm-r-md);
+    padding: 15px;
+    margin-top: 10px;
+    font-weight: 700;
+}
+
+.invoice-section.summary .summary-item span.label { font-size: 13.5px; color: var(--fm-text-soft); }
+.invoice-section.summary .summary-item span.value { font-size: 13.5px; color: var(--fm-text); font-weight: 600; }
+
+.invoice-section.summary .summary-item.total span.value {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--fm-primary-600);
+}
+
+@media (max-width: 767.98px) {
+    .invoice-section { padding: var(--fm-sp-4); }
+    .invoice-section .info-grid { grid-template-columns: 1fr; }
+    .product-table th, .product-table td { padding: 10px 8px; font-size: 12px; }
+    .product-table .product-image { width: 44px; height: 44px; }
+}
+
+/* ───────────── آدرس‌ها / مودال فرم (user_addresses) ───────────── */
+.modal-body .form-group { margin-bottom: var(--fm-sp-4); }
+
+.modal-body label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--fm-text);
+}
+
+.modal-body input[type="text"],
+.modal-body input[type="tel"],
+.modal-body textarea {
+    width: 100%;
+    padding: 11px 13px;
+    font-size: 14px;
+    color: var(--fm-text);
+    background: var(--fm-surface);
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-r-md);
+    transition: border-color .2s var(--fm-ease), box-shadow .2s var(--fm-ease);
+}
+
+.modal-body textarea { min-height: 100px; resize: vertical; }
+
+.form-check { margin: var(--fm-sp-4) 0; }
+.form-check-input { margin-left: 6px; accent-color: var(--fm-primary-500); }
+
+.address-card {
+    position: relative;
+    padding: var(--fm-sp-4);
+    background: var(--fm-surface);
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-r-lg);
+    margin-bottom: var(--fm-sp-4);
+    transition: border-color .2s var(--fm-ease), box-shadow .2s var(--fm-ease);
+}
+
+.address-card:hover { border-color: var(--fm-primary-300); box-shadow: var(--fm-shadow-sm); }
+
+.address-card.default {
+    border-color: var(--fm-primary-500);
+    box-shadow: 0 0 0 1px var(--fm-primary-500) inset;
+}
+
+.default-address-badge {
+    background: var(--fm-success-bg);
+    color: var(--fm-success);
+    border: 1px solid rgba(31, 157, 99, .22);
+    padding: 3px 10px;
+    border-radius: var(--fm-r-pill);
+    font-size: 11.5px;
+    font-weight: 700;
+    margin-right: 8px;
+}
+
+.address-actions { display: flex; gap: 8px; margin-top: var(--fm-sp-3); flex-wrap: wrap; }
+.address-actions .btn { font-size: 12px; padding: 6px 13px; }
+
+.badge-delete {
+    background: var(--fm-danger-bg);
+    color: var(--fm-danger);
+    border: 1px solid rgba(217, 72, 72, .22);
+}
+
+.badge-default {
+    background: var(--fm-info-bg);
+    color: var(--fm-info);
+    border: 1px solid rgba(44, 127, 184, .22);
+}
+
+.text-danger { color: var(--fm-danger); font-size: 12.5px; margin-top: 4px; }
+
+input.error, textarea.error { border-color: var(--fm-danger) !important; }
+
+input.error:focus, textarea.error:focus {
+    box-shadow: 0 0 0 3px rgba(217, 72, 72, .2) !important;
+}

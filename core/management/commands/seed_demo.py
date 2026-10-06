@@ -18,7 +18,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from blog.models import Article, Category as ArticleCategory, Tag
-from cart.models import Coupon
+from cart.models import Coupon, Order, OrderItem
 from core.models import Banner, SiteSettings
 from pages.models import StaticPage
 from product.models import DigitalAsset, Product, ProductBrand, ProductCategory, ProductComment
@@ -750,6 +750,44 @@ class Command(BaseCommand):
                 maximum_discount=500000, minimum_order_amount=500000,
             )
             self.stdout.write('کد تخفیف WELCOME10 ثبت شد (۱۰٪ تا سقف ۵۰۰ هزار تومان).')
+
+        # ------------------------------------------------- سفارش پرداخت‌شده نمونه + لینک دانلود
+        # بدون این بخش، صفحه «فاکتور سفارش» و «دانلودهای من» هیچ داده‌ای برای
+        # نمایش ندارند و عملاً قابل مشاهده نیستند.
+        from downloads.models import DownloadToken
+
+        if not Order.objects.filter(user=demo).exists():
+            demo_products = list(
+                Product.objects.filter(status='published', digital_asset__isnull=False)[:2]
+            ) or list(Product.objects.filter(status='published')[:2])
+            if demo_products:
+                total = sum(p.price for p in demo_products)
+                order = Order.objects.create(
+                    user=demo,
+                    total_price=total,
+                    coupon_discount=0,
+                    shipping_cost=0,
+                    final_price=total,
+                    status='paid',
+                    items_data={
+                        'items': [
+                            {'product_id': p.id, 'title': p.title, 'quantity': 1, 'price': p.price}
+                            for p in demo_products
+                        ],
+                        'coupon': None,
+                        'discount': 0,
+                    },
+                )
+                for p in demo_products:
+                    OrderItem.objects.create(
+                        order=order, product=p,
+                        unit_price=p.price, quantity=1, total_price=p.price,
+                    )
+                    DownloadToken.objects.create(user=demo, product=p, order=order)
+                self.stdout.write(
+                    f'سفارش پرداخت‌شده نمونه ثبت شد: {order.order_number} '
+                    f'({len(demo_products)} فایل قابل دانلود برای کاربر demo).'
+                )
 
         self.stdout.write(self.style.SUCCESS(
             'داده‌های نمونه با موفقیت ثبت شد!\n'

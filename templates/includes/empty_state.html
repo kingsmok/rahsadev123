@@ -1,0 +1,20 @@
+{% comment %}
+حالت خالی مشترک — وقتی فهرستی نتیجه‌ای ندارد.
+
+پارامترها:
+  icon       نام آیکون Font Awesome (پیش‌فرض: fa-folder-open)
+  title      عنوان کوتاه (الزامی)
+  text       توضیح/راهنمای بعدی (اختیاری)
+  cta_url    لینک اقدام پیشنهادی (اختیاری)
+  cta_label  متن دکمه (اختیاری)
+{% endcomment %}
+<div class="fm-empty">
+    <div class="fm-empty__icon">
+        <i class="fa {{ icon|default:'fa-folder-open' }}" aria-hidden="true"></i>
+    </div>
+    <h3>{{ title }}</h3>
+    {% if text %}<p>{{ text }}</p>{% endif %}
+    {% if cta_url and cta_label %}
+        <a href="{{ cta_url }}" class="fm-btn fm-btn--primary">{{ cta_label }}</a>
+    {% endif %}
+</div>

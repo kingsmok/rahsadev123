@@ -471,7 +471,7 @@
                                                     </ol>
                                                 </div>
                                             {% else %}
-                                                <p>دیدگاهی وجود ندارد!</p>
+                                                {% include 'includes/empty_state.html' with icon='fa-comments' title='هنوز دیدگاهی ثبت نشده' text='اولین نفری باشید که تجربه خود را از این فایل می‌نویسد.' %}
                                             {% endif %}
 
                                         </div>

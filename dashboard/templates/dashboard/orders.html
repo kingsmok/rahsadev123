@@ -75,7 +75,7 @@
                                         {% endfor %}
                                     {% else %}
                                         <div class="">
-                                            <p>سفارشی یافت نشد</p>
+                                            {% include 'includes/empty_state.html' with icon='fa-receipt' title='هنوز سفارشی ثبت نکرده‌اید' text='اولین فایل خود را انتخاب کنید و بلافاصله دانلود کنید.' cta_url='/products/' cta_label='شروع خرید' %}
                                         </div>
                                     {% endif %}
 

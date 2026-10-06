@@ -159,7 +159,7 @@
                                             </div>
                                         {% endfor %}
                                     {% else %}
-                                        فایلی با این مشخصات پیدا نشد!
+                                        {% include 'includes/empty_state.html' with icon='fa-magnifying-glass' title='فایلی با این فیلترها پیدا نشد' text='فیلترها را تغییر دهید یا همه فایل‌ها را ببینید.' cta_url='/products/' cta_label='حذف فیلترها' %}
                                     {% endif %}
                                 </div>
 

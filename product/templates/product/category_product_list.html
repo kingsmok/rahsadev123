@@ -173,7 +173,7 @@
                                             </div>
                                         {% endfor %}
                                     {% else %}
-                                        فایلی در این دسته پیدا نشد!
+                                        {% include 'includes/empty_state.html' with icon='fa-folder-open' title='هنوز فایلی در این دسته نیست' text='به‌زودی فایل‌های این دسته اضافه می‌شوند.' cta_url='/products/' cta_label='مشاهده همه فایل‌ها' %}
                                     {% endif %}
                                 </div>
 

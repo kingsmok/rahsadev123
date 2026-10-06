@@ -1024,3 +1024,8 @@ textarea:focus {
 
 /* مسیر راهنمای صفحه محصول (داخل بدنه، نه سربرگ) */
 .fm-crumbs--product { margin: var(--fm-sp-4) 0 var(--fm-sp-3); }
+
+/* حالت خالی داخل جدول */
+.fm-empty-row td { padding: 0 !important; background: transparent !important; }
+.fm-empty-row:hover td { background: transparent !important; }
+.fm-empty-row .fm-empty { padding: var(--fm-sp-6) var(--fm-sp-4); }

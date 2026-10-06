@@ -35,7 +35,7 @@
                                         {% endfor %}
                                     {% else %}
                                         <div class="">
-                                            <p>اعلانی یافت نشد</p>
+                                            {% include 'includes/empty_state.html' with icon='fa-bell' title='اعلان جدیدی ندارید' text='اطلاع‌رسانی‌های مربوط به سفارش‌ها اینجا نمایش داده می‌شود.' %}
                                         </div>
                                     {% endif %}
                                 </div>

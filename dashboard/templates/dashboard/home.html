@@ -139,8 +139,10 @@
                                                 </tr>
                                             {% endfor %}
                                         {% else %}
-                                            <tr>
-                                                <td colspan="5" class="text-center">سفارشی یافت نشد</td>
+                                            <tr class="fm-empty-row">
+                                                <td colspan="5">
+                                                    {% include 'includes/empty_state.html' with icon='fa-receipt' title='هنوز سفارشی ثبت نکرده‌اید' text='اولین فایل خود را انتخاب کنید و بلافاصله دانلود کنید.' cta_url='/products/' cta_label='شروع خرید' %}
+                                                </td>
                                             </tr>
                                         {% endif %}
                                         </tbody>
@@ -180,7 +182,7 @@
                                         </div>
                                     {% endfor %}
                                 {% else %}
-                                    محصولی وجود ندارد!
+                                    {% include 'includes/empty_state.html' with icon='fa-heart' title='لیست علاقه‌مندی شما خالی است' text='فایل‌های موردعلاقه‌تان را ذخیره کنید تا بعداً سریع پیدایشان کنید.' cta_url='/products/' cta_label='مشاهده فایل‌ها' %}
                                 {% endif %}
 
                             </div>

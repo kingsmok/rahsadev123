@@ -53,7 +53,7 @@
                                         {% endfor %}
                                     {% else %}
                                         <div class="">
-                                            <p>محصول مورد علاقه ای یافت نشد</p>
+                                            {% include 'includes/empty_state.html' with icon='fa-heart' title='لیست علاقه‌مندی شما خالی است' text='فایل‌های موردعلاقه‌تان را ذخیره کنید تا بعداً سریع پیدایشان کنید.' cta_url='/products/' cta_label='مشاهده فایل‌ها' %}
                                         </div>
                                     {% endif %}
                                 </div>

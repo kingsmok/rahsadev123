@@ -54,7 +54,7 @@
                                         {% endfor %}
                                     {% else %}
                                         <div class="">
-                                            <p>سفارشی یافت نشد</p>
+                                            {% include 'includes/empty_state.html' with icon='fa-circle-check' title='سفارش تکمیل‌شده‌ای ندارید' text='پس از اولین خرید موفق، سفارش‌ها اینجا ظاهر می‌شوند.' cta_url='/products/' cta_label='مشاهده فایل‌ها' %}
                                         </div>
                                     {% endif %}
 

@@ -64,7 +64,7 @@
                                 </div>
                             {% endfor %}
                         {% else %}
-                            مقاله ای وجود ندارد!
+                            {% include 'includes/empty_state.html' with icon='fa-newspaper' title='مقاله‌ای در این دسته نیست' text='دسته‌های دیگر وبلاگ را ببینید.' cta_url='/blog/' cta_label='همه مقالات' %}
                         {% endif %}
                     </div>
                     <!-- Pagination -->

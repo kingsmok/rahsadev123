@@ -78,7 +78,7 @@
                                         {% endfor %}
                                     {% else %}
                                         <div class="">
-                                            <p>سبد خرید شما خالی است.</p>
+                                            {% include 'includes/empty_state.html' with icon='fa-cart-shopping' title='سبد خرید شما خالی است' text='فایل موردنظرتان را انتخاب کنید و بلافاصله پس از پرداخت دانلود کنید.' cta_url='/products/' cta_label='مشاهده فایل‌ها' %}
                                             <a href="{% url 'product:product_list' %}" class="btn btn-primary">مشاهده محصولات</a>
                                         </div>
                                     {% endif %}

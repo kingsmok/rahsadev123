@@ -122,7 +122,7 @@
                                             </div>
                                         {% endfor %}
                                     {% else %}
-                                        محصولی وجود ندارد!
+                                        {% include 'includes/empty_state.html' with icon='fa-tags' title='در حال حاضر تخفیف فعالی نداریم' text='برای باخبرشدن از تخفیف‌ها در خبرنامه عضو شوید.' cta_url='/products/' cta_label='مشاهده همه فایل‌ها' %}
                                     {% endif %}
                                 </div>
 
