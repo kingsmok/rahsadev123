@@ -3,6 +3,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_POST
 
 from .forms import LoginForm, UserRegistrationForm
 
@@ -52,6 +53,7 @@ def user_login(request):
     return render(request, 'accounts/login.html', {'form': form})
 
 
+@require_POST
 def user_logout(request):
     logout(request)
     messages.info(request, 'از حساب کاربری خارج شدید.')

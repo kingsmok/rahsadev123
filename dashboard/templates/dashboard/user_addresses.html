@@ -16,7 +16,7 @@
                             <header class="card-header">
                                 <h3 class="card-title"><span>آدرس های من</span></h3>
                                 <div class="text-left">
-                                    <a class="btn btn-main-masai" data-toggle="modal" data-target="#addressModal">آدرس جدید</a>
+                                    <button type="button" class="btn btn-main-masai" data-toggle="modal" data-target="#addressModal">آدرس جدید</button>
                                 </div>
                             </header>
                             <!-- Addresses Start -->
@@ -31,8 +31,7 @@
                                                             <i class="fa fa-map-pin" aria-hidden="true"></i> {{ address.title }}
                                                         </h4>
                                                         <ul class="order-addres">
-                                                            <i class="fa fa-map  colormain"
-                                                               aria-hidden="true"></i> {{ address.city }}، {{ address.province }}، {{ address.full_address }}
+                                                            <li><i class="fa fa-map colormain" aria-hidden="true"></i> {{ address.city }}، {{ address.province }}، {{ address.full_address }}</li>
                                                             <li>
                                                                 <i class="fa fa-mail-bulk colormain"
                                                                    aria-hidden="true"></i> {{ address.postal_code }}
@@ -57,7 +56,7 @@
                                                             <form method="post" action="{% url 'dashboard:user_addresses' %}">
                                                                 {% csrf_token %}
                                                                 <input type="hidden" name="delete_address" value="{{ address.id }}">
-                                                                <button type="submit" class="btn btn-sm badge-delete" onclick="return confirm('آیا از حذف این آدرس مطمئن هستید؟')">
+                                                                <button type="submit" class="btn btn-sm badge-delete" data-confirm-delete>
                                                                     حذف آدرس
                                                                 </button>
                                                             </form>
@@ -227,33 +226,21 @@
 
 
     <script>
-        document.querySelectorAll('[onclick="return confirm(\'آیا از حذف این آدرس مطمئن هستید؟\')"]').forEach(button => {
-            button.onclick = function (e) {
-                e.preventDefault();
-                const form = this.closest('form');
-
-                Swal.fire({
-                    title: 'حذف آدرس',
-                    text: 'آیا از حذف این آدرس مطمئن هستید؟',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'بله، حذف شود',
-                    cancelButtonText: 'انصراف',
-                    confirmButtonColor: '#e74c3c',
-                    cancelButtonColor: '#46A9AE',
-                    background: '#f8f9fa',
-                    showClass: {
-                        popup: 'animate__animated animate__fadeInDown'
-                    },
-                    hideClass: {
-                        popup: 'animate__animated animate__fadeOutUp'
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        form.submit();
-                    }
-                });
-            };
+        document.querySelectorAll('[data-confirm-delete]').forEach(button => {
+            button.addEventListener('click', event => {
+                event.preventDefault();
+                const form = button.closest('form');
+                const options = {
+                    title: 'حذف آدرس', text: 'آیا از حذف این آدرس مطمئن هستید؟', icon: 'warning',
+                    showCancelButton: true, confirmButtonText: 'بله، حذف شود', cancelButtonText: 'انصراف',
+                    confirmButtonColor: '#d94848', cancelButtonColor: '#46a9ae'
+                };
+                if (window.Swal) {
+                    Swal.fire(options).then(result => { if (result.isConfirmed) form.submit(); });
+                } else if (window.confirm(options.text)) {
+                    form.submit();
+                }
+            });
         });
     </script>
 {% endblock %}

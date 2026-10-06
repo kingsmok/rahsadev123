@@ -1,6 +1,8 @@
 from pathlib import Path
 import os
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -8,10 +10,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'change-me-in-production')
-
+# Security defaults: development remains easy to run, while a production
+# process refuses to start without an explicit, non-placeholder secret.
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('1', 'true', 'yes')
+SECRET_KEY = os.environ.get('SECRET_KEY', '')
+if not SECRET_KEY:
+    if DEBUG:
+        # Never used in production: developers should still override this via
+        # SECRET_KEY even locally when they need persistent signed data.
+        SECRET_KEY = 'development-only-change-this-secret-key-before-production'
+    else:
+        raise ImproperlyConfigured('SECRET_KEY must be set when DEBUG=False.')
+if not DEBUG and (len(SECRET_KEY) < 50 or SECRET_KEY.startswith('django-insecure-')):
+    raise ImproperlyConfigured('SECRET_KEY must be a strong, random value of at least 50 characters in production.')
+
 ALLOWED_HOSTS = [host.strip() for host in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if host.strip()]
 if DEBUG and os.environ.get('ALLOW_ALL_HOSTS', '1').lower() in ('1', 'true', 'yes'):
     # در حالت توسعه همه هاست‌ها پذیرفته می‌شود تا پیش‌نمایش آنلاین و دامنه‌های تست کار کنند.
@@ -23,6 +35,7 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_REFERRER_POLICY = 'same-origin'
 

@@ -1,0 +1,173 @@
+/* Focused repairs and interaction states shared by the redesigned storefront.
+   This file deliberately comes last: it normalizes legacy theme components
+   without rewriting their markup. */
+
+/* The local family has no separate Light binary; map 300 to the bundled
+   regular face instead of asking the browser for a remote font. */
+@font-face {
+    font-family: 'Vazirmatn FD';
+    src: url('../fonts/vazirmatn/Vazirmatn-FD-Regular.woff2') format('woff2');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Interactive elements in legacy navigation retain link typography. */
+.list_style .list__link.nav-categories-toggle,
+.navbar-nav.default .mobile-menu-toggle {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
+    text-align: inherit;
+}
+
+.list_style .list__link.nav-categories-toggle {
+    color: #1d4a4d;
+    padding: 0;
+}
+
+.nav_header .nav__ullist .list_style.is-open .submeno,
+.nav_header .nav__ullist .list_style:focus-within .submeno {
+    display: inline-block;
+    position: absolute;
+    background-color: var(--fm-surface);
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-r-sm);
+    box-shadow: var(--fm-shadow-md);
+    margin-top: 2px;
+    z-index: 1000;
+    width: 180px;
+    left: 11px;
+    right: 0;
+    top: 20px;
+}
+
+.list_style .list__link.is-active,
+.navbar-nav.default a.is-active {
+    color: var(--fm-primary-600) !important;
+    font-weight: 800;
+}
+
+.navbar-nav.default .mobile-menu-toggle {
+    color: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.navbar-nav.default .mobile-menu-toggle .fa { transition: transform .2s var(--fm-ease); }
+.navbar-nav.default .sub-menu.open > .mobile-menu-toggle .fa { transform: rotate(180deg); }
+
+/* Product-card cart controls used to be an icon-only <i>; they are real,
+   keyboard-accessible buttons now. */
+.search_prod_btn {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.search_prod_btn .search_icon_cart {
+    display: inline-grid;
+    place-items: center;
+}
+
+.search_prod_btn[disabled],
+.js-add-to-cart[disabled] { cursor: wait; opacity: .65; }
+.search_prod_btn.is-added .search_icon_cart,
+.js-add-to-cart.is-added { background: var(--fm-success) !important; }
+
+.back-to-top button {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: var(--fm-text-soft);
+    cursor: pointer;
+    font: inherit;
+}
+.back-to-top button:hover span:last-child { color: var(--fm-primary-600); }
+.order-steps li > span.active { color: var(--fm-primary-500); font-size: 15px; font-weight: 500; }
+
+/* The mini-cart remove action is no longer nested inside a product link. */
+.m_cart_li1 { position: relative; }
+header.Masai-header .cart .dropdown-menu .remove-cart-item {
+    position: absolute;
+    right: 28px;
+    top: 18px;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #ff6060;
+    color: #fff;
+    cursor: pointer;
+}
+header.Masai-header .cart .dropdown-menu .remove-cart-item:hover { background: #d94848; }
+header.Masai-header .cart .dropdown-menu .remove-cart-item:disabled { opacity: .55; cursor: wait; }
+
+.cart_item .remove-cart-item {
+    border: 0;
+    background: transparent;
+    color: var(--fm-danger);
+    cursor: pointer;
+    padding: 8px;
+}
+.cart_item .remove-cart-item:hover { color: #a92d2d; }
+
+.order-steps .disabled {
+    color: var(--fm-neutral-400);
+    font-weight: 600;
+    cursor: not-allowed;
+}
+
+.fm-local-map { margin: 18px 0 0; }
+.fm-local-map img { width: 100%; max-height: 330px; object-fit: cover; }
+.fm-local-map figcaption { margin-top: 7px; color: var(--fm-text-faint); font-size: 12px; }
+.contact-details ul { list-style: none; padding: 0; }
+.contact-details li { display: flex; align-items: flex-start; gap: 8px; line-height: 2; margin-bottom: 9px; }
+.contact-details li i { flex: 0 0 auto; margin-top: 7px; }
+
+.fm-form-status { min-height: 24px; margin: 12px 0 0; font-size: 13px; }
+.fm-form-status.is-success { color: var(--fm-success); }
+.fm-form-status.is-error { color: var(--fm-danger); }
+
+.price-card .btn-order {
+    width: 100%;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font: inherit;
+}
+
+.fm-product-title { font-size: clamp(21px, 2.2vw, 26px); }
+.fm-share-url { overflow-wrap: anywhere; word-break: break-word; white-space: normal; }
+
+.plan.basic-plan input[type='radio'] { accent-color: var(--fm-primary-500); }
+.plan.basic-plan:has(input:focus-visible) { outline: 3px solid rgba(70, 169, 174, .35); outline-offset: 3px; }
+
+.fm-logout-form { margin: 0; }
+.fm-logout-form .dropdown-item {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    text-align: right;
+    cursor: pointer;
+}
+
+@media (max-width: 767.98px) {
+    .contact_us_page { padding: 12px 0; }
+    .fm-local-map img { max-height: 230px; }
+    .nav_header .nav__ullist .list_style.is-open .submeno,
+    .nav_header .nav__ullist .list_style:focus-within .submeno { width: min(260px, 85vw); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .navbar-nav.default .mobile-menu-toggle .fa { transition: none; }
+}

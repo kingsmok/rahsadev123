@@ -5,6 +5,7 @@ from django.contrib import messages
 from .models import Cart, CartItem, Coupon, Order
 from product.models import Product
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 
 def _cart_summary(user):
@@ -40,50 +41,39 @@ def cart(request):
 
 
 @login_required
+@require_POST
 def add_to_cart(request, product_id):
-    if request.method == 'POST':
-        try:
-            product = get_object_or_404(Product, pk=product_id, status='published')
+    product = get_object_or_404(Product, pk=product_id, status='published')
+    if not product.is_available:
+        return JsonResponse({'success': False, 'message': 'این فایل در حال حاضر قابل خرید نیست.'}, status=400)
 
-            if not product.is_available:
-                return JsonResponse({'success': False, 'message': 'این فایل در حال حاضر قابل خرید نیست'})
+    cart, _ = Cart.objects.get_or_create(user=request.user)
+    # محصولات دیجیتال کمّیت ندارند؛ هر فایل فقط یک‌بار به سبد اضافه می‌شود.
+    _, created = CartItem.objects.get_or_create(cart=cart, product=product, defaults={'quantity': 1})
+    if not created:
+        return JsonResponse({'success': False, 'message': 'این فایل از قبل در سبد خرید شما موجود است.'}, status=409)
 
-            cart, created = Cart.objects.get_or_create(user=request.user)
-
-            # محصول دانلودی: هر فایل فقط یک بار به سبد اضافه می‌شود
-            cart_item, created = CartItem.objects.get_or_create(
-                cart=cart,
-                product=product,
-                defaults={'quantity': 1}
-            )
-
-            if not created:
-                return JsonResponse({'success': False, 'message': 'این فایل از قبل در سبد خرید شما موجود است'})
-
-            return JsonResponse({'success': True, 'message': 'فایل با موفقیت به سبد خرید اضافه شد', 'cart_count': cart.items.count()})
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)})
-    return JsonResponse({'success': False, 'message': 'درخواست نامعتبر'})
+    return JsonResponse({
+        'success': True,
+        'message': 'فایل با موفقیت به سبد خرید اضافه شد.',
+        'cart_count': cart.items.count(),
+    })
 
 
 @login_required
+@require_POST
 def remove_cart_item(request, item_id):
-    if request.method == 'POST':
-        try:
-            cart_item = get_object_or_404(CartItem, pk=item_id, cart__user=request.user)
-            cart = cart_item.cart
-            cart_item.delete()
-            total_price = sum(item.total_price for item in cart.items.all())
+    cart_item = get_object_or_404(CartItem, pk=item_id, cart__user=request.user)
+    cart = cart_item.cart
+    cart_item.delete()
+    total_price = sum(item.total_price for item in cart.items.all())
 
-            return JsonResponse({
-                'success': True,
-                'total_price': total_price,
-                'final_price': total_price - cart.coupon_discount,
-                'cart_count': cart.items.count()
-            })
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)})
-    return JsonResponse({'success': False, 'message': 'درخواست نامعتبر'})
+    return JsonResponse({
+        'success': True,
+        'total_price': total_price,
+        'final_price': max(0, total_price - cart.coupon_discount),
+        'cart_count': cart.items.count(),
+    })
 
 
 @login_required

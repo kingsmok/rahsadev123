@@ -11,7 +11,8 @@ from .models import Wishlist, Address, Notification
 from .forms import AddressForm, ProfileEditForm
 from django.db.models import Q
 from accounts.forms import ChangePasswordForm
-from django.contrib.auth import logout, update_session_auth_hash
+from django.contrib.auth import update_session_auth_hash
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 
 
@@ -273,6 +274,7 @@ def wishlist_products(request):
 
 
 @login_required
+@require_POST
 def add_to_wishlist(request, product_id):
     product = get_object_or_404(Product, pk=product_id)
     wishlist_item, created = Wishlist.objects.get_or_create(user=request.user, product=product)
@@ -290,6 +292,7 @@ def add_to_wishlist(request, product_id):
 
 
 @login_required
+@require_POST
 def remove_from_wishlist(request, product_id):
     product = get_object_or_404(Product, pk=product_id)
     wishlist_item = get_object_or_404(Wishlist, user=request.user, product=product)
@@ -385,24 +388,33 @@ def user_profile(request):
 
 @login_required
 def edit_profile(request, username):
+    """Edit only the authenticated user's profile.
+
+    The username remains in the historical URL for compatibility, but must never
+    be used to select another customer's profile.
+    """
     user = request.user
-    profile = Profile.objects.get(user=user)
+    profile = get_object_or_404(Profile, user=user)
+    if username != user.username:
+        messages.error(request, 'شما فقط می‌توانید اطلاعات حساب خودتان را ویرایش کنید.')
+        return redirect('dashboard:user_profile')
 
-    user_profile = get_object_or_404(Profile, user__username=username)
     if request.method == 'POST':
-        form = ProfileEditForm(request.POST or None, request.FILES or None, instance=user_profile)
+        form = ProfileEditForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
-            form.save()
-            return redirect('dashboard:home')
+            updated_profile = form.save()
+            # Keep Django's canonical user data in sync with the profile shown
+            # throughout the storefront and admin panel.
+            user.first_name = updated_profile.first_name
+            user.last_name = updated_profile.last_name
+            user.email = updated_profile.email
+            user.save(update_fields=['first_name', 'last_name', 'email'])
+            messages.success(request, 'اطلاعات حساب کاربری شما ذخیره شد.')
+            return redirect('dashboard:user_profile')
     else:
-        form = ProfileEditForm(instance=user_profile)
+        form = ProfileEditForm(instance=profile)
 
-    context = {
-        'profile': profile,
-
-        'form': form,
-    }
-    return render(request, 'dashboard/edit_profile.html', context)
+    return render(request, 'dashboard/edit_profile.html', {'profile': profile, 'form': form})
 
 
 @login_required
@@ -411,26 +423,15 @@ def change_password(request):
     profile = Profile.objects.get(user=user)
 
     if request.method == 'POST':
-        form = ChangePasswordForm(request.POST)
+        form = ChangePasswordForm(request.POST, user=user)
         if form.is_valid():
-            old_password = form.cleaned_data['old_password']
-            new_password = form.cleaned_data['new_password']
-
-            if request.user.check_password(old_password):
-                request.user.set_password(new_password)
-                request.user.save()
-                update_session_auth_hash(request, request.user)
-                logout(request)
-                messages.success(request, 'رمز عبور شما با موفقیت تغییر یافت. لطفاً با رمز عبور جدید وارد شوید.')
-                return redirect('account:login')
-            else:
-                form.add_error('old_password', 'رمز عبور فعلی نادرست است.')
+            user.set_password(form.cleaned_data['new_password'])
+            user.save(update_fields=['password'])
+            # Preserve the current session after a successful password change.
+            update_session_auth_hash(request, user)
+            messages.success(request, 'رمز عبور شما با موفقیت تغییر یافت.')
+            return redirect('dashboard:user_profile')
     else:
-        form = ChangePasswordForm()
+        form = ChangePasswordForm(user=user)
 
-    context = {
-        'profile': profile,
-
-        'form': form,
-    }
-    return render(request, 'dashboard/change_password.html', context)
+    return render(request, 'dashboard/change_password.html', {'profile': profile, 'form': form})

@@ -52,8 +52,8 @@
                                     <span>تا <span id="max-value">{{ max_price }}</span> تومان</span>
                                 </div>
                                 <div class="slider-track-container">
-                                    <input type="range" name="min_price" min="{{ actual_min_price }}" max="{{ actual_max_price }}" value="{{ min_price }}" step="500" id="minRange">
-                                    <input type="range" name="max_price" min="{{ actual_min_price }}" max="{{ actual_max_price }}" value="{{ max_price }}" step="500" id="maxRange">
+                                    <input type="range" name="min_price" min="{{ actual_min_price }}" max="{{ actual_max_price }}" value="{{ min_price }}" step="500" id="minRange" aria-label="حداقل قیمت">
+                                    <input type="range" name="max_price" min="{{ actual_min_price }}" max="{{ actual_max_price }}" value="{{ max_price }}" step="500" id="maxRange" aria-label="حداکثر قیمت">
                                     <div class="slider-track"></div>
                                 </div>
                             </div>
@@ -61,8 +61,8 @@
 
                         <div class="box">
                             <div class="box-content">
-                                <input type="checkbox" class="bootstrap-switch" name="instant" value="1" {% if instant_only == '1' %}checked{% endif %}/>
-                                <label for="">فقط دانلود آنی و نامحدود</label>
+                                <input type="checkbox" class="bootstrap-switch" name="instant" value="1" id="instant-only" {% if instant_only == '1' %}checked{% endif %}>
+                                <label for="instant-only">فقط دانلود آنی و نامحدود</label>
                             </div>
                         </div>
                         <button type="submit" class="view_more">اعمال فیلتر</button>
@@ -80,9 +80,9 @@
                                             <div class="col-xl-4 col-lg-4 col-md-6 col-12 list_search_p ">
                                                 <div class="product-box">
                                                     <div class="product-seller-details product-seller-details-item-grid">
-                                                        <span class="search_prod_btn">
-                                                            <i class="fa fa fa-cart-arrow-down search_icon_cart" aria-hidden="true" data-product-id="{{ product.id }}" onclick="addToCart(this)"></i>
-                                                        </span>
+                                                        <button type="button" class="search_prod_btn js-add-to-cart" data-product-id="{{ product.id }}" aria-label="افزودن {{ product.title }} به سبد خرید">
+                                                            <i class="fa fa-cart-arrow-down search_icon_cart" aria-hidden="true"></i>
+                                                        </button>
                                                     </div>
                                                     <a class="product-box-img"
                                                        href="{% url 'product:product_detail' product.pid product.slug %}">
@@ -172,60 +172,11 @@
             maxValue.textContent = formatPrice(maxRange.value);
         }
 
-        minRange.addEventListener('input', updatePriceLabels);
-        maxRange.addEventListener('input', updatePriceLabels);
-
-        updatePriceLabels();
-
-        function addToCart(element) {
-            {% if not request.user.is_authenticated %}
-                Swal.fire({
-                    title: 'ورود به سیستم',
-                    text: 'برای افزودن فایل به سبد خرید، ابتدا باید وارد حساب کاربری خود شوید.',
-                    icon: 'warning',
-                    confirmButtonText: 'ورود',
-                    confirmButtonColor: '#46A9AE',
-                    showCancelButton: true,
-                    cancelButtonText: 'انصراف',
-                    cancelButtonColor: '#e74c3c'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = "{% url 'account:login' %}?next={{ request.path }}";
-                    }
-                });
-                return;
-            {% endif %}
-
-            const productId = element.getAttribute('data-product-id');
-
-            fetch(`/cart/add/${productId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    quantity: 1
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        text: 'فایل با موفقیت به سبد خرید اضافه شد',
-                        icon: 'success',
-                        confirmButtonText: 'تایید',
-                        confirmButtonColor: '#46A9AE'
-                    });
-                } else {
-                    Swal.fire({
-                        title: 'خطا',
-                        text: data.message,
-                        icon: 'error',
-                        confirmButtonColor: '#e74c3c'
-                    });
-                }
-            });
+        if (minRange && maxRange && minValue && maxValue) {
+            minRange.addEventListener('input', updatePriceLabels);
+            maxRange.addEventListener('input', updatePriceLabels);
+            updatePriceLabels();
         }
+
     </script>
 {% endblock %}

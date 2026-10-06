@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
+{% block extra_css %}
+    <link href="{% static 'css/plugins/prettyphoto/css/prettyPhoto.css' %}" rel="stylesheet">
+{% endblock %}
 {% block title %}{% if products.meta_title %}{{ products.meta_title }}{% else %}دانلود {{ products.title|truncatewords:12 }}{% endif %}{% endblock %}
 {% block meta_description %}{{ products.meta_description|default:products.description|striptags|truncatechars:160 }}{% endblock %}
 {% block canonical %}<link rel="canonical" href="{% if products.canonical_url %}{{ products.canonical_url }}{% else %}{{ request.build_absolute_uri }}{% endif %}">{% endblock %}
@@ -73,13 +76,13 @@
                                 </div>
                                 <ul class="gallery-options">
                                     <li>
-                                        <button class="add-favorites favorites2 favorites_heart {% if is_in_wishlist %}active{% endif %}" data-product-id="{{ products.id }}">
-                                            <i class="fa fa-heart"></i>
+                                        <button type="button" class="add-favorites favorites2 favorites_heart {% if is_in_wishlist %}active{% endif %}" data-product-id="{{ products.id }}" aria-label="{% if is_in_wishlist %}حذف از علاقه‌مندی‌ها{% else %}افزودن به علاقه‌مندی‌ها{% endif %}" aria-pressed="{{ is_in_wishlist|yesno:'true,false' }}">
+                                            <i class="fa fa-heart" aria-hidden="true"></i>
                                         </button>
                                     </li>
                                     <li>
-                                        <button class="favorites2" data-toggle="modal" data-target="#myModal"><i
-                                                class="fa fa-share-alt"></i></button>
+                                        <button type="button" class="favorites2" data-toggle="modal" data-target="#myModal" aria-label="اشتراک‌گذاری محصول"><i
+                                                class="fa fa-share-alt" aria-hidden="true"></i></button>
                                     </li>
                                 </ul>
                                 <!-- Modal Core -->
@@ -94,21 +97,17 @@
                                                 <h4 class="modal-title" id="myModalLabel">به اشتراک گذاشتن</h4>
                                             </div>
                                             <div class="modal-footer">
-                                                <form class="default">
-                                                    <div class="row">
-                                                        <div class="col-12">
-                                                            <p>
-                                                                برای کپی آدرس در کادر زیر دابل کلیک کنید
-                                                            </p>
-                                                            <p class="right-side-header shareurlvalue"
-                                                               title="کپی بعد دوبار کلیک" id="text"
-                                                               ondblclick="copyToClipboard(this.id)"
-                                                               style="overflow-wrap: break-word; word-break: break-all; white-space: normal;">
-                                                                {{ request.build_absolute_uri|truncatechars:80 }}
-                                                            </p>
-                                                        </div>
+                                                <div class="row w-100">
+                                                    <div class="col-12">
+                                                        <p>آدرس محصول را با دکمه زیر کپی کنید.</p>
+                                                        <p class="right-side-header shareurlvalue fm-share-url" id="share-url">
+                                                            {{ request.build_absolute_uri|truncatechars:100 }}
+                                                        </p>
+                                                        <button type="button" class="btn btn-second-masai" id="copy-product-url">
+                                                            <i class="fa fa-copy" aria-hidden="true"></i> کپی آدرس
+                                                        </button>
                                                     </div>
-                                                </form>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -117,7 +116,7 @@
                             </div>
                             <div class="col-lg-7 col-md-6 col-sm-12 ">
 
-                                <h1 class="product-title " style="font-size:1.6rem;">
+                                <h1 class="product-title fm-product-title">
                                     {{ products.title }}
                                 </h1>
                                 <hr class="hr-text" data-content="{{ products.get_product_type_display }}">
@@ -253,8 +252,8 @@
                                                             {% if in_cart %}
                                                                 <a href="{% url 'cart:cart' %}" class="btn btn-second-masai big_btn">در سبد خرید شما است - مشاهده سبد</a>
                                                             {% else %}
-                                                                <button class="btn btn-main-masai big_btn" id="add-to-cart"
-                                                                        data-product-id="{{ products.id }}">افزودن به سبد
+                                                                <button type="button" class="btn btn-main-masai big_btn js-add-to-cart" id="add-to-cart"
+                                                                        data-product-id="{{ products.id }}" aria-label="افزودن {{ products.title }} به سبد خرید">افزودن به سبد
                                                                 </button>
                                                             {% endif %}
                                                         {% else %}
@@ -292,24 +291,22 @@
                             <div class="box-tabs default">
                                 <ul class="nav" role="tablist">
                                     <li class="box-tabs-tab">
-                                        <a class="active " data-toggle="tab" href="#desc" role="tab"
-                                           aria-expanded="true">
+                                        <a class="active" id="tab-desc" data-toggle="tab" href="#desc" role="tab" aria-controls="desc" aria-selected="true">
                                             توضیحات تکمیلی
                                         </a>
                                     </li>
                                     <li class="box-tabs-tab">
-                                        <a data-toggle="tab" href="#params" role="tab" aria-expanded="false">
+                                        <a id="tab-params" data-toggle="tab" href="#params" role="tab" aria-controls="params" aria-selected="false">
                                             مشخصات فایل
                                         </a>
                                     </li>
                                     <li class="box-tabs-tab">
-                                        <a data-toggle="tab" href="#comments" role="tab" aria-expanded="false">
+                                        <a id="tab-comments" data-toggle="tab" href="#comments" role="tab" aria-controls="comments" aria-selected="false">
                                             دیدگاه کاربران
                                         </a>
                                     </li>
                                     <li class="box-tabs-tab">
-                                        <a data-toggle="tab" href="#comments_questions" role="tab"
-                                           aria-expanded="false">
+                                        <a id="tab-comment-form" data-toggle="tab" href="#comments_questions" role="tab" aria-controls="comments_questions" aria-selected="false">
                                             ارسال دیدگاه
                                         </a>
                                     </li>
@@ -317,7 +314,7 @@
                                 <div class="card-body default">
                                     <!-- Tab panes -->
                                     <div class="tab-content">
-                                        <div class="tab-pane active" id="desc" role="tabpanel" aria-expanded="true">
+                                        <div class="tab-pane active" id="desc" role="tabpanel" aria-labelledby="tab-desc">
 
                                             <header class="card-header">
                                                 <h3 class="card-title"><span>بررسی تخصصی {{ products.title }} </span>
@@ -331,7 +328,7 @@
                                             </div>
 
                                         </div>
-                                        <div class="tab-pane params" id="params" role="tabpanel" aria-expanded="false">
+                                        <div class="tab-pane params" id="params" role="tabpanel" aria-labelledby="tab-params">
                                             <header class="card-header">
                                                 <h3 class="card-title"><span>مشخصات فایل {{ products.title }} </span>
                                                 </h3>
@@ -400,7 +397,7 @@
                                                 {% endif %}
                                             </div>
                                         </div>
-                                        <div class="tab-pane" id="comments" role="tabpanel" aria-expanded="false">
+                                        <div class="tab-pane" id="comments" role="tabpanel" aria-labelledby="tab-comments">
 
                                             <header class="card-header">
                                                 <h3 class="card-title"><span>دیدگاه کاربران</span></h3>
@@ -445,8 +442,7 @@
                                             {% endif %}
 
                                         </div>
-                                        <div class="tab-pane form-comment" id="comments_questions" role="tabpanel"
-                                             aria-expanded="false">
+                                        <div class="tab-pane form-comment" id="comments_questions" role="tabpanel" aria-labelledby="tab-comment-form">
                                             <header class="card-header">
                                                 <h3 class="card-title"><span>ارسال دیدگاه </span></h3>
                                             </header>
@@ -474,193 +470,107 @@
         </div>
     </main>
     <script>
-        function copyToClipboard() {
-            const textToCopy = '{{ request.build_absolute_uri }}';
-            navigator.clipboard.writeText(textToCopy)
-                .then(() => {
-                    Swal.fire({
-                        text: 'آدرس در کلیپ‌بورد شما کپی شد.',
-                        icon: 'success',
-                        confirmButtonText: 'تایید',
-                        confirmButtonColor: '#46A9AE',
-                        background: '#f8f9fa',
-                        showClass: {
-                            popup: 'animate__animated animate__fadeInDown'
-                        },
-                        hideClass: {
-                            popup: 'animate__animated animate__fadeOutUp'
-                        }
-                    });
-                })
-                .catch(err => {
-                    Swal.fire({
-                        title: 'خطا',
-                        text: 'خطا در کپی کردن آدرس.',
-                        icon: 'error',
-                        confirmButtonColor: '#e74c3c'
-                    });
-                });
-        }
+        (function () {
+            function csrfToken() {
+                const input = document.querySelector('#comment-form [name="csrfmiddlewaretoken"]');
+                return input ? input.value : '';
+            }
 
-        document.getElementById('comment-form')?.addEventListener('submit', async function (e) {
-            e.preventDefault();
-            const body = document.getElementById('body').value.trim();
-            if (!body) return;
+            function showMessage(options) {
+                if (window.Swal) return Swal.fire(options);
+                alert(options.text || options.title || 'عملیات انجام نشد.');
+                return Promise.resolve();
+            }
 
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-            const response = await fetch(window.location.href, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrfToken,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({body: body})
-            });
-
-            const data = await response.json();
-
-            if (data.status === 'success') {
-                const commentList = document.querySelector('.comment-list');
-                const newComment = document.createElement('li');
-                newComment.innerHTML = `
-                    <div class="comment-body">
-                        <div class="comment-author">
-                            <img alt="" src="{% if request.user.profile.image %}{{ request.user.profile.image.url }}{% else %}{% static 'img/default_profile_image.png' %}{% endif %}" class="avatar">
-                            <div class="text-h5">
-                                {% if request.user.profile.first_name and request.user.profile.last_name %}
-                                    {{ request.user.profile.first_name }} {{ request.user.profile.last_name }}
-                                {% else %}
-                                    {{ request.user.username }}
-                                {% endif %}
-                            </div>
-                        </div>
-                        <p>${body}</p>
-                        <ul class="commentul">
-                            <li>همین حالا</li>
-                        </ul>
-                    </div>
-                `;
-                commentList.prepend(newComment);
-                document.getElementById('body').value = '';
-                const commentsTab = document.querySelector('a[href="#comments"]');
-                if (commentsTab) {
-                    commentsTab.click();
-                    setTimeout(() => {
-                        document.getElementById('comments').scrollIntoView({behavior: 'smooth'});
-                    }, 200);
+            async function copyProductUrl() {
+                const text = '{{ request.build_absolute_uri|escapejs }}';
+                try {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(text);
+                    } else {
+                        const textarea = document.createElement('textarea');
+                        textarea.value = text;
+                        textarea.setAttribute('readonly', '');
+                        textarea.style.position = 'fixed';
+                        textarea.style.opacity = '0';
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        if (!document.execCommand('copy')) throw new Error('copy failed');
+                        textarea.remove();
+                    }
+                    showMessage({text: 'آدرس در کلیپ‌بورد شما کپی شد.', icon: 'success', confirmButtonText: 'تأیید', confirmButtonColor: '#46a9ae'});
+                } catch (error) {
+                    showMessage({title: 'خطا', text: 'کپی‌کردن آدرس انجام نشد. لطفاً آدرس را دستی کپی کنید.', icon: 'error', confirmButtonColor: '#d94848'});
                 }
             }
-        });
 
+            document.getElementById('copy-product-url')?.addEventListener('click', copyProductUrl);
 
-        document.getElementById('add-to-cart')?.addEventListener('click', function () {
-            {% if not request.user.is_authenticated %}
-                Swal.fire({
-                    title: 'ورود به سیستم',
-                    text: 'برای افزودن فایل به سبد خرید، ابتدا باید وارد حساب کاربری خود شوید.',
-                    icon: 'warning',
-                    confirmButtonText: 'ورود',
-                    confirmButtonColor: '#46A9AE',
-                    showCancelButton: true,
-                    cancelButtonText: 'انصراف',
-                    cancelButtonColor: '#e74c3c'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = "{% url 'account:login' %}?next={{ request.path }}";
-                    }
-                });
-                return;
-            {% endif %}
-
-            const productId = this.getAttribute('data-product-id');
-
-            fetch(`/cart/add/${productId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    quantity: 1
-                })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({
-                            text: 'فایل با موفقیت به سبد خرید اضافه شد',
-                            icon: 'success',
-                            confirmButtonText: 'تایید',
-                            confirmButtonColor: '#46A9AE'
-                        });
-                    } else {
-                        Swal.fire({
-                            title: 'خطا',
-                            text: data.message,
-                            icon: 'error',
-                            confirmButtonColor: '#e74c3c'
-                        });
-                    }
-                });
-        });
-
-
-        document.querySelectorAll('.favorites_heart').forEach(button => {
-            button.addEventListener('click', function () {
-                {% if not request.user.is_authenticated %}
-                    e.preventDefault();
-                    Swal.fire({
-                        title: 'ورود به سیستم',
-                        text: 'برای افزودن فایل به لیست علاقه ‌مندی ‌ها، ابتدا باید وارد حساب کاربری خود شوید.',
-                        icon: 'warning',
-                        confirmButtonText: 'ورود',
-                        confirmButtonColor: '#46A9AE',
-                        showCancelButton: true,
-                        cancelButtonText: 'انصراف',
-                        cancelButtonColor: '#e74c3c'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = "{% url 'account:login' %}?next={{ request.path }}";
-                        }
+            document.getElementById('comment-form')?.addEventListener('submit', async function (event) {
+                event.preventDefault();
+                const form = event.currentTarget;
+                const body = form.querySelector('[name="body"]').value.trim();
+                const submit = form.querySelector('[type="submit"]');
+                if (!body) return;
+                submit.disabled = true;
+                try {
+                    const response = await fetch(window.location.href, {
+                        method: 'POST',
+                        headers: {'X-CSRFToken': csrfToken(), 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+                        body: JSON.stringify({body: body})
                     });
-                    return false;
-                {% endif %}
-                const productId = this.getAttribute('data-product-id');
-                const isActive = this.classList.contains('active');
-                const url = isActive
-                    ? `/dashboard/wishlist/remove/${productId}/`
-                    : `/dashboard/wishlist/add/${productId}/`;
+                    const data = await response.json();
+                    if (!response.ok || data.status !== 'success') throw new Error(data.message || 'ثبت دیدگاه انجام نشد.');
+                    await showMessage({text: 'دیدگاه شما ثبت شد و پس از بررسی نمایش داده می‌شود.', icon: 'success', confirmButtonText: 'تأیید', confirmButtonColor: '#46a9ae'});
+                    window.location.hash = 'comments';
+                    window.location.reload();
+                } catch (error) {
+                    showMessage({title: 'خطا', text: error.message || 'مشکلی در ارتباط با سرور پیش آمد.', icon: 'error', confirmButtonColor: '#d94848'});
+                } finally {
+                    submit.disabled = false;
+                }
+            });
 
-                fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}',
-                        'X-Requested-With': 'XMLHttpRequest'
+            document.querySelectorAll('.favorites_heart').forEach(function (button) {
+                button.addEventListener('click', async function () {
+                    if (!window.FM || !window.FM.isAuthenticated) {
+                        const result = await showMessage({title: 'ورود به سیستم', text: 'برای مدیریت علاقه‌مندی‌ها ابتدا وارد حساب کاربری شوید.', icon: 'warning', confirmButtonText: 'ورود', confirmButtonColor: '#46a9ae', showCancelButton: true, cancelButtonText: 'انصراف'});
+                        if (result && result.isConfirmed) window.location.assign((window.FM.loginUrl || '/account/') + '?next=' + encodeURIComponent(window.location.pathname));
+                        return;
                     }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success' || data.status === 'info') {
-                        this.classList.toggle('active');
-
-                        Swal.fire({
-                            text: data.message,
-                            icon: data.status,
-                            confirmButtonText: 'تایید',
-                            confirmButtonColor: '#46A9AE'
+                    const productId = button.getAttribute('data-product-id');
+                    const isActive = button.classList.contains('active');
+                    button.disabled = true;
+                    try {
+                        const response = await fetch(isActive ? `/dashboard/wishlist/remove/${productId}/` : `/dashboard/wishlist/add/${productId}/`, {
+                            method: 'POST',
+                            headers: {'X-CSRFToken': csrfToken(), 'X-Requested-With': 'XMLHttpRequest'}
                         });
+                        const data = await response.json();
+                        if (!response.ok || !['success', 'info'].includes(data.status)) throw new Error(data.message || 'تغییر علاقه‌مندی انجام نشد.');
+                        const nowActive = !isActive;
+                        button.classList.toggle('active', nowActive);
+                        button.setAttribute('aria-pressed', String(nowActive));
+                        button.setAttribute('aria-label', nowActive ? 'حذف از علاقه‌مندی‌ها' : 'افزودن به علاقه‌مندی‌ها');
+                        showMessage({text: data.message, icon: data.status, confirmButtonText: 'تأیید', confirmButtonColor: '#46a9ae'});
+                    } catch (error) {
+                        showMessage({title: 'خطا', text: error.message || 'مشکلی در ارتباط با سرور پیش آمد.', icon: 'error', confirmButtonColor: '#d94848'});
+                    } finally {
+                        button.disabled = false;
                     }
-                })
-                .catch(error => {
-                    Swal.fire({
-                        title: 'خطا',
-                        text: 'مشکلی در ارتباط با سرور پیش آمد',
-                        icon: 'error',
-                        confirmButtonColor: '#e74c3c'
-                    });
                 });
             });
-        });
+        })();
+    </script>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'css/plugins/prettyphoto/js/jquery.prettyPhoto.js' %}"></script>
+    <script>
+        if (window.jQuery && jQuery.fn.prettyPhoto) {
+            jQuery(function () {
+                jQuery('.gallery a[rel^="prettyPhoto"]').prettyPhoto({animation_speed: 'fast', theme: 'light_square'});
+            });
+        }
     </script>
 {% endblock %}

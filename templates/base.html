@@ -62,13 +62,9 @@
     <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/main_ui.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/icon.css' %}" rel="stylesheet"/>
-    <link href="{% static 'css/plugins/owl.carousel.css' %}" rel="stylesheet"/>
-    <link href="{% static 'css/plugins/owl.theme.default.min.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/style.css' %}" rel="stylesheet"/>
-    <link href="{% static 'css/nouislider.min.css' %}" rel="stylesheet"/>
-    <!-- only single -->
-    <link href="{% static 'css/plugins/prettyphoto/css/prettyPhoto.css' %}" rel="stylesheet"/>
-    <!-- only single -->
+    {# CSS ویژهٔ هر صفحه (مثل کاروسل خانه یا گالری محصول) #}
+    {% block extra_css %}{% endblock %}
     {# قالب فروشگاه (یکپارچه‌شده از mainc74d.css + mainc81e.css که نسخه تکراری یکدیگر بودند) #}
     <link href="{% static 'css/theme.css' %}" rel="stylesheet"/>
     <!-- SweetAlert2 (local) -->
@@ -79,6 +75,7 @@
     <link href="{% static 'css/fm-design-system.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/fm-pages.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/fm-dashboard.css' %}" rel="stylesheet"/>
+    <link href="{% static 'css/fm-accessibility.css' %}" rel="stylesheet"/>
 </head>
 
 <body class="index-page sidebar-collapse">
@@ -87,7 +84,7 @@
     window.FM_NL_URL = '{% url "core:newsletter_subscribe" %}';
     window.FM_FALLBACK_IMG = '{% static "img/product_image_not_found.jpg" %}';
 </script>
-<div class="top-section fullscreen-container">
+<div class="top-section fullscreen-container" aria-hidden="true">
     <img src="{% static 'img/banner_img/bg_top.jpg' %}" class="h-100" alt="">
 </div>
 <!--start mobile header -->
@@ -96,7 +93,7 @@
         <div class="navbar-translate">
 
             <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse"
-                    data-target="#navigation" aria-controls="navigation-index" aria-expanded="false"
+                    data-target="#navigation" aria-controls="navigation" aria-expanded="false"
                     aria-label="Toggle navigation">
                 <span class="navbar-toggler-bar bar1"></span>
                 <span class="navbar-toggler-bar bar2"></span>
@@ -104,17 +101,17 @@
             </button>
             <div class="search-nav default">
                 <form action="{% url 'product:product_search' %}" method="get">
-                    <input type="text" name="search" placeholder="جستجو در فایل‌ها..." autocomplete="off">
-                    <button type="submit" aria-label="جستجو"><img src="{% static 'img/search.png' %}" alt="جستجو"></button>
+                    <input type="search" name="search" placeholder="جستجو در فایل‌ها..." autocomplete="off" aria-label="جستجو در فایل‌ها">
+                    <button type="submit" aria-label="جستجو"><img src="{% static 'img/search.png' %}" alt=""></button>
                 </form>
 
                 <ul>
                     {% if request.user.is_authenticated %}
-                        <li><a href="{% url "dashboard:home" %}"><i class="fa fa-user-tie colormain" aria-hidden="true"></i></a></li>
+                        <li><a href="{% url "dashboard:home" %}" aria-label="پنل کاربری"><i class="fa fa-user-tie colormain" aria-hidden="true"></i></a></li>
                     {% else %}
-                        <li><a href="{% url 'account:login' %}"><i class="fa fa-user-large colormain" aria-hidden="true"></i></a></li>
+                        <li><a href="{% url 'account:login' %}" aria-label="ورود به حساب کاربری"><i class="fa fa-user-large colormain" aria-hidden="true"></i></a></li>
                     {% endif %}
-                    <li><a href="{% url 'cart:cart' %}"><i class="fa fa-cart-arrow-down colormain" aria-hidden="true"></i></a></li>
+                    <li><a href="{% url 'cart:cart' %}" aria-label="سبد خرید"><i class="fa fa-cart-arrow-down colormain" aria-hidden="true"></i></a></li>
                     <li><button type="button" class="theme-toggle" style="width:36px;height:36px;font-size:15px;border:none;background:transparent;box-shadow:none;" aria-label="حالت شب/روز"><i class="fa fa-moon" aria-hidden="true"></i><i class="fa fa-sun" aria-hidden="true"></i></button></li>
                 </ul>
             </div>
@@ -132,8 +129,8 @@
             </div>
             <ul class="navbar-nav default">
                 <li class="sub-menu">
-                    <a href="javascript:void(0)">دسته بندی فایل‌ها</a>
-                    <ul>
+                    <button type="button" class="mobile-menu-toggle" aria-expanded="false" aria-controls="mobile-categories">دسته‌بندی فایل‌ها <i class="fa fa-chevron-down" aria-hidden="true"></i></button>
+                    <ul id="mobile-categories">
                         {% for category in categories %}
                             <li>
                                 <a href="{% url 'product:category_product_list' category.slug %}">{{ category.title }}</a>
@@ -142,19 +139,19 @@
                     </ul>
                 </li>
                 <li>
-                    <a href="{% url 'product:product_list' %}"> همه فایل‌ها</a>
+                    <a href="{% url 'product:product_list' %}" {% if request.resolver_match.namespace == 'product' and request.resolver_match.url_name != 'discount_product' %}aria-current="page" class="is-active"{% endif %}>همه فایل‌ها</a>
                 </li>
                 <li>
-                    <a href="{% url 'services:services' %}">طراحی وب سایت</a>
+                    <a href="{% url 'services:services' %}" {% if request.resolver_match.namespace == 'services' %}aria-current="page" class="is-active"{% endif %}>طراحی وب سایت</a>
                 </li>
                 <li>
-                    <a href="{% url 'blog:article_list' %}">وبلاگ</a>
+                    <a href="{% url 'blog:article_list' %}" {% if request.resolver_match.namespace == 'blog' %}aria-current="page" class="is-active"{% endif %}>وبلاگ</a>
                 </li>
                 <li>
-                    <a href="{% url 'core:contact' %}">تماس با ما</a>
+                    <a href="{% url 'core:contact' %}" {% if request.resolver_match.url_name == 'contact' %}aria-current="page" class="is-active"{% endif %}>تماس با ما</a>
                 </li>
                 <li>
-                    <a href="{% url 'core:about' %}">درباره ما</a>
+                    <a href="{% url 'core:about' %}" {% if request.resolver_match.url_name == 'about' %}aria-current="page" class="is-active"{% endif %}>درباره ما</a>
                 </li>
             </ul>
         </div>
@@ -182,8 +179,8 @@
                 <div class="col-lg-8 col-md-5 col-sm-8 col-7">
                     <div class="search-area default">
                         <form action="{% url 'product:product_search' %}" method="get" class="search">
-                            <input type="text" name="search" value="{{ request.GET.search }}" placeholder="جستجو در فایل‌ها، قالب‌ها و نرم‌افزارها...">
-                            <button type="submit"><img src="{% static 'img/search.png' %}" alt=""></button>
+                            <input type="search" name="search" value="{{ request.GET.search }}" placeholder="جستجو در فایل‌ها، قالب‌ها و نرم‌افزارها..." aria-label="جستجو در فروشگاه">
+                            <button type="submit" aria-label="جستجو"><img src="{% static 'img/search.png' %}" alt=""></button>
                         </form>
                     </div>
                 </div>
@@ -194,19 +191,19 @@
                             <i class="fa fa-sun" aria-hidden="true"></i>
                         </button>
                         {% if request.user.is_authenticated %}
-                            <a href="{% url 'dashboard:home' %}" class="iconhead">
+                            <a href="{% url 'dashboard:home' %}" class="iconhead" aria-label="پنل کاربری">
                                 <i class="fa fa-user-tie font-20" aria-hidden="true"></i>
                             </a>
                         {% else %}
-                            <a href="{% url 'account:login' %}" class="iconhead">
+                            <a href="{% url 'account:login' %}" class="iconhead" aria-label="ورود به حساب کاربری">
                                 <i class="fa fa-user-large font-20" aria-hidden="true"></i>
                             </a>
                         {% endif %}
                     </div>
                     <div class="cart dropdown masai_dropdown">
                         <span class="divider"></span>
-                        <a href="javascript:void(0)" class="dropdown-toggle iconhead" data-toggle="dropdown"
-                           id="navbar_a">
+                        <a href="{% url 'cart:cart' %}" class="dropdown-toggle iconhead" data-toggle="dropdown"
+                           id="navbar_a" aria-label="سبد خرید" aria-haspopup="true" aria-expanded="false">
                             <i class="fa fa-cart-arrow-down font-20" aria-hidden="true"></i>
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbar_a">
@@ -214,10 +211,11 @@
                                 {% if cart_items %}
                                     {% for item in cart_items %}
                                         <li class="m_cart_li1">
+                                            <button type="button" class="remove-cart-item" data-item-id="{{ item.id }}" aria-label="حذف {{ item.product.title }} از سبد خرید">
+                                                <i class="fa fa-times" aria-hidden="true"></i>
+                                            </button>
                                             <a href="{% url "product:product_detail" item.product.pid item.product.slug %}"
                                                class="m_cart-item">
-                                                <i class="fa fa-times remove-cart-item" aria-hidden="true"
-                                                   data-item-id="{{ item.id }}"></i>
                                                 <div class="m_cart-item-content">
                                                     <div class="m_cart-item-image">
                                                         {% if item.product.image %}
@@ -272,10 +270,9 @@
 
         <nav class="nav_header">
             <ul class="nav__ullist">
-                <li class="list_style">
-                    <i class="fa fa-bars icon-icon" aria-hidden="true"></i><a href="javascript:void(0)"
-                                                                              class="list__link">دسته بندی
-                    فایل‌ها</a>
+                <li class="list_style list_style--categories">
+                    <i class="fa fa-bars icon-icon" aria-hidden="true"></i><button type="button"
+                        class="list__link nav-categories-toggle" aria-expanded="false" aria-haspopup="true">دسته‌بندی فایل‌ها <i class="fa fa-chevron-down" aria-hidden="true"></i></button>
                     <div class="submeno">
                         <ul class="main_meno-drobdown">
                             {% for category in categories %}
@@ -288,32 +285,29 @@
                     </div>
                 </li>
                 <li class="list_style">
-                    <i class="fa fa-folder-open icon-icon" aria-hidden="true"></i><a href="{% url 'product:product_list' %}"
-                                                                             class="list__link">
-                    همه فایل‌ها
-                </a>
+                    <i class="fa fa-folder-open icon-icon" aria-hidden="true"></i><a href="{% url 'product:product_list' %}" class="list__link {% if request.resolver_match.namespace == 'product' and request.resolver_match.url_name != 'discount_product' %}is-active{% endif %}" {% if request.resolver_match.namespace == 'product' and request.resolver_match.url_name != 'discount_product' %}aria-current="page"{% endif %}>همه فایل‌ها</a>
                 </li>
                 <li class="list_style">
                     <i class="fa fa-code icon-icon" aria-hidden="true"></i>
-                    <a href="{% url 'services:services' %}" class="list__link">طراحی وب سایت</a>
+                    <a href="{% url 'services:services' %}" class="list__link {% if request.resolver_match.namespace == 'services' %}is-active{% endif %}" {% if request.resolver_match.namespace == 'services' %}aria-current="page"{% endif %}>طراحی وب سایت</a>
                 </li>
                 <li class="list_style">
                     <i class="fa fa-tags icon-icon" aria-hidden="true"></i>
-                    <a href="{% url 'product:discount_product' %}" class="list__link">تخفیف‌های ویژه</a>
+                    <a href="{% url 'product:discount_product' %}" class="list__link {% if request.resolver_match.url_name == 'discount_product' %}is-active{% endif %}" {% if request.resolver_match.url_name == 'discount_product' %}aria-current="page"{% endif %}>تخفیف‌های ویژه</a>
                 </li>
                 <li class="list_style">
                     <i class="fa fa-newspaper icon-icon" aria-hidden="true"></i>
-                    <a href="{% url 'blog:article_list' %}" class="list__link">وبلاگ</a>
+                    <a href="{% url 'blog:article_list' %}" class="list__link {% if request.resolver_match.namespace == 'blog' %}is-active{% endif %}" {% if request.resolver_match.namespace == 'blog' %}aria-current="page"{% endif %}>وبلاگ</a>
                 </li>
 
                 <li class="list_style">
                     <i class="fa fa-phone icon-icon" aria-hidden="true"></i>
-                    <a href="{% url 'core:contact' %}" class="list__link">تماس با ما</a>
+                    <a href="{% url 'core:contact' %}" class="list__link {% if request.resolver_match.url_name == 'contact' %}is-active{% endif %}" {% if request.resolver_match.url_name == 'contact' %}aria-current="page"{% endif %}>تماس با ما</a>
                 </li>
 
                 <li class="list_style">
                     <i class="fa fa-users icon-icon" aria-hidden="true"></i>
-                    <a href="{% url 'core:about' %}" class="list__link">درباره ما</a>
+                    <a href="{% url 'core:about' %}" class="list__link {% if request.resolver_match.url_name == 'about' %}is-active{% endif %}" {% if request.resolver_match.url_name == 'about' %}aria-current="page"{% endif %}>درباره ما</a>
                 </li>
             </ul>
         </nav>
@@ -341,12 +335,10 @@
 
 
     <footer class="main-footer default">
-        <div class="back-to-top ">
-            <a href="#">
-                <span class="icon"><i class="fa fa-chevron-up"></i></span> <span>
-                    بازگشت بالا
-                </span>
-            </a>
+        <div class="back-to-top">
+            <button type="button" aria-label="بازگشت به ابتدای صفحه">
+                <span class="icon"><i class="fa fa-chevron-up" aria-hidden="true"></i></span> <span>بازگشت بالا</span>
+            </button>
         </div>
         <div class=" servicesbg">
             <div class="footer-services container  space-10">
@@ -497,82 +489,22 @@
         </div>
     </footer>
 </div>
-<!--    JS Files   -->
-<script src="{% static 'js/core/jquery.3.2.1.min.js' %}" type="text/javascript"></script>
-<script src="{% static 'js/core/jquery.min.js' %}"></script>
+<!-- JavaScript: only shared, local dependencies are loaded globally. -->
+<script src="{% static 'js/core/jquery.min.js' %}" type="text/javascript"></script>
 <script src="{% static 'js/core/popper.min.js' %}" type="text/javascript"></script>
 <script src="{% static 'js/core/bootstrap.min.js' %}" type="text/javascript"></script>
-<script src="{% static 'js/plugins/bootstrap-switch.js' %}"></script>
-<script src="{% static 'js/plugins/nouislider.min.js' %}" type="text/javascript"></script>
-<script src="{% static 'js/plugins/bootstrap-datepicker.js' %}" type="text/javascript"></script>
-<script src="{% static 'js/plugins/jquery.sharrre.js' %}" type="text/javascript"></script>
-<script src="{% static 'js/now-ui-kit.js' %}" type="text/javascript"></script>
-<script src="{% static 'js/plugins/countdown.min.js' %}" type="text/javascript"></script>
-<script src="{% static 'js/plugins/owl.carousel.min.js' %}" type="text/javascript"></script>
-<script src="{% static 'js/plugins/jquery.easing.1.3.min.js' %}" type="text/javascript"></script>
-<script src="{% static 'js/plugins/jquery.ez-plus.js' %}" type="text/javascript"></script>
-
-<!-- SweetAlert2 (local) -->
 <script src="{% static 'js/plugins/sweetalert2.all.min.js' %}" type="text/javascript"></script>
-
-<!-- custom Js -->
+<script>
+    window.FM = {
+        isAuthenticated: {{ request.user.is_authenticated|yesno:'true,false' }},
+        loginUrl: '{% url "account:login" %}',
+        cartAddUrl: '{% url "cart:add_to_cart" 0 %}'.replace('/0/', '/{id}/'),
+        cartRemoveUrl: '{% url "cart:remove_cart_item" 0 %}'.replace('/0/', '/{id}/')
+    };
+</script>
 <script src="{% static 'js/main.js' %}" type="text/javascript"></script>
+<script src="{% static 'js/store-actions.js' %}" type="text/javascript"></script>
 <script src="{% static 'js/modern-2026.js' %}" defer></script>
-<!-- only single  -->
-<script src="{% static 'css/plugins/prettyphoto/js/jquery.prettyPhoto.js' %}"></script>
-
-<script>
-    function copyElementText(id) {
-        var text = document.getElementById(id).innerText;
-        var elem = document.createElement("textarea");
-        document.body.appendChild(elem);
-        elem.value = text;
-        elem.select();
-        document.execCommand("copy");
-        document.body.removeChild(elem);
-    }
-</script>
-<script type="text/javascript" charset="utf-8">
-    $(document).ready(function () {
-        $("area[rel^='prettyPhoto']").prettyPhoto();
-
-        $(".gallery:first a[rel^='prettyPhoto']").prettyPhoto({
-            animation_speed: 'normal',
-            theme: 'light_square',
-            slideshow: 3000,
-            autoplay_slideshow: false
-        });
-        $(".gallery:gt(0) a[rel^='prettyPhoto']").prettyPhoto({
-            animation_speed: 'fast',
-            slideshow: 10000,
-            hideflash: true
-        });
-
-    });
-</script>
-
-<script>
-    $(document).ready(function () {
-        // حذف آیتم از سبد خرید
-        $('.remove-cart-item').click(function (e) {
-            e.preventDefault();
-            var itemId = $(this).data('item-id');
-
-            $.ajax({
-                url: '/cart/remove/' + itemId + '/',
-                method: 'POST',
-                data: {
-                    csrfmiddlewaretoken: '{{ csrf_token }}'
-                },
-                success: function (response) {
-                    if (response.success) {
-                        location.reload();
-                    }
-                }
-            });
-        });
-    });
-</script>
 
 {% block extra_js %}{% endblock %}
 </body>

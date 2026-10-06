@@ -90,17 +90,9 @@ class ProfileEditForm(forms.ModelForm):
         return last_name
 
     def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if email is None:
-            email = ''
-        if email:
-            if not email.endswith('@gmail.com'):
-                raise ValidationError("لطفاً یک ایمیل معتبر با دامنه @gmail.com وارد کنید.")
-            if len(email) < 15:
-                raise ValidationError("ایمیل باید حداقل 15 کاراکتر باشد.")
-            if len(email) > 100:
-                raise ValidationError("ایمیل باید حداکثر 100 کاراکتر باشد.")
-        return email
+        # Profile.email is an EmailField, so Django validates the address format.
+        # Do not limit customers to one provider such as Gmail.
+        return (self.cleaned_data.get('email') or '').strip().lower()
 
     def clean_about_me(self):
         about_me = self.cleaned_data.get('about_me')
@@ -111,14 +103,10 @@ class ProfileEditForm(forms.ModelForm):
         return about_me
 
     def clean_phone(self):
-        phone = self.cleaned_data.get('phone')
-        if phone is None:
-            phone = ''
+        phone = (self.cleaned_data.get('phone') or '').strip()
         if phone:
-            if not phone.startswith('09'):
-                raise ValidationError("شماره تلفن باید با 09 شروع شود.")
-            if len(phone) != 11:
-                raise ValidationError("شماره تلفن باید 11 رقم باشد.")
+            if not phone.isdigit() or not phone.startswith('09') or len(phone) != 11:
+                raise ValidationError("شماره تلفن باید با 09 شروع شده و 11 رقم باشد.")
         return phone
 
     def clean_card_number(self):

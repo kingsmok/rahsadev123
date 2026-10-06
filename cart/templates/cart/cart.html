@@ -20,14 +20,14 @@
                             </a>
                         </li>
                         <li>
-                            <a href="javascript:void(0)" {% if cart.items.count == 0 %}class="disabled"{% endif %}>
-                                <span>روش پرداخت</span>
-                            </a>
+                            {% if cart_items %}
+                                <a href="{% url 'cart:shopping_payment' %}"><span>روش پرداخت</span></a>
+                            {% else %}
+                                <span class="disabled" aria-disabled="true">روش پرداخت</span>
+                            {% endif %}
                         </li>
                         <li>
-                            <a href="javascript:void(0)" class="disabled">
-                                <span>پایان خرید و دانلود</span>
-                            </a>
+                            <span class="disabled" aria-disabled="true">پایان خرید و دانلود</span>
                         </li>
                     </ul>
                 </div>
@@ -57,8 +57,9 @@
                                             <img src="{% static 'img/product_image_not_found.jpg' %}"
                                                  alt="{{ item.product.title|truncatewords:5 }}">
                                         {% endif %}
-                                        <i class="fa fa-times remove-item" aria-hidden="true"
-                                           data-item-id="{{ item.id }}"></i>
+                                        <button type="button" class="remove-cart-item" data-item-id="{{ item.id }}" aria-label="حذف {{ item.product.title }} از سبد خرید">
+                                            <i class="fa fa-times" aria-hidden="true"></i>
+                                        </button>
                                     </td>
                                     <td>
                                         <h3 class="cart_title">
@@ -105,9 +106,10 @@
                         <div class="cart-page-content col-xl-8 col-lg-7 col-md-7 ">
                             <form method="post" action="{% url 'cart:apply_coupon' %}">
                                 {% csrf_token %}
-                                <input type="text" name="coupon_code" placeholder="کد تخفیف"
-                                       class="input_second input_all width-200">
-                                <button type="submit" class="btn btn-main-masai"> اعمال</button>
+                                <label class="fm-sr-only" for="coupon_code">کد تخفیف</label>
+                                <input type="text" name="coupon_code" id="coupon_code" placeholder="کد تخفیف"
+                                       class="input_second input_all width-200" autocomplete="off">
+                                <button type="submit" class="btn btn-main-masai">اعمال کد</button>
                                 {% if messages %}
                                     {% for message in messages %}
                                         <div class="coupon-{{ message.tags }} coupon-message">
@@ -115,7 +117,7 @@
                                         </div>
                                     {% endfor %}
                                 {% endif %}
-                                {% if cart.coupon and cart.items.count > 0 %}
+                                {% if cart and cart.coupon and cart_items %}
                                     <div class="coupon-success coupon-message">
                                         کد تخفیف {{ cart.coupon.code }} با موفقیت اعمال شد
                                         ({{ cart.coupon_discount|format_price }} تومان تخفیف)
@@ -143,7 +145,7 @@
                                 <tr>
                                     <td>تخفیف:</td>
                                     <td id="coupon-discount">
-                                        {% if cart.coupon and cart.items.count > 0 %}
+                                        {% if cart and cart.coupon and cart_items %}
                                             {{ cart.coupon_discount|format_price }} <span>تومان</span>
                                         {% else %}
                                             0 <span>تومان</span>
@@ -164,11 +166,11 @@
                                 </tr>
                                 <tr>
                                     <td colspan="2">
-                                        <a href="
-                                                {% if cart.items.count > 0 %}{% url 'cart:shopping_payment' %}{% else %}#{% endif %}"
-                                           class="btn big_btn btn-main-masai {% if cart.items.count == 0 %}disabled{% endif %}">
-                                            گام بعدی
-                                        </a>
+                                        {% if cart_items %}
+                                            <a href="{% url 'cart:shopping_payment' %}" class="btn big_btn btn-main-masai">گام بعدی</a>
+                                        {% else %}
+                                            <span class="btn big_btn btn-main-masai disabled" aria-disabled="true">گام بعدی</span>
+                                        {% endif %}
                                     </td>
                                 </tr>
                                 </tbody>
@@ -180,41 +182,5 @@
         </div>
     </main>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
 
-            document.querySelectorAll('.remove-item').forEach(button => {
-                button.addEventListener('click', function () {
-                    const itemId = this.getAttribute('data-item-id');
-                    removeCartItem(itemId);
-                });
-            });
-
-            function removeCartItem(itemId) {
-                fetch(`/cart/remove/${itemId}/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({})
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            location.reload();
-                        } else {
-                            alert(data.message);
-                        }
-                    });
-            }
-
-            setTimeout(function () {
-                const messages = document.querySelectorAll('.coupon-message');
-                messages.forEach(message => {
-                    message.style.display = 'none';
-                });
-            }, 5000);
-        });
-    </script>
 {% endblock %}
