@@ -574,18 +574,46 @@ a.btn-main-masai:hover,
     .profile-page-aside .responsive-profile-menu {
         position: relative;
         top: auto;
+        z-index: 30;
     }
 
+    .profile-page-aside .responsive-profile-menu .dropdown-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 48px;
+        text-align: right;
+    }
+
+    .profile-page-aside .responsive-profile-menu .dropdown-toggle i {
+        float: none;
+        margin: 0 0 0 10px;
+    }
+
+    /* این فهرست طولانی روی موبایل نباید به‌صورت لایهٔ absolute پشت محتوای
+       داشبورد باز شود. با بازشدن، در جریان طبیعی صفحه زیر دکمه قرار می‌گیرد. */
     .profile-page-aside .responsive-profile-menu .dropdown-menu {
+        position: static !important;
+        float: none;
         width: 100%;
         max-height: min(60dvh, 420px);
+        margin: 8px 0 0;
+        padding: 6px;
         overflow-y: auto;
+        background: var(--fm-surface);
+        border: 1px solid var(--fm-border);
+        border-radius: var(--fm-r-md);
+        box-shadow: var(--fm-shadow-md);
+        transform: none !important;
     }
 
     .profile-page-aside .responsive-profile-menu .dropdown-item {
         display: flex;
         align-items: center;
         min-height: 44px;
+        border-radius: var(--fm-r-sm);
+        color: var(--fm-text);
+        white-space: normal;
     }
 }
 
