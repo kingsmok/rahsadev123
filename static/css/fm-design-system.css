@@ -1083,3 +1083,153 @@ textarea:focus {
     color: var(--fm-text-faint);
     line-height: 1.5;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   شبکه ایمنی حالت شب برای سطوح قالب قدیمی
+   ───────────────────────────────────────────────────────────────────────
+   theme.css رنگ‌های روشن را hard-code کرده بود؛ این کلاس‌ها در حالت شب
+   به‌صورت بلوک‌های سفید روی پس‌زمینه تیره دیده می‌شدند.
+   ═══════════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] .order-delivered,
+[data-theme="dark"] .listing-items,
+[data-theme="dark"] .brand-slider,
+[data-theme="dark"] .product-seller-details-item-grid,
+[data-theme="dark"] .widget,
+[data-theme="dark"] .widget-product,
+[data-theme="dark"] .widget-blog,
+[data-theme="dark"] .widget_blog,
+[data-theme="dark"] .widget_blog_posts,
+[data-theme="dark"] .widget_blog_headbox,
+[data-theme="dark"] .product-box,
+[data-theme="dark"] .single_blog_content,
+[data-theme="dark"] .single_blog_page,
+[data-theme="dark"] .single_blog_box_content,
+[data-theme="dark"] .sidebar_blog,
+[data-theme="dark"] .Blog-category,
+[data-theme="dark"] .Blog-carousel,
+[data-theme="dark"] .cart_details,
+[data-theme="dark"] .cart_item,
+[data-theme="dark"] .cart_price,
+[data-theme="dark"] .cart_empty,
+[data-theme="dark"] .cart_content,
+[data-theme="dark"] .plans,
+[data-theme="dark"] .banner-ads,
+[data-theme="dark"] .bglight,
+[data-theme="dark"] .comments_form,
+[data-theme="dark"] .modal-share,
+[data-theme="dark"] .login_box,
+[data-theme="dark"] .account-box,
+[data-theme="dark"] .content-section,
+[data-theme="dark"] .profile-card-1,
+[data-theme="dark"] .profile-recent-fav-row,
+[data-theme="dark"] .main-content,
+[data-theme="dark"] .contact_us_content,
+[data-theme="dark"] .table,
+[data-theme="dark"] .table-responsive {
+    background-color: var(--fm-surface) !important;
+    border-color: var(--fm-border) !important;
+    color: var(--fm-text);
+}
+
+/* نوارهای جداکننده و سطوح ثانویه */
+[data-theme="dark"] .card-header,
+[data-theme="dark"] .widget_blog_headbox,
+[data-theme="dark"] .servicesbg,
+[data-theme="dark"] .copyright,
+[data-theme="dark"] .hr-text {
+    background-color: var(--fm-surface-alt) !important;
+    border-color: var(--fm-border) !important;
+}
+
+/* جدول‌های قالب قدیمی */
+[data-theme="dark"] .table th,
+[data-theme="dark"] .table td {
+    background-color: transparent !important;
+    border-color: var(--fm-border) !important;
+    color: var(--fm-text);
+}
+
+[data-theme="dark"] .table thead th { background-color: var(--fm-surface-alt) !important; color: var(--fm-text-soft); }
+
+/* متن‌های کم‌رنگ قالب قدیمی */
+[data-theme="dark"] .light-black,
+[data-theme="dark"] .title-1,
+[data-theme="dark"] .title-2,
+[data-theme="dark"] .title-3,
+[data-theme="dark"] .about_footer,
+[data-theme="dark"] .footer-menu a,
+[data-theme="dark"] .text_details p { color: var(--fm-text-soft) !important; }
+
+/* فوتر و هدر موبایل */
+[data-theme="dark"] .main-footer,
+[data-theme="dark"] .navbar.header-responsive,
+[data-theme="dark"] .navbar-collapse {
+    background-color: var(--fm-surface) !important;
+    color: var(--fm-text);
+}
+
+[data-theme="dark"] .bg-map { background-color: var(--fm-bg) !important; }
+
+/* ورودی‌های قالب قدیمی */
+[data-theme="dark"] .input_all,
+[data-theme="dark"] .input_second,
+[data-theme="dark"] .form-control,
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="email"],
+[data-theme="dark"] input[type="password"],
+[data-theme="dark"] input[type="tel"],
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+    background-color: var(--fm-surface-alt) !important;
+    border-color: var(--fm-border) !important;
+    color: var(--fm-text) !important;
+}
+
+[data-theme="dark"] ::placeholder { color: var(--fm-neutral-400) !important; }
+
+/* منوی کشویی دسته‌بندی‌ها */
+[data-theme="dark"] .submeno,
+[data-theme="dark"] .main_meno-drobdown,
+[data-theme="dark"] .dropdown-menu,
+[data-theme="dark"] .nav_header {
+    background-color: var(--fm-surface) !important;
+    border-color: var(--fm-border) !important;
+}
+
+[data-theme="dark"] .nav__ullist .list__link,
+[data-theme="dark"] .dropdown-item,
+[data-theme="dark"] .main_meno-drobdown a { color: var(--fm-text) !important; }
+
+[data-theme="dark"] .dropdown-item:hover,
+[data-theme="dark"] .main_meno-drobdown a:hover {
+    background-color: var(--fm-primary-50) !important;
+    color: var(--fm-primary-600) !important;
+}
+
+/* باقیمانده سطوح قالب قدیمی در حالت شب */
+[data-theme="dark"] .bg_single_product,
+[data-theme="dark"] .single-product,
+[data-theme="dark"] .product_main_details,
+[data-theme="dark"] .box-tabs,
+[data-theme="dark"] .box-tabs-tab,
+[data-theme="dark"] .m_cart_li1,
+[data-theme="dark"] .profile-menu,
+[data-theme="dark"] .responsive-profile-menu,
+[data-theme="dark"] .back-to-top {
+    background-color: var(--fm-surface) !important;
+    border-color: var(--fm-border) !important;
+    color: var(--fm-text);
+}
+
+[data-theme="dark"] .box-tabs-tab.active,
+[data-theme="dark"] .box-tabs .active {
+    background-color: var(--fm-primary-50) !important;
+    color: var(--fm-primary-600) !important;
+}
+
+[data-theme="dark"] .checkbox-check {
+    background-color: var(--fm-surface-alt) !important;
+    border-color: var(--fm-border) !important;
+}
+
+[data-theme="dark"] body.sidebar-collapse { background-color: var(--fm-bg) !important; }

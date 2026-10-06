@@ -201,22 +201,19 @@
                                                     <div class="stock-info">
                                                         <p>وضعیت فایل:
                                                             {% if products.is_unlimited %}
-                                                                <span style="color: #46A9AE; font-weight: bold;">نامحدود</span>
+                                                                <span class="fm-stock fm-stock--ok">نامحدود</span>
                                                             {% elif products.stock_count > 0 %}
-                                                                <span style="color: #46A9AE; font-weight: bold;">{{ products.stock_count }} لایسنس فعال</span>
+                                                                <span class="fm-stock fm-stock--ok">{{ products.stock_count }} لایسنس فعال</span>
                                                             {% else %}
-                                                                <span style="color: #FF0000; font-weight: bold;">ناموجود</span>
+                                                                <span class="fm-stock fm-stock--out">ناموجود</span>
                                                             {% endif %}
                                                         </p>
-                                                        <div class="progress"
-                                                             style="height: 14px; background: #f5f5f5;">
+                                                        <div class="progress fm-stock-bar">
                                                             <div class="progress-bar"
-                                                                 style="width: {% if products.is_unlimited %}100{% elif products.stock_count %}{{ products.stock_count }}{% else %}0{% endif %}%;
-                                                                         background-color: #46A9AE;
-                                                                         border-radius: 5px;">
+                                                                 style="width: {% if products.is_unlimited %}100{% elif products.stock_count %}{{ products.stock_count }}{% else %}0{% endif %}%;">
                                                             </div>
                                                         </div>
-                                                        <small style="color: {% if products.is_available %}#46A9AE{% else %}#FF0000{% endif %};">
+                                                        <small class="fm-stock {% if products.is_available %}fm-stock--ok{% else %}fm-stock--out{% endif %}">
                                                             {% if products.is_unlimited %}
                                                                 بدون محدودیت تعداد دانلود و فروش
                                                             {% elif products.stock_count > 0 %}
@@ -241,7 +238,7 @@
                                                     <div class="col-12 timer-title text--center">
                                                         {% if user_tokens %}
                                                             <div class="download-box">
-                                                                <b><i class="fa fa-circle-check" style="color:#2e9e44" aria-hidden="true"></i>
+                                                                <b><i class="fa fa-circle-check fm-ico-ok" aria-hidden="true"></i>
                                                                     این فایل را قبلاً خریداری کرده‌اید</b>
                                                                 {% for token in user_tokens %}
                                                                     {% if token.is_valid %}

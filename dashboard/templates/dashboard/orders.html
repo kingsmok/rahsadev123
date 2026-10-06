@@ -26,27 +26,27 @@
                                                         <h4 class="profile-recent-fav-name">
                                                             {% if order.status == 'paid' %}
                                                                 <span class="badge badge-paid">
-                                                                    <i class="fa fa-check-circle" style='color: white;' aria-hidden="true"></i> {{ order.get_status_display }}
+                                                                    <i class="fa fa-check-circle" aria-hidden="true"></i> {{ order.get_status_display }}
                                                                 </span>
                                                             {% elif order.status == 'shipped' %}
                                                                 <span class="badge badge-shipped">
-                                                                    <i class="fa fa-truck" style='color: white;' aria-hidden="true"></i> {{ order.get_status_display }}
+                                                                    <i class="fa fa-truck" aria-hidden="true"></i> {{ order.get_status_display }}
                                                                 </span>
                                                             {% elif order.status == 'delivered' %}
                                                                 <span class="badge badge-delivered">
-                                                                    <i class="fa fa-check-square" style='color: white;' aria-hidden="true"></i> {{ order.get_status_display }}
+                                                                    <i class="fa fa-check-square" aria-hidden="true"></i> {{ order.get_status_display }}
                                                                 </span>
                                                             {% elif order.status == 'pending' %}
                                                                 <span class="badge badge-pending">
-                                                                    <i class="fa fa-clock" style='color: white;' aria-hidden="true"></i> {{ order.get_status_display }}
+                                                                    <i class="fa fa-clock" aria-hidden="true"></i> {{ order.get_status_display }}
                                                                 </span>
                                                             {% elif order.status == 'processing' %}
                                                                 <span class="badge badge-processing">
-                                                                    <i class="fa fa-cog fa-spin" style='color: white;' aria-hidden="true"></i> {{ order.get_status_display }}
+                                                                    <i class="fa fa-cog fa-spin" aria-hidden="true"></i> {{ order.get_status_display }}
                                                                 </span>
                                                             {% elif order.status == 'cancelled' %}
                                                                 <span class="badge badge-cancelled">
-                                                                    <i class="fa fa-times-circle" style='color: white;' aria-hidden="true"></i> {{ order.get_status_display }}
+                                                                    <i class="fa fa-times-circle" aria-hidden="true"></i> {{ order.get_status_display }}
                                                                 </span>
                                                             {% endif %}
                                                         </h4>

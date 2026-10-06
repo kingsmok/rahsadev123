@@ -323,3 +323,24 @@
     .price-card, .req-form { padding: 20px 16px; }
     .portfolio-card img { height: 160px; }
 }
+
+/* وضعیت موجودی لایسنس در صفحه محصول */
+.fm-stock { font-weight: 700; }
+.fm-stock--ok  { color: var(--fm-primary-600); }
+.fm-stock--out { color: var(--fm-danger); }
+
+.fm-stock-bar {
+    height: 10px;
+    background: var(--fm-neutral-100);
+    border-radius: var(--fm-r-pill);
+    overflow: hidden;
+}
+
+.fm-stock-bar .progress-bar {
+    background: var(--fm-grad);
+    border-radius: var(--fm-r-pill);
+}
+
+.fm-ico-ok   { color: var(--fm-success); }
+.fm-ico-warn { color: var(--fm-warning); }
+.fm-ico-bad  { color: var(--fm-danger); }
