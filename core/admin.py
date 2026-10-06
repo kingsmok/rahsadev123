@@ -75,3 +75,15 @@ class RedirectAdmin(admin.ModelAdmin):
     @admin.display(description='آخرین استفاده', ordering='updated_at')
     def get_updated_jalali(self, obj):
         return datetime2jalali(obj.updated_at).strftime('%Y/%m/%d - %H:%M')
+
+
+@admin.register(models.NewsletterSubscriber)
+class NewsletterSubscriberAdmin(admin.ModelAdmin):
+    list_display = ['email', 'is_active', 'get_joined_jalali']
+    list_filter = ['is_active']
+    search_fields = ['email']
+    list_editable = ['is_active']
+
+    @admin.display(description='تاریخ عضویت', ordering='created_at')
+    def get_joined_jalali(self, obj):
+        return datetime2jalali(obj.created_at).strftime('%Y/%m/%d - %H:%M')

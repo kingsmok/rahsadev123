@@ -99,7 +99,7 @@ def website_schema(context):
             '@type': 'SearchAction',
             'target': {
                 '@type': 'EntryPoint',
-                'urlTemplate': _absolute(context, '/products/product_search/?q={search_term_string}'),
+                'urlTemplate': _absolute(context, '/products/product_search/?search={search_term_string}'),
             },
             'query-input': 'required name=search_term_string',
         },

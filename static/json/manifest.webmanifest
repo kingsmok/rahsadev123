@@ -1,0 +1,16 @@
+{
+  "name": "فایل‌مارکت | فروش فایل و محصولات مجازی",
+  "short_name": "فایل‌مارکت",
+  "description": "خرید و دانلود آنی فایل‌های نرم‌افزاری، قالب وب سایت، اسکریپت و محصولات مجازی با لایسنس رسمی",
+  "lang": "fa-IR",
+  "dir": "rtl",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f8fa",
+  "theme_color": "#46a9ae",
+  "icons": [
+    { "src": "/static/img/favicon.png", "sizes": "32x32", "type": "image/png" },
+    { "src": "/static/img/favicon.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/static/img/favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -97,3 +97,32 @@ def custom_404(request, exception=None):
 
 def custom_500(request):
     return render(request, 'errors/500.html', status=500)
+
+
+def newsletter_subscribe(request):
+    """عضویت در خبرنامه (AJAX) — با CSRF و اعتبارسنجی ایمیل."""
+    from django.http import JsonResponse
+    from django.views.decorators.http import require_POST
+    from django.middleware.csrf import get_token
+
+    @require_POST
+    def _subscribe(request):
+        import json as _json
+        from .models import NewsletterSubscriber
+        try:
+            data = _json.loads(request.body.decode('utf-8'))
+        except Exception:
+            return JsonResponse({'ok': False, 'message': 'درخواست نامعتبر است.'}, status=400)
+        email = (data.get('email') or '').strip().lower()
+        from django.core.validators import EmailValidator
+        from django.core.exceptions import ValidationError
+        try:
+            EmailValidator()(email)
+        except ValidationError:
+            return JsonResponse({'ok': False, 'message': 'ایمیل واردشده معتبر نیست.'})
+        _, created = NewsletterSubscriber.objects.get_or_create(email=email, defaults={'is_active': True})
+        if created:
+            return JsonResponse({'ok': True, 'message': 'عضویت شما در خبرنامه با موفقیت ثبت شد؛ تخفیف‌ها و فایل‌های جدید را زودتر از همه دریافت می‌کنید.'})
+        return JsonResponse({'ok': True, 'message': 'این ایمیل قبلاً در خبرنامه ثبت شده است.'})
+
+    return _subscribe(request)

@@ -133,3 +133,19 @@ class Redirect(models.Model):
         if not self.new_path.startswith(('http://', 'https://')):
             self.new_path = self.normalize_path(self.new_path)
         super().save(*args, **kwargs)
+
+
+class NewsletterSubscriber(models.Model):
+    """مشترک خبرنامه — دریافت ایمیل‌های اطلاع‌رسانی فایل‌های جدید و تخفیف‌ها."""
+
+    email = models.EmailField(unique=True, verbose_name='ایمیل')
+    is_active = models.BooleanField(default=True, verbose_name='فعال')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ عضویت')
+
+    class Meta:
+        verbose_name = 'مشترک خبرنامه'
+        verbose_name_plural = 'مشترکان خبرنامه'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.email

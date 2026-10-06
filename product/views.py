@@ -194,6 +194,21 @@ def product_search(request):
     products_search = request.GET.get('search', '')
     products = Product.objects.filter(title__icontains=products_search, status='published').order_by('-created_at')
 
+    # جست‌وجوی زنده (AJAX) — فقط نتایج محدود با JSON
+    if request.GET.get('ajax') and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        results = []
+        for p in products.select_related()[:6]:
+            cat = p.category.first()
+            results.append({
+                'title': p.title,
+                'url': f'/products/{p.pid}/{p.slug}/',
+                'price': p.price,
+                'image': p.image.url if p.image else None,
+                'category': cat.title if cat else '',
+            })
+        from django.http import JsonResponse
+        return JsonResponse({'results': results, 'count': products.count()})
+
     products, selected_types, selected_brands, instant_only = _apply_digital_filters(request, products)
     prices = _price_range(Product.objects.filter(status='published'))
     object_list, pages_to_show, querystring = _paginate(request, products)

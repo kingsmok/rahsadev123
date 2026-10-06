@@ -1,0 +1,562 @@
+/* ═══════════════════════════════════════════════════════════
+   به‌روزرسانی ۲۰۲۶ — فایل‌مارکت
+   فونت وزیرمتن (ارقام فارسی) + حالت شب + پولیش مدرن ایرانی
+   این فایل بعد از همه CSSها لود می‌شود و لایه نهایی ظاهر است.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ---------- ۱) فونت وزیرمتن ۲۰۲۶ (با ارقام فارسی خودکار) ---------- */
+@font-face {
+    font-family: 'Vazirmatn FD';
+    src: url('../fonts/vazirmatn/Vazirmatn-FD-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Vazirmatn FD';
+    src: url('../fonts/vazirmatn/Vazirmatn-FD-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Vazirmatn FD';
+    src: url('../fonts/vazirmatn/Vazirmatn-FD-SemiBold.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Vazirmatn FD';
+    src: url('../fonts/vazirmatn/Vazirmatn-FD-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Vazirmatn FD';
+    src: url('../fonts/vazirmatn/Vazirmatn-FD-ExtraBold.woff2') format('woff2');
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Vazirmatn FD';
+    src: url('../fonts/vazirmatn/Vazirmatn-FD-Black.woff2') format('woff2');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* اعمال فونت جدید روی همه اجزا (لایه نهایی) */
+body, h1, h2, h3, h4, h5, h6, p, a, span, li, td, th, label,
+button, input, select, textarea, .form-control, .btn, .text-logo,
+.card-title, .product-title, .navbar, .dropdown-menu, .modal-content,
+.swal2-popup, .breadcrumb, .badge, small, strong, b {
+    font-family: 'Vazirmatn FD', 'Vazirmatn', 'vazir-fd-wl', Tahoma, Arial, sans-serif !important;
+    letter-spacing: 0 !important;
+}
+
+body {
+    font-feature-settings: 'ss01';
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- ۲) متغیرهای رنگ ۲۰۲۶ (روشن) ---------- */
+:root {
+    --fm-teal: #46a9ae;
+    --fm-teal-dark: #2d7a80;
+    --fm-teal-light: #61bec3;
+    --fm-grad: linear-gradient(135deg, #46a9ae 0%, #3aa8b5 55%, #5bc8d4 100%);
+    --fm-radius: 14px;
+    --fm-shadow-sm: 0 2px 8px rgba(23, 42, 52, .06);
+    --fm-shadow-md: 0 8px 24px rgba(23, 42, 52, .10);
+    --fm-shadow-lg: 0 16px 40px rgba(23, 42, 52, .14);
+    --fm-bg: #f6f8fa;
+    --fm-surface: #ffffff;
+    --fm-text: #22333f;
+    --fm-text-soft: #5d7285;
+    --fm-border: rgba(23, 42, 52, .08);
+    --fm-header-bg: rgba(255, 255, 255, .86);
+}
+
+/* ---------- ۳) حالت شب (دارک مود ۲۰۲۶) ---------- */
+[data-theme="dark"] {
+    --fm-bg: #0f1720;
+    --fm-surface: #18232e;
+    --fm-text: #e8eef4;
+    --fm-text-soft: #9db0c0;
+    --fm-border: rgba(232, 238, 244, .09);
+    --fm-header-bg: rgba(16, 24, 32, .88);
+    --fm-shadow-sm: 0 2px 8px rgba(0, 0, 0, .35);
+    --fm-shadow-md: 0 8px 24px rgba(0, 0, 0, .45);
+    --fm-shadow-lg: 0 16px 40px rgba(0, 0, 0, .55);
+}
+
+/* سطوح اصلی در حالت شب */
+[data-theme="dark"] body,
+[data-theme="dark"] body.index-page {
+    background: var(--fm-bg) !important;
+    color: var(--fm-text) !important;
+}
+[data-theme="dark"] .wrapper.default,
+[data-theme="dark"] main,
+[data-theme="dark"] .main.default {
+    background: transparent !important;
+}
+[data-theme="dark"] .card,
+[data-theme="dark"] .panel,
+[data-theme="dark"] .box,
+[data-theme="dark"] .sidebar .item-side,
+[data-theme="dark"] .list-group-item {
+    background: var(--fm-surface) !important;
+    border-color: var(--fm-border) !important;
+    color: var(--fm-text) !important;
+}
+[data-theme="dark"] .card-title,
+[data-theme="dark"] .card-title span,
+[data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3,
+[data-theme="dark"] h4, [data-theme="dark"] h5,
+[data-theme="dark"] .product-title a, [data-theme="dark"] .product-title,
+[data-theme="dark"] .title-3, [data-theme="dark"] .title-1:not(.light-black),
+[data-theme="dark"] .about_footer, [data-theme="dark"] .footer-menu a,
+[data-theme="dark"] .text-logo span, [data-theme="dark"] .text-logo small,
+[data-theme="dark"] label, [data-theme="dark"] th,
+[data-theme="dark"] .list-group-item, [data-theme="dark"] p {
+    color: var(--fm-text) !important;
+}
+[data-theme="dark"] p, [data-theme="dark"] .about_footer,
+[data-theme="dark"] .text-muted, [data-theme="dark"] small {
+    color: var(--fm-text-soft) !important;
+}
+[data-theme="dark"] a:not(.btn):not(.colormain) {
+    color: var(--fm-text);
+}
+[data-theme="dark"] a:not(.btn):hover {
+    color: var(--fm-teal-light);
+}
+[data-theme="dark"] .title-1.light-black,
+[data-theme="dark"] .light-black {
+    color: var(--fm-text) !important;
+}
+
+/* هدر و ناوبری در شب */
+[data-theme="dark"] .Masai-header.default,
+[data-theme="dark"] header.Masai-header {
+    background: var(--fm-header-bg) !important;
+    backdrop-filter: blur(14px) saturate(1.4);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    box-shadow: 0 1px 0 var(--fm-border), var(--fm-shadow-sm) !important;
+}
+[data-theme="dark"] .header-responsive,
+[data-theme="dark"] nav.header-responsive {
+    background: var(--fm-header-bg) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+[data-theme="dark"] .navbar-nav.default > li > a,
+[data-theme="dark"] .navbar-nav .sub-menu > a,
+[data-theme="dark"] .navbar-nav.default li a {
+    color: var(--fm-text) !important;
+}
+[data-theme="dark"] .navbar-nav.default > li > a:hover,
+[data-theme="dark"] .navbar-nav.default li a:hover {
+    color: var(--fm-teal-light) !important;
+}
+[data-theme="dark"] .sub-menu ul,
+[data-theme="dark"] .dropdown-menu {
+    background: #1d2a36 !important;
+    border-color: var(--fm-border) !important;
+    box-shadow: var(--fm-shadow-lg) !important;
+}
+[data-theme="dark"] .sub-menu ul li a,
+[data-theme="dark"] .dropdown-menu a {
+    color: var(--fm-text) !important;
+}
+[data-theme="dark"] .sub-menu ul li a:hover,
+[data-theme="dark"] .dropdown-menu a:hover {
+    background: rgba(70, 169, 174, .12) !important;
+}
+
+/* فرم‌ها در شب */
+[data-theme="dark"] .form-control,
+[data-theme="dark"] input[type="text"], [data-theme="dark"] input[type="password"],
+[data-theme="dark"] input[type="email"], [data-theme="dark"] input[type="number"],
+[data-theme="dark"] input[type="tel"], [data-theme="dark"] textarea,
+[data-theme="dark"] select {
+    background: #101b25 !important;
+    border-color: var(--fm-border) !important;
+    color: var(--fm-text) !important;
+}
+[data-theme="dark"] .form-control::placeholder,
+[data-theme="dark"] input::placeholder, [data-theme="dark"] textarea::placeholder {
+    color: #6d8092 !important;
+}
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] input:focus, [data-theme="dark"] textarea:focus {
+    border-color: var(--fm-teal) !important;
+    box-shadow: 0 0 0 3px rgba(70, 169, 174, .25) !important;
+}
+
+/* جعبه جست‌وجو در شب */
+[data-theme="dark"] .search-area.default .search,
+[data-theme="dark"] .search-nav.default form {
+    background: #101b25 !important;
+}
+[data-theme="dark"] .search input {
+    background: transparent !important;
+    color: var(--fm-text) !important;
+}
+
+/* فوتر در شب */
+[data-theme="dark"] .main-footer.default,
+[data-theme="dark"] footer.main-footer,
+[data-theme="dark"] .footer-services {
+    background: #0b1219 !important;
+}
+[data-theme="dark"] .servicesbg,
+[data-theme="dark"] .footerbg {
+    background: #0b1219 !important;
+}
+
+/* جدول‌ها، تب‌ها، مودال، پیام‌ها */
+[data-theme="dark"] .table, [data-theme="dark"] .table th, [data-theme="dark"] .table td {
+    color: var(--fm-text) !important;
+    border-color: var(--fm-border) !important;
+}
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .swal2-popup {
+    background: var(--fm-surface) !important;
+    color: var(--fm-text) !important;
+}
+[data-theme="dark"] .alert-info { background: rgba(70,169,174,.12); color: #bfeef1; border-color: rgba(70,169,174,.35); }
+[data-theme="dark"] .alert-danger { background: rgba(220,53,69,.12); color: #f5b8bd; border-color: rgba(220,53,69,.35); }
+[data-theme="dark"] .alert-success { background: rgba(25,135,84,.14); color: #b7e8cd; border-color: rgba(25,135,84,.4); }
+[data-theme="dark"] .alert-warning { background: rgba(255,193,7,.12); color: #ffe4a3; border-color: rgba(255,193,7,.35); }
+
+/* بنر تصویر بالای صفحه در شب تیره‌تر شود */
+[data-theme="dark"] .top-section img {
+    filter: brightness(.32) saturate(.85);
+}
+
+/* ---------- ۴) پولیش مدرن ۲۰۲۶ (هر دو حالت) ---------- */
+
+/* هدر شیشه‌ای چسبان */
+.Masai-header.default {
+    backdrop-filter: blur(12px) saturate(1.3);
+    -webkit-backdrop-filter: blur(12px) saturate(1.3);
+    background: var(--fm-header-bg);
+    box-shadow: var(--fm-shadow-sm);
+    transition: box-shadow .3s ease;
+}
+
+/* کارت‌ها: گوشه نرم‌تر + سایه لایه‌ای + هاور */
+.card, .panel, .box {
+    border-radius: var(--fm-radius) !important;
+    box-shadow: var(--fm-shadow-sm);
+    transition: transform .28s cubic-bezier(.22,.61,.36,1), box-shadow .28s ease, border-color .28s ease;
+    border-color: var(--fm-border);
+}
+.card:hover {
+    box-shadow: var(--fm-shadow-md);
+}
+
+/* کارت محصول: هاور بلندشدن نرم */
+.product-item, .item-2, .item-product, [class*="product"] .card,
+.owl-item .item, .blog-item {
+    transition: transform .3s cubic-bezier(.22,.61,.36,1), box-shadow .3s ease !important;
+}
+.product-item:hover, .owl-item .item:hover, .item-product:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--fm-shadow-md) !important;
+}
+
+/* دکمه‌های اصلی: گرادیان + هاور */
+.btn-primary, .btn.colormain, a.btn:not(.btn-light):not(.btn-outline) {
+    background: var(--fm-grad) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 14px rgba(70, 169, 174, .35);
+    transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+    font-weight: 600;
+}
+.btn-primary:hover, .btn.colormain:hover, a.btn:not(.btn-light):not(.btn-outline):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(70, 169, 174, .45);
+    filter: brightness(1.05);
+}
+
+/* لینک‌ها و تیترها */
+a { transition: color .2s ease, opacity .2s ease; }
+.card-title span { position: relative; }
+.colormain { color: var(--fm-teal) !important; }
+
+/* عناوین بخش‌ها: زیرخط گرادیانی */
+.card-title > span {
+    display: inline-block;
+    position: relative;
+    padding-bottom: 8px;
+}
+.card-title > span::after {
+    content: '';
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 46%;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--fm-grad);
+    transition: width .35s ease;
+}
+.card-title > span:hover::after { width: 100%; }
+
+/* قیمت‌ها خواناتر */
+.price .amount { font-weight: 800; letter-spacing: 0; }
+
+/* فرم‌ها: فوکوس تمیز */
+.form-control, input[type="text"], input[type="password"],
+input[type="email"], textarea, select {
+    border-radius: 12px !important;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+.form-control:focus, input:focus, textarea:focus {
+    border-color: var(--fm-teal) !important;
+    box-shadow: 0 0 0 3px rgba(70, 169, 174, .18) !important;
+    outline: none;
+}
+
+/* فوکوس‌رینگ دسترس‌پذیری */
+a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+    outline: 3px solid rgba(70, 169, 174, .55) !important;
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+/* اسکرول‌بار سفارشی (RTL) */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #46a9ae, #2d7a80);
+    border-radius: 8px;
+    border: 2px solid var(--fm-bg);
+}
+::-webkit-scrollbar-thumb:hover { background: #2d7a80; }
+
+/* اسکرول نرم */
+html { scroll-behavior: smooth; }
+
+/* بج‌ها و تخفیف‌ها */
+.badge { border-radius: 8px !important; font-weight: 600; }
+
+/* ---------- ۵) دکمه حالت شب/روز ---------- */
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    border: 1px solid var(--fm-border);
+    background: var(--fm-surface);
+    color: var(--fm-text);
+    cursor: pointer;
+    font-size: 18px;
+    box-shadow: var(--fm-shadow-sm);
+    transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
+    vertical-align: middle;
+}
+.theme-toggle:hover {
+    transform: translateY(-2px) rotate(-8deg);
+    box-shadow: var(--fm-shadow-md);
+}
+.theme-toggle .fa-sun { display: none; color: #f6b93b; }
+.theme-toggle .fa-moon { display: inline-block; color: var(--fm-teal); }
+[data-theme="dark"] .theme-toggle .fa-sun { display: inline-block; }
+[data-theme="dark"] .theme-toggle .fa-moon { display: none; }
+
+/* ---------- ۶) لیو سرچ (جست‌وجوی زنده) ---------- */
+.live-search-wrap { position: relative; }
+.live-search-results {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0; left: 0;
+    z-index: 9999;
+    background: var(--fm-surface);
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-radius);
+    box-shadow: var(--fm-shadow-lg);
+    overflow: hidden;
+    display: none;
+    max-height: 420px;
+    overflow-y: auto;
+}
+.live-search-results.open { display: block; animation: fmSlideDown .22s ease; }
+@keyframes fmSlideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.ls-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--fm-border);
+    text-decoration: none;
+    color: var(--fm-text);
+    transition: background .15s ease;
+}
+.ls-item:hover { background: rgba(70, 169, 174, .08); text-decoration: none; }
+.ls-item img {
+    width: 52px; height: 52px;
+    object-fit: cover;
+    border-radius: 10px;
+    flex-shrink: 0;
+    border: 1px solid var(--fm-border);
+}
+.ls-item .ls-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--fm-text);
+    line-height: 1.7;
+    display: block;
+}
+.ls-item .ls-meta { font-size: 12px; color: var(--fm-text-soft); }
+.ls-item .ls-price {
+    margin-right: auto;
+    font-weight: 800;
+    color: var(--fm-teal);
+    white-space: nowrap;
+    font-size: 13px;
+}
+.ls-empty { padding: 18px; text-align: center; color: var(--fm-text-soft); font-size: 14px; }
+.ls-all {
+    display: block;
+    padding: 12px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--fm-teal);
+    background: rgba(70, 169, 174, .07);
+    font-size: 14px;
+}
+.ls-all:hover { background: rgba(70, 169, 174, .15); text-decoration: none; }
+.ls-spinner {
+    padding: 16px; text-align: center; color: var(--fm-text-soft); font-size: 13px;
+}
+
+/* ---------- ۷) دکمه بازگشت به بالا با حلقه پیشرفت ---------- */
+#fmScrollTop {
+    position: fixed;
+    bottom: 26px;
+    left: 26px;
+    z-index: 9500;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    border: none;
+    background: var(--fm-surface);
+    color: var(--fm-teal);
+    box-shadow: var(--fm-shadow-md);
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: transform .25s ease, opacity .25s ease;
+    transform: translateY(14px);
+    opacity: 0;
+}
+#fmScrollTop.show { display: flex; transform: translateY(0); opacity: 1; }
+#fmScrollTop:hover { transform: translateY(-3px); box-shadow: var(--fm-shadow-lg); }
+#fmScrollTop svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 52px; height: 52px;
+    transform: rotate(-90deg);
+}
+#fmScrollTop circle {
+    fill: none;
+    stroke: var(--fm-teal);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 151;
+    stroke-dashoffset: 151;
+}
+
+/* ---------- ۸) خبرنامه ۲۰۲۶ ---------- */
+.fm-newsletter {
+    background: var(--fm-grad);
+    border-radius: var(--fm-radius);
+    padding: 26px 26px;
+    color: #fff;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    box-shadow: var(--fm-shadow-md);
+    margin-bottom: 26px;
+}
+.fm-newsletter .fm-nl-text { flex: 1 1 320px; }
+.fm-newsletter h4 {
+    color: #fff !important;
+    font-weight: 800;
+    margin-bottom: 6px;
+    font-size: 18px;
+}
+.fm-newsletter p { color: #e9fbfb !important; margin: 0; font-size: 13.5px; }
+.fm-newsletter form {
+    flex: 1 1 300px;
+    display: flex;
+    gap: 8px;
+    background: rgba(255,255,255,.16);
+    border: 1px solid rgba(255,255,255,.35);
+    border-radius: 14px;
+    padding: 6px;
+    backdrop-filter: blur(6px);
+}
+.fm-newsletter input {
+    flex: 1;
+    border: none !important;
+    background: transparent !important;
+    color: #fff !important;
+    padding: 8px 14px;
+    font-size: 14px;
+    min-width: 0;
+}
+.fm-newsletter input::placeholder { color: rgba(255,255,255,.75) !important; }
+.fm-newsletter button {
+    border: none;
+    background: #fff;
+    color: #2d7a80;
+    font-weight: 800;
+    border-radius: 10px;
+    padding: 9px 22px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: transform .2s ease, box-shadow .2s ease;
+    white-space: nowrap;
+}
+.fm-newsletter button:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,.18); }
+.fm-nl-status { flex-basis: 100%; font-size: 13px; margin: 0; min-height: 18px; }
+.fm-nl-status.ok { color: #eafff0; }
+.fm-nl-status.err { color: #ffe0e2; }
+
+/* ---------- ۹) ریز اصلاحات واکنش‌گرا ---------- */
+@media (max-width: 768px) {
+    .Masai-header .search-area { margin-top: 8px; }
+    #fmScrollTop { bottom: 18px; left: 18px; width: 46px; height: 46px; }
+    #fmScrollTop svg { width: 46px; height: 46px; }
+    .fm-newsletter { padding: 18px; }
+}
+
+/* انیمیشن ورود نرم بخش‌ها */
+@keyframes fmFadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+main .container, main .container-fluid { animation: fmFadeUp .45s ease both; }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+    }
+    html { scroll-behavior: auto; }
+}

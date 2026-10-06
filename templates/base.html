@@ -6,8 +6,21 @@
 
 <head>
     <meta charset="utf-8"/>
+    <meta name="theme-color" content="#ffffff">
     <link rel="apple-touch-icon" sizes="76x76" href="{% static 'img/favicon.png' %}">
     <link rel="icon" type="image/png" href="{% static 'img/favicon.png' %}">
+    <link rel="manifest" href="{% static 'json/manifest.webmanifest' %}">
+    <link rel="preload" href="{% static 'fonts/vazirmatn/Vazirmatn-FD-Regular.woff2' %}" as="font" type="font/woff2" crossorigin>
+    <script>
+        /* حالت شب/روز — ست‌کردن قبل از رندر برای جلوگیری از فلش روشن */
+        (function () {
+            try {
+                var s = localStorage.getItem('fm-theme');
+                var dark = s ? s === 'dark' : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (dark) { document.documentElement.setAttribute('data-theme', 'dark'); }
+            } catch (e) {}
+        })();
+    </script>
     <title>{% block title %}{% if site_settings.default_meta_title %}{{ site_settings.default_meta_title }}{% else %}{{ site_name }} | فروش فایل، نرم‌افزار، قالب و محصولات مجازی{% endif %}{% endblock %}</title>
     <meta name="description" content="{% block meta_description %}{% if site_settings.default_meta_description %}{{ site_settings.default_meta_description }}{% else %}دانلود فایل‌های نرم‌افزاری، قالب وب سایت، افزونه، اسکریپت، فایل‌های طراحی و محصولات مجازی با لایسنس رسمی و دانلود آنی{% endif %}{% endblock %}">
     {% block meta_robots %}<meta name="robots" content="{{ meta_robots }}">{% endblock %}
@@ -64,9 +77,16 @@
     <link href="{% static 'css/mainc81e.css' %}" rel="stylesheet"/>
     <!-- SweetAlert2 (local) -->
     <link href="{% static 'css/plugins/sweetalert2.min.css' %}" rel="stylesheet"/>
+    <!-- به‌روزرسانی ۲۰۲۶: وزیرمتن + حالت شب + پولیش مدرن -->
+    <link href="{% static 'css/modern-2026.css' %}" rel="stylesheet"/>
 </head>
 
 <body class="index-page sidebar-collapse">
+<script>
+    window.FM_SEARCH_URL = '{% url "product:product_search" %}?search=';
+    window.FM_NL_URL = '{% url "core:newsletter_subscribe" %}';
+    window.FM_FALLBACK_IMG = '{% static "img/product_image_not_found.jpg" %}';
+</script>
 <div class="top-section fullscreen-container">
     <img src="{% static 'img/banner_img/bg_top.jpg' %}" class="h-100" alt="">
 </div>
@@ -83,9 +103,9 @@
                 <span class="navbar-toggler-bar bar3"></span>
             </button>
             <div class="search-nav default">
-                <form action="#">
-                    <input type="text" placeholder="جستجو ...">
-                    <button type="submit"><img src="{% static 'img/search.png' %}" alt=""></button>
+                <form action="{% url 'product:product_search' %}" method="get">
+                    <input type="text" name="search" placeholder="جستجو در فایل‌ها..." autocomplete="off">
+                    <button type="submit" aria-label="جستجو"><img src="{% static 'img/search.png' %}" alt="جستجو"></button>
                 </form>
 
                 <ul>
@@ -95,6 +115,7 @@
                         <li><a href="{% url 'account:login' %}"><i class="fa fa-user-large colormain" aria-hidden="true"></i></a></li>
                     {% endif %}
                     <li><a href="{% url 'cart:cart' %}"><i class="fa fa-cart-arrow-down colormain" aria-hidden="true"></i></a></li>
+                    <li><button type="button" class="theme-toggle" style="width:36px;height:36px;font-size:15px;border:none;background:transparent;box-shadow:none;" aria-label="حالت شب/روز"><i class="fa fa-moon" aria-hidden="true"></i><i class="fa fa-sun" aria-hidden="true"></i></button></li>
                 </ul>
             </div>
         </div>
@@ -167,7 +188,11 @@
                     </div>
                 </div>
                 <div class="col-md-2 col-sm-12">
-                    <div class="user_head">
+                    <div class="user_head d-flex align-items-center justify-content-end">
+                        <button type="button" class="theme-toggle" aria-label="تغییر حالت شب/روز" title="حالت شب/روز">
+                            <i class="fa fa-moon" aria-hidden="true"></i>
+                            <i class="fa fa-sun" aria-hidden="true"></i>
+                        </button>
                         {% if request.user.is_authenticated %}
                             <a href="{% url 'dashboard:home' %}" class="iconhead">
                                 <i class="fa fa-user-tie font-20" aria-hidden="true"></i>
@@ -434,9 +459,23 @@
 
         </div>
 
+        <div class="container" style="padding-bottom:6px;">
+            <section class="fm-newsletter" aria-label="خبرنامه">
+                <div class="fm-nl-text">
+                    <h4><i class="fa fa-envelope-open-text" aria-hidden="true"></i> در تخفیف‌ها و فایل‌های جدید اولین نفر باشید</h4>
+                    <p>ایمیل خود را وارد کنید؛ جدیدترین فایل‌ها، قالب‌ها و کدهای تخفیف را زودتر از همه دریافت کنید.</p>
+                </div>
+                <form id="fmNewsletterForm" novalidate>
+                    {% csrf_token %}
+                    <input type="email" name="email" placeholder="ایمیل شما؛ مثلاً name@gmail.com" autocomplete="email" required>
+                    <button type="submit">عضویت در خبرنامه</button>
+                </form>
+                <p class="fm-nl-status" id="fmNlStatus" role="status" aria-live="polite"></p>
+            </section>
+        </div>
         <div class="copyright">
             <div class="container">
-                <p>{{ site_settings.copy_right }}</p>
+                <p>{{ site_settings.copy_right }} <span class="fm-jalali-year">۱۴۰۵</span></p>
             </div>
         </div>
     </footer>
@@ -461,6 +500,7 @@
 
 <!-- custom Js -->
 <script src="{% static 'js/main.js' %}" type="text/javascript"></script>
+<script src="{% static 'js/modern-2026.js' %}" defer></script>
 <!-- only single  -->
 <script src="{% static 'css/plugins/prettyphoto/js/jquery.prettyPhoto.js' %}"></script>
 
