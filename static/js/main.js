@@ -106,6 +106,70 @@
                 .siblings('.mobile-menu-toggle').attr('aria-expanded', 'false');
         });
 
+        /* پنل همبرگری موبایل
+           قالب قدیمی برای نمایش پنل به کلاس html.nav-open وابسته بود، اما
+           اسکریپت قدیمی Now UI دیگر در base.html لود نمی‌شود. Bootstrap فقط
+           کلاس collapse/show را تغییر می‌دهد و پنل بیرون صفحه می‌ماند؛ این
+           اتصال کوچک، Collapse استاندارد Bootstrap را با پنل و backdrop
+           فعلی همگام می‌کند. */
+        var $mobileNavigation = $('#navigation');
+        var mobileBreakpoint = window.matchMedia ? window.matchMedia('(max-width: 1077px)') : null;
+
+        function isMobileNavigation() {
+            return !mobileBreakpoint || mobileBreakpoint.matches;
+        }
+
+        function mobileBackdrop() {
+            var $backdrop = $('.fm-mobile-nav-backdrop');
+            if (!$backdrop.length) {
+                $backdrop = $('<div class="fm-mobile-nav-backdrop" aria-hidden="true"></div>').appendTo('body');
+                $backdrop.on('click', function () {
+                    if ($mobileNavigation.length && $mobileNavigation.hasClass('show')) {
+                        $mobileNavigation.collapse('hide');
+                    }
+                });
+            }
+            return $backdrop;
+        }
+
+        function setMobileNavigation(open) {
+            if (!isMobileNavigation()) return;
+            $('html').toggleClass('nav-open', open);
+            var $backdrop = mobileBackdrop();
+            if (open) {
+                requestAnimationFrame(function () { $backdrop.addClass('is-visible'); });
+            } else {
+                $backdrop.removeClass('is-visible');
+                setTimeout(function () {
+                    if (!$('html').hasClass('nav-open')) $backdrop.remove();
+                }, 250);
+            }
+        }
+
+        if ($mobileNavigation.length && $.fn.collapse) {
+            $mobileNavigation
+                .on('show.bs.collapse', function () { setMobileNavigation(true); })
+                .on('hidden.bs.collapse', function () { setMobileNavigation(false); })
+                .on('click', 'a', function () {
+                    if (isMobileNavigation() && $mobileNavigation.hasClass('show')) {
+                        $mobileNavigation.collapse('hide');
+                    }
+                });
+
+            $(document).on('keydown', function (event) {
+                if (event.key === 'Escape' && isMobileNavigation() && $mobileNavigation.hasClass('show')) {
+                    $mobileNavigation.collapse('hide');
+                }
+            });
+
+            $(window).on('resize', function () {
+                if (!isMobileNavigation()) {
+                    $('html').removeClass('nav-open');
+                    $('.fm-mobile-nav-backdrop').remove();
+                }
+            });
+        }
+
         var desktopCategory = $('.nav-categories-toggle');
         desktopCategory.on('focus', function () {
             // :focus-within keeps the menu visible for keyboard users.

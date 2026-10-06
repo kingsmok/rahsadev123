@@ -34,7 +34,9 @@
     }
 
     function initLiveSearch(form) {
-        var input = form.querySelector('input[type="text"]');
+        // هدرهای فروشگاه از type="search" استفاده می‌کنند؛ پذیرش هر دو نوع
+        // باعث می‌شود جست‌وجوی زنده در دسکتاپ و موبایل فعال شود.
+        var input = form.querySelector('input[type="search"], input[type="text"]');
         if (!input) return;
         var wrap = form.parentElement;
         if (!wrap.classList.contains('live-search-wrap')) {
