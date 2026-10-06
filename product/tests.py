@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.db import IntegrityError, transaction
 from django.test import TestCase
 from .models import Product, ProductCategory
 
@@ -13,3 +14,26 @@ class ProductFlowTests(TestCase):
         self.assertEqual(self.client.get(f'/products/{self.product.pid}/{self.product.slug}/').status_code, 200)
     def test_search(self):
         self.assertEqual(self.client.get('/products/product_search/?search=تست').status_code, 200)
+
+    def test_product_price_cannot_be_negative_in_database(self):
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                Product.objects.create(
+                    vendor=self.user,
+                    title='فایل با قیمت نامعتبر',
+                    slug='invalid-price-file',
+                    description='توضیح',
+                    price=-1,
+                )
+
+    def test_draft_product_is_not_publicly_accessible(self):
+        draft = Product.objects.create(
+            vendor=self.user,
+            title='فایل پیش‌نویس',
+            slug='draft-file',
+            description='این محصول نباید عمومی باشد',
+            price=1000,
+            status='draft',
+        )
+        response = self.client.get(f'/products/{draft.pid}/{draft.slug}/')
+        self.assertEqual(response.status_code, 404)

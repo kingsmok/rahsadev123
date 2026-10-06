@@ -60,7 +60,7 @@
                                         <p>
                                             <span class="title">شماره کارت :</span>
                                             {% if profile.card_number %}
-                                                <span>{{ profile.card_number }} </span>
+                                                <span dir="ltr">{{ profile.masked_card_number }}</span>
                                             {% else %}
                                                 <span>ثبت نشده </span>
                                             {% endif %}

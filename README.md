@@ -12,12 +12,14 @@ python manage.py seed_demo      # داده‌های نمونه کامل + کار
 python manage.py runserver
 ```
 
-**کاربران پیش‌فرض:**
+**کاربران نمونه (فقط توسعه):**
 
 | کاربر | نام کاربری | رمز عبور | توضیح |
 |---|---|---|---|
 | مدیر | `admin` | `admin1234` | دسترسی `/admin/` و `/admin-panel/` |
 | نمونه | `demo` | `demo1234` | دارای یک سفارش پرداخت‌شده و فایل قابل دانلود |
+
+> در محیط عملیاتی، `seed_demo` هرگز با این رمزهای شناخته‌شده حساب ایجاد نمی‌کند. پیش از اجرای آن، برای حساب‌های تازه `SEED_ADMIN_PASSWORD` و `SEED_DEMO_PASSWORD` را با رمزهای حداقل ۱۲ کاراکتری تنظیم کنید.
 
 ## 🧩 بخش‌های فروشگاه
 
@@ -190,6 +192,9 @@ ZARINPAL_MERCHANT_ID=...
 SNAPPAY_CLIENT_ID=...
 SNAPPAY_CLIENT_SECRET=...
 TOROBPAY_MERCHANT_ID=...
+# فقط برای اجرای نخست seed_demo در production:
+SEED_ADMIN_PASSWORD=...
+SEED_DEMO_PASSWORD=...
 ```
 
 - نام و شعار سایت از **تنظیمات سایت** در پنل ادمین قابل تغییر است (پیش‌فرض: «فایل‌مارکت»).

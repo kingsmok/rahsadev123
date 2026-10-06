@@ -19,6 +19,14 @@ class Profile(models.Model):
         verbose_name = 'پروفایل'
         verbose_name_plural = 'پروفایل ها'
 
+    @property
+    def masked_card_number(self):
+        """Safe representation for customer-facing pages and admin lists."""
+        if not self.card_number:
+            return ''
+        visible = self.card_number[-4:]
+        return f'**** **** **** {visible}'
+
     def __str__(self):
         return f"پروفایل {self.user.username}"
 

@@ -60,7 +60,8 @@ def category_article(request, slug):
 
 def article_detail(request, slug):
     categories = Category.objects.all()
-    article = get_object_or_404(Article, slug=slug)
+    # A guessed slug must not expose an unpublished editorial draft.
+    article = get_object_or_404(Article, slug=slug, status='published')
     latest_articles = Article.objects.filter(status='published').exclude(id=article.id).order_by('-created_at')[:6]
 
     viewed_article = request.session.get('viewed_article', [])

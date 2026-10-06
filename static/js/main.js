@@ -114,6 +114,7 @@
            فعلی همگام می‌کند. */
         var $mobileNavigation = $('#navigation');
         var mobileBreakpoint = window.matchMedia ? window.matchMedia('(max-width: 1077px)') : null;
+        var lastMobileToggle = null;
 
         function isMobileNavigation() {
             return !mobileBreakpoint || mobileBreakpoint.matches;
@@ -140,6 +141,9 @@
                 $('.live-search-results').removeClass('open');
             }
             $('html').toggleClass('nav-open', open);
+            $('.navbar-toggler[data-target="#navigation"]')
+                .attr('aria-label', open ? 'بستن منوی اصلی' : 'باز کردن منوی اصلی')
+                .attr('aria-expanded', String(open));
             var $backdrop = mobileBackdrop();
             if (open) {
                 requestAnimationFrame(function () { $backdrop.addClass('is-visible'); });
@@ -151,10 +155,47 @@
             }
         }
 
+        function mobileNavigationFocusable() {
+            return $mobileNavigation.find(
+                'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            ).filter(':visible').toArray();
+        }
+
+        function trapMobileNavigationFocus(event) {
+            if (event.key !== 'Tab' || !$mobileNavigation.hasClass('show')) return;
+            var focusable = mobileNavigationFocusable();
+            if (!focusable.length) {
+                event.preventDefault();
+                return;
+            }
+            var first = focusable[0];
+            var last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        }
+
         if ($mobileNavigation.length && $.fn.collapse) {
             $mobileNavigation
-                .on('show.bs.collapse', function () { setMobileNavigation(true); })
-                .on('hidden.bs.collapse', function () { setMobileNavigation(false); })
+                .on('show.bs.collapse', function () {
+                    lastMobileToggle = document.activeElement;
+                    setMobileNavigation(true);
+                })
+                .on('shown.bs.collapse', function () {
+                    var first = mobileNavigationFocusable()[0];
+                    if (first) first.focus();
+                })
+                .on('hidden.bs.collapse', function () {
+                    setMobileNavigation(false);
+                    // When Cart Drawer closed this panel, it owns focus instead.
+                    if (!document.documentElement.classList.contains('cart-drawer-open') && lastMobileToggle && document.contains(lastMobileToggle)) {
+                        lastMobileToggle.focus();
+                    }
+                })
                 .on('click', 'a', function () {
                     if (isMobileNavigation() && $mobileNavigation.hasClass('show')) {
                         $mobileNavigation.collapse('hide');
@@ -162,9 +203,13 @@
                 });
 
             $(document).on('keydown', function (event) {
-                if (event.key === 'Escape' && isMobileNavigation() && $mobileNavigation.hasClass('show')) {
+                if (!isMobileNavigation() || !$mobileNavigation.hasClass('show')) return;
+                if (event.key === 'Escape') {
+                    event.preventDefault();
                     $mobileNavigation.collapse('hide');
+                    return;
                 }
+                trapMobileNavigationFocus(event);
             });
 
             $(window).on('resize', function () {

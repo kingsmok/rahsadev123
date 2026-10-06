@@ -1,6 +1,12 @@
+import os
+from unittest.mock import patch
+
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.core.management.base import CommandError
+from django.test import TestCase, override_settings
 from django.urls import reverse
+
+from core.management.commands.seed_demo import _seed_password
 
 from core.models import ContactUs
 from product.models import Product, ProductCategory
@@ -36,6 +42,13 @@ class PublicFormAndSafetyTests(TestCase):
         })
         self.assertRedirects(valid, reverse('core:contact'))
         self.assertEqual(ContactUs.objects.get().phone, '09121234567')
+
+        persian_digits = self.client.post(reverse('core:contact'), {
+            'first_name': 'کاربر', 'last_name': 'فارسی', 'phone': '۰۹۱۲۱۲۳۴۵۶۷',
+            'message': 'این پیام با شماره فارسی معتبر است.',
+        })
+        self.assertRedirects(persian_digits, reverse('core:contact'))
+        self.assertEqual(ContactUs.objects.order_by('-id').first().phone, '09121234567')
 
     def test_registration_requires_terms_acceptance(self):
         payload = {
@@ -76,9 +89,23 @@ class PublicFormAndSafetyTests(TestCase):
         self.assertEqual(ServiceRequest.objects.count(), 0)
 
         valid = self.client.post(reverse('services:request_service'), {
-            'full_name': 'کاربر آزمایشی', 'phone': '+989121234567',
+            'full_name': 'کاربر آزمایشی', 'phone': '۰۹۱۲۱۲۳۴۵۶۷',
             'email': 'customer@example.test', 'message': 'برای یک سایت فروشگاهی مشاوره لازم دارم.',
         }, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         self.assertEqual(valid.status_code, 200)
         self.assertJSONEqual(valid.content, {'success': True, 'message': 'درخواست شما با موفقیت ثبت شد. کارشناسان ما به‌زودی با شما تماس می‌گیرند.'})
         self.assertEqual(ServiceRequest.objects.get().phone, '09121234567')
+
+
+class SeedCommandSafetyTests(TestCase):
+    @override_settings(DEBUG=False)
+    def test_production_seed_requires_non_default_passwords(self):
+        with patch.dict(os.environ, {'SEED_ADMIN_PASSWORD': ''}, clear=False):
+            with self.assertRaises(CommandError):
+                _seed_password('SEED_ADMIN_PASSWORD', 'admin1234')
+
+        with patch.dict(os.environ, {'SEED_ADMIN_PASSWORD': 'A-secure-production-password'}, clear=False):
+            self.assertEqual(
+                _seed_password('SEED_ADMIN_PASSWORD', 'admin1234'),
+                'A-secure-production-password',
+            )

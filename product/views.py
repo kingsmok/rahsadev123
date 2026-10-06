@@ -13,7 +13,7 @@ from django.http import JsonResponse, FileResponse, Http404
 from .models import Product, ProductComment, ProductCategory, ProductBrand, PRODUCT_TYPES
 from downloads.models import DownloadToken
 from dashboard.models import Wishlist
-from cart.models import Order
+from cart.models import Order, OrderItem
 from core.models import SiteSettings
 
 
@@ -100,6 +100,39 @@ def _paginate(request, products, per_page=None):
     if 'page' in query_params:
         query_params.pop('page')
     return object_list, pages_to_show, urlencode(query_params)
+
+
+def _snapshot_contains_product(items_data, product_id):
+    """Match an old order snapshot by product id, never by a title substring."""
+    raw_items = items_data.get('items', []) if isinstance(items_data, dict) else items_data
+    if not isinstance(raw_items, list):
+        return False
+    for item in raw_items:
+        if not isinstance(item, dict):
+            continue
+        item_product_id = item.get('product_id', item.get('product'))
+        if str(item_product_id) == str(product_id):
+            return True
+    return False
+
+
+def _has_purchased_product(user, product):
+    paid_statuses = ['paid', 'processing', 'shipped', 'delivered']
+    if OrderItem.objects.filter(
+        order__user=user,
+        order__status__in=paid_statuses,
+        product=product,
+    ).exists():
+        return True
+
+    # Orders created before OrderItem existed still have their immutable JSON
+    # snapshot.  Keep those customers recognised without false positives from
+    # similar product titles.
+    legacy_snapshots = Order.objects.filter(
+        user=user,
+        status__in=paid_statuses,
+    ).values_list('items_data', flat=True)
+    return any(_snapshot_contains_product(snapshot, product.pk) for snapshot in legacy_snapshots)
 
 
 def product_list(request):
@@ -251,7 +284,14 @@ def product_search(request):
 
 
 def product_detail(request, pid, slug):
-    products = get_object_or_404(Product.objects.prefetch_related('product_images'), pid=pid, slug=slug)
+    # Draft products must be reachable only from Django admin, not through a
+    # guessed pid/slug URL.
+    products = get_object_or_404(
+        Product.objects.prefetch_related('product_images'),
+        pid=pid,
+        slug=slug,
+        status='published',
+    )
     product_image = products.product_images.all()
 
     if request.method == 'POST' and request.headers.get('Content-Type', '').startswith('application/json'):
@@ -285,10 +325,7 @@ def product_detail(request, pid, slug):
     if request.user.is_authenticated:
         is_in_wishlist = Wishlist.objects.filter(user=request.user, product=products).exists()
         user_tokens = list(DownloadToken.objects.filter(user=request.user, product=products).order_by('-created_at'))
-        already_purchased = Order.objects.filter(
-            user=request.user, status__in=['paid', 'processing', 'shipped', 'delivered'],
-            items_data__icontains=products.title,
-        ).exists()
+        already_purchased = _has_purchased_product(request.user, products)
         in_cart = products.cartitem_set.filter(cart__user=request.user).exists()
 
     context = {
@@ -316,7 +353,11 @@ def download_asset(request, pid):
         messages.error(request, 'شما به این فایل دسترسی ندارید یا لینک دانلود شما منقضی شده است.')
         return redirect('product:product_detail', pid=product.pid, slug=product.slug)
 
-    asset.download_count = models.F('download_count') + 1
-    asset.save(update_fields=['download_count'])
-    token.register_download()
+    # ``register_download`` rechecks validity in one conditional database
+    # update, preventing concurrent requests from exceeding the token limit.
+    if not token.register_download():
+        messages.error(request, 'لینک دانلود شما منقضی شده یا به سقف تعداد دانلود رسیده است.')
+        return redirect('product:product_detail', pid=product.pid, slug=product.slug)
+
+    type(asset).objects.filter(pk=asset.pk).update(download_count=models.F('download_count') + 1)
     return FileResponse(asset.file.open('rb'), as_attachment=True, filename=asset.file.name.rsplit('/', 1)[-1])

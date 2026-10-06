@@ -178,6 +178,15 @@ class Product(models.Model):
         verbose_name = 'محصول'
         verbose_name_plural = 'محصولات'
         ordering = ['-created_at', '-id']
+        constraints = [
+            models.CheckConstraint(condition=models.Q(price__gte=0), name='product_price_nonnegative'),
+            models.CheckConstraint(
+                condition=models.Q(old_price__isnull=True) | models.Q(old_price__gte=0),
+                name='product_old_price_nonnegative',
+            ),
+            models.CheckConstraint(condition=models.Q(stock_count__gte=0), name='product_stock_nonnegative'),
+            models.CheckConstraint(condition=models.Q(sales_count__gte=0), name='product_sales_count_nonnegative'),
+        ]
 
     @property
     def is_available(self):
