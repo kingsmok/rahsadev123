@@ -542,7 +542,10 @@
                     const isActive = button.classList.contains('active');
                     button.disabled = true;
                     try {
-                        const response = await fetch(isActive ? `/dashboard/wishlist/remove/${productId}/` : `/dashboard/wishlist/add/${productId}/`, {
+                        const urlTemplate = isActive ? window.FM.wishlistRemoveUrl : window.FM.wishlistAddUrl;
+                        const wishlistUrl = urlTemplate && urlTemplate.replace('{id}', encodeURIComponent(productId));
+                        if (!wishlistUrl) throw new Error('نشانی تغییر علاقه‌مندی در دسترس نیست.');
+                        const response = await fetch(wishlistUrl, {
                             method: 'POST',
                             headers: {'X-CSRFToken': csrfToken(), 'X-Requested-With': 'XMLHttpRequest'}
                         });

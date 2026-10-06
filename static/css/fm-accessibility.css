@@ -148,6 +148,9 @@ header.Masai-header .cart .dropdown-menu .remove-cart-item:disabled { opacity: .
 
 .fm-product-title { font-size: clamp(21px, 2.2vw, 26px); }
 .fm-share-url { overflow-wrap: anywhere; word-break: break-word; white-space: normal; }
+.fm-profile-complete-link { color: var(--fm-danger); font-weight: 700; }
+.fm-profile-complete-link:hover { color: #a92d2d; text-decoration: underline; }
+.fm-profile-bio { min-height: 84px; resize: vertical; }
 
 .plan.basic-plan input[type='radio'] { accent-color: var(--fm-primary-500); }
 .plan.basic-plan:has(input:focus-visible) { outline: 3px solid rgba(70, 169, 174, .35); outline-offset: 3px; }

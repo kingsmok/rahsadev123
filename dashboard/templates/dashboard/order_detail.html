@@ -53,7 +53,7 @@
                                 <h3>اطلاعات خریدار</h3>
                                 <div class="info-grid">
                                     <div class="info-item">
-                                        <i class="fas fa-user"></i>
+                                        <i class="fa fa-user" aria-hidden="true"></i>
                                         <span class="label">نام:</span>
                                         {% if order.user.profile.first_name and order.user.profile.last_name %}
                                             <span class="value">{{ order.user.profile.first_name }} {{ order.user.profile.last_name }}</span>
@@ -62,31 +62,27 @@
                                         {% endif %}
                                     </div>
                                     <div class="info-item">
-                                        <i class="fas fa-phone"></i>
+                                        <i class="fa fa-phone" aria-hidden="true"></i>
                                         <span class="label">شماره تلفن:</span>
                                         {% if order.user.profile.phone %}
                                             <span class="value">{{ order.user.profile.phone }}</span>
                                         {% else %}
                                             <span class="value">شماره تلفن ثبت نشده</span> /
-                                            <a href='#edit_profile'>
-                                                <span class="value" style='color: #C62828; font-weight: bold;'>ثبت شماره تلفن</span>
-                                            </a>
+                                            <a href="{% url 'dashboard:edit_profile' order.user.username %}" class="fm-profile-complete-link">ثبت شماره تلفن</a>
                                         {% endif %}
                                     </div>
                                     <div class="info-item">
-                                        <i class="fas fa-envelope"></i>
+                                        <i class="fa fa-envelope" aria-hidden="true"></i>
                                         <span class="label">ایمیل:</span>
                                         {% if order.user.profile.email %}
                                             <span class="value">{{ order.user.profile.email }}</span>
                                         {% else %}
                                             <span class="value">ایمیل ثبت نشده</span> /
-                                            <a href='#edit_profile'>
-                                                <span class="value" style='color: #C62828; font-weight: bold;'>ثبت ایمیل</span>
-                                            </a>
+                                            <a href="{% url 'dashboard:edit_profile' order.user.username %}" class="fm-profile-complete-link">ثبت ایمیل</a>
                                         {% endif %}
                                     </div>
                                     <div class="info-item">
-                                        <i class="fas fa-cloud-arrow-down"></i>
+                                        <i class="fa fa-cloud-arrow-down" aria-hidden="true"></i>
                                         <span class="label">نحوه تحویل:</span>
                                         <span class="value">دانلود آنی از پنل کاربری</span>
                                     </div>
@@ -100,12 +96,12 @@
                                 <table class="table product-table">
                                     <thead>
                                     <tr>
-                                        <th>#</th>
-                                        <th>تصویر</th>
-                                        <th>محصول</th>
-                                        <th>تعداد</th>
-                                        <th>قیمت واحد</th>
-                                        <th>قیمت نهایی</th>
+                                        <th scope="col">#</th>
+                                        <th scope="col">تصویر</th>
+                                        <th scope="col">محصول</th>
+                                        <th scope="col">تعداد</th>
+                                        <th scope="col">قیمت واحد</th>
+                                        <th scope="col">قیمت نهایی</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -153,7 +149,7 @@
                                                     </a>
                                                 </span>
                                             {% else %}
-                                                <span class="value" class="fm-ico-bad">لینک منقضی شده است</span>
+                                                <span class="value fm-ico-bad">لینک منقضی شده است</span>
                                             {% endif %}
                                         </div>
                                     {% endfor %}

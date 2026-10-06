@@ -499,7 +499,9 @@
         isAuthenticated: {{ request.user.is_authenticated|yesno:'true,false' }},
         loginUrl: '{% url "account:login" %}',
         cartAddUrl: '{% url "cart:add_to_cart" 0 %}'.replace('/0/', '/{id}/'),
-        cartRemoveUrl: '{% url "cart:remove_cart_item" 0 %}'.replace('/0/', '/{id}/')
+        cartRemoveUrl: '{% url "cart:remove_cart_item" 0 %}'.replace('/0/', '/{id}/'),
+        wishlistAddUrl: '{% url "dashboard:add_to_wishlist" 0 %}'.replace('/0/', '/{id}/'),
+        wishlistRemoveUrl: '{% url "dashboard:remove_from_wishlist" 0 %}'.replace('/0/', '/{id}/')
     };
 </script>
 <script src="{% static 'js/main.js' %}" type="text/javascript"></script>

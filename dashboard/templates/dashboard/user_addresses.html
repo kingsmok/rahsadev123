@@ -116,11 +116,16 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="بستن پنجره">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                     <h4 class="modal-title" id="addressModalLabel">آدرس جدید</h4>
                 </div>
                 <div class="modal-body">
                     <form method="post" action="{% url 'dashboard:user_addresses' %}">
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
+                        {% endif %}
                         {% csrf_token %}
                         <div class="form-group">
                             <label for="id_title">* عنوان آدرس</label>
@@ -242,5 +247,13 @@
                 }
             });
         });
+
+        {% if show_address_modal %}
+            window.addEventListener('DOMContentLoaded', () => {
+                if (window.jQuery) {
+                    window.jQuery('#addressModal').modal('show');
+                }
+            });
+        {% endif %}
     </script>
 {% endblock %}

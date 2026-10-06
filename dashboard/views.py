@@ -207,44 +207,41 @@ def orders_return(request):
     user = request.user
     profile = Profile.objects.get(user=user)
 
+    def respond(success, message):
+        """Use JSON for the enhanced form and a useful redirect without JavaScript."""
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': success, 'message': message})
+        if success:
+            messages.success(request, message)
+        else:
+            messages.error(request, message)
+        return redirect('dashboard:orders_return')
+
     if request.method == 'POST':
-        order_number = request.POST.get('order_number')
+        order_number = (request.POST.get('order_number') or '').strip()
+        if not order_number:
+            return respond(False, 'لطفاً کد سفارش را وارد کنید.')
 
         try:
             order = Order.objects.get(order_number=order_number, user=user)
-
-            if not profile.card_number:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'برای لغو سفارش باید شماره کارت خود را در پروفایل ثبت کنید.'
-                })
-
-            time_since_order = timezone.now() - order.created_at
-            if time_since_order.total_seconds() > 48 * 3600:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'زمان لغو سفارش گذشته است. فقط تا 48 ساعت پس از ثبت سفارش امکان لغو وجود دارد.'
-                })
-
-            if order.status not in ['paid', 'shipped', 'pending']:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'این سفارش قابل لغو نیست. فقط سفارشات با وضعیت "پرداخت شده"، "ارسال شده" یا "در انتظار پرداخت" قابل لغو هستند.'
-                })
-
-            order.status = 'processing'
-            order.save()
-
-            return JsonResponse({
-                'success': True,
-                'message': 'سفارش شما در حال پردازش است. پس از تایید لغو سفارش، در بخش اعلان ها اطلاع خواهیم داد.'
-            })
-
         except Order.DoesNotExist:
-            return JsonResponse({
-                'success': False,
-                'message': 'سفارشی با این شماره یافت نشد.'
-            })
+            return respond(False, 'سفارشی با این شماره یافت نشد.')
+
+        if not profile.card_number:
+            return respond(False, 'برای لغو سفارش باید شماره کارت خود را در پروفایل ثبت کنید.')
+
+        time_since_order = timezone.now() - order.created_at
+        if time_since_order.total_seconds() > 48 * 3600:
+            return respond(False, 'زمان لغو سفارش گذشته است. فقط تا 48 ساعت پس از ثبت سفارش امکان لغو وجود دارد.')
+
+        # FileMarket delivers digital purchases from the account dashboard; a
+        # legacy physical-shipping state must never be presented as cancellable.
+        if order.status not in ['paid', 'pending']:
+            return respond(False, 'این سفارش قابل لغو نیست. فقط سفارش‌های پرداخت‌شده یا در انتظار پرداخت قابل بررسی هستند.')
+
+        order.status = 'processing'
+        order.save(update_fields=['status', 'updated_at'])
+        return respond(True, 'درخواست لغو سفارش شما ثبت شد. پس از بررسی، نتیجه در بخش اعلان‌ها اطلاع‌رسانی می‌شود.')
 
     context = {
         'profile': profile,
@@ -312,11 +309,13 @@ def user_addresses(request):
     profile = Profile.objects.get(user=user)
     addresses = Address.objects.filter(user=user).order_by('-created_at')
 
+    show_address_modal = False
     if request.method == 'POST':
         if 'delete_address' in request.POST:
             address_id = request.POST.get('delete_address')
             address = get_object_or_404(Address, pk=address_id, user=user)
             address.delete()
+            messages.success(request, 'آدرس با موفقیت حذف شد.')
             return redirect('dashboard:user_addresses')
 
         if 'set_default' in request.POST:
@@ -324,6 +323,7 @@ def user_addresses(request):
             address = get_object_or_404(Address, pk=address_id, user=user)
             address.is_default = True
             address.save()
+            messages.success(request, 'آدرس پیش‌فرض شما به‌روزرسانی شد.')
             return redirect('dashboard:user_addresses')
 
         form = AddressForm(request.POST)
@@ -331,7 +331,9 @@ def user_addresses(request):
             address = form.save(commit=False)
             address.user = user
             address.save()
+            messages.success(request, 'آدرس جدید با موفقیت ثبت شد.')
             return redirect('dashboard:user_addresses')
+        show_address_modal = True
     else:
         form = AddressForm()
 
@@ -346,6 +348,7 @@ def user_addresses(request):
 
         'addresses': object_list,
         'form': form,
+        'show_address_modal': show_address_modal,
         'pages_to_show': pages_to_show,
     }
     return render(request, 'dashboard/user_addresses.html', context)

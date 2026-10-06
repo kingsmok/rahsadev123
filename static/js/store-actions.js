@@ -86,25 +86,49 @@
         }
 
         var removeButton = event.target.closest('.remove-cart-item');
-        if (!removeButton) return;
+        if (removeButton) {
+            event.preventDefault();
+            var itemId = removeButton.getAttribute('data-item-id');
+            if (!itemId) return;
+            removeButton.disabled = true;
+            fetch(cartUrl(config.cartRemoveUrl, itemId), {
+                method: 'POST',
+                headers: {'X-CSRFToken': csrfToken(), 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+                body: '{}'
+            })
+                .then(function (response) {
+                    return response.json().catch(function () { return {}; }).then(function (data) {
+                        if (!response.ok || !data.success) throw new Error(data.message || 'حذف فایل از سبد خرید انجام نشد.');
+                        return data;
+                    });
+                })
+                .then(function () { window.location.reload(); })
+                .catch(function (error) {
+                    removeButton.disabled = false;
+                    showError(error.message);
+                });
+            return;
+        }
+
+        var wishlistButton = event.target.closest('.remove-wishlist-item');
+        if (!wishlistButton) return;
         event.preventDefault();
-        var itemId = removeButton.getAttribute('data-item-id');
-        if (!itemId) return;
-        removeButton.disabled = true;
-        fetch(cartUrl(config.cartRemoveUrl, itemId), {
+        var productId = wishlistButton.getAttribute('data-product-id');
+        if (!productId) return;
+        wishlistButton.disabled = true;
+        fetch(cartUrl(config.wishlistRemoveUrl, productId), {
             method: 'POST',
-            headers: {'X-CSRFToken': csrfToken(), 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
-            body: '{}'
+            headers: {'X-CSRFToken': csrfToken(), 'X-Requested-With': 'XMLHttpRequest'}
         })
             .then(function (response) {
                 return response.json().catch(function () { return {}; }).then(function (data) {
-                    if (!response.ok || !data.success) throw new Error(data.message || 'حذف فایل از سبد خرید انجام نشد.');
+                    if (!response.ok || data.status !== 'success') throw new Error(data.message || 'حذف فایل از علاقه‌مندی‌ها انجام نشد.');
                     return data;
                 });
             })
             .then(function () { window.location.reload(); })
             .catch(function (error) {
-                removeButton.disabled = false;
+                wishlistButton.disabled = false;
                 showError(error.message);
             });
     });
