@@ -76,6 +76,8 @@
     <link href="{% static 'css/fm-pages.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/fm-dashboard.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/fm-accessibility.css' %}" rel="stylesheet"/>
+    <!-- ممیزی نهایی واکنش‌گرایی و containment؛ باید آخرین لایهٔ مشترک بماند. -->
+    <link href="{% static 'css/fm-ui-audit.css' %}" rel="stylesheet"/>
 </head>
 
 <body class="index-page sidebar-collapse">
@@ -112,7 +114,7 @@
                         <li><a href="{% url 'account:login' %}" aria-label="ورود به حساب کاربری"><i class="fa fa-user-large colormain" aria-hidden="true"></i></a></li>
                     {% endif %}
                     <li><a href="{% url 'cart:cart' %}" class="js-cart-drawer-toggle" aria-label="باز کردن سبد خرید" aria-controls="fm-cart-drawer" aria-expanded="false"><i class="fa fa-cart-arrow-down colormain" aria-hidden="true"></i></a></li>
-                    <li><button type="button" class="theme-toggle" style="width:36px;height:36px;font-size:15px;border:none;background:transparent;box-shadow:none;" aria-label="حالت شب/روز"><i class="fa fa-moon" aria-hidden="true"></i><i class="fa fa-sun" aria-hidden="true"></i></button></li>
+                    <li><button type="button" class="theme-toggle theme-toggle--mobile" aria-label="حالت شب/روز"><i class="fa fa-moon" aria-hidden="true"></i><i class="fa fa-sun" aria-hidden="true"></i></button></li>
                 </ul>
             </div>
         </div>
@@ -120,7 +122,7 @@
             <div class="logo-nav-res default text-center">
                 <a href="{% url 'core:home' %}" class="text-logo">
                     {% if site_settings.logo %}
-                        <img src="{{ site_settings.logo.url }}" alt="{{ site_name }}" style="max-height: 48px;">
+                        <img src="{{ site_settings.logo.url }}" alt="{{ site_name }}" class="site-logo site-logo--mobile">
                     {% else %}
                         <i class="fa fa-cloud-arrow-down" aria-hidden="true"></i>
                         <span>{{ site_name }}</span>
@@ -168,7 +170,7 @@
                     <div class="logo-area default">
                         <a href="{% url 'core:home' %}" class="text-logo">
                             {% if site_settings.logo %}
-                                <img src="{{ site_settings.logo.url }}" alt="{{ site_name }}" style="max-height: 56px;">
+                                <img src="{{ site_settings.logo.url }}" alt="{{ site_name }}" class="site-logo site-logo--desktop">
                             {% else %}
                                 <i class="fa fa-cloud-arrow-down" aria-hidden="true"></i>
                                 <span>{{ site_name }}<small>{{ site_settings.site_slogan|default:'فایل | نرم‌افزار | محصولات مجازی' }}</small></span>
@@ -334,13 +336,13 @@
                                     ارائه می‌شوند؛ سفارش شما بلافاصله پس از پرداخت قابل دانلود است.
                                 {% endif %}
                             </p>
-                            <div class="footer-social" style="margin-top:10px;font-size:18px;">
-                                {% if site_settings.instagram_link %}<a href="{{ site_settings.instagram_link }}" target="_blank" rel="noopener" class="colormain" style="margin-left:10px;"><i class="fa fa-instagram"></i></a>{% endif %}
-                                {% if site_settings.telegram_link %}<a href="{{ site_settings.telegram_link }}" target="_blank" rel="noopener" class="colormain" style="margin-left:10px;"><i class="fa fa-telegram"></i></a>{% endif %}
-                                {% if site_settings.whatsapp_link %}<a href="{{ site_settings.whatsapp_link }}" target="_blank" rel="noopener" class="colormain" style="margin-left:10px;"><i class="fa fa-whatsapp"></i></a>{% endif %}
-                                {% if site_settings.twitter_link %}<a href="{{ site_settings.twitter_link }}" target="_blank" rel="noopener" class="colormain" style="margin-left:10px;"><i class="fa fa-x-twitter"></i></a>{% endif %}
-                                {% if site_settings.youtube_link %}<a href="{{ site_settings.youtube_link }}" target="_blank" rel="noopener" class="colormain" style="margin-left:10px;"><i class="fa fa-youtube"></i></a>{% endif %}
-                                {% if site_settings.linkedin_link %}<a href="{{ site_settings.linkedin_link }}" target="_blank" rel="noopener" class="colormain"><i class="fa fa-linkedin"></i></a>{% endif %}
+                            <div class="footer-social">
+                                {% if site_settings.instagram_link %}<a href="{{ site_settings.instagram_link }}" target="_blank" rel="noopener" class="colormain footer-social__link"><i class="fa fa-instagram"></i></a>{% endif %}
+                                {% if site_settings.telegram_link %}<a href="{{ site_settings.telegram_link }}" target="_blank" rel="noopener" class="colormain footer-social__link"><i class="fa fa-telegram"></i></a>{% endif %}
+                                {% if site_settings.whatsapp_link %}<a href="{{ site_settings.whatsapp_link }}" target="_blank" rel="noopener" class="colormain footer-social__link"><i class="fa fa-whatsapp"></i></a>{% endif %}
+                                {% if site_settings.twitter_link %}<a href="{{ site_settings.twitter_link }}" target="_blank" rel="noopener" class="colormain footer-social__link"><i class="fa fa-x-twitter"></i></a>{% endif %}
+                                {% if site_settings.youtube_link %}<a href="{{ site_settings.youtube_link }}" target="_blank" rel="noopener" class="colormain footer-social__link"><i class="fa fa-youtube"></i></a>{% endif %}
+                                {% if site_settings.linkedin_link %}<a href="{{ site_settings.linkedin_link }}" target="_blank" rel="noopener" class="colormain footer-social__link"><i class="fa fa-linkedin"></i></a>{% endif %}
                             </div>
                         </div>
                     </div>
@@ -412,7 +414,7 @@
 
         </div>
 
-        <div class="container" style="padding-bottom:6px;">
+        <div class="container fm-newsletter-wrap">
             <section class="fm-newsletter" aria-label="خبرنامه">
                 <div class="fm-nl-text">
                     <h4><i class="fa fa-envelope-open-text" aria-hidden="true"></i> در تخفیف‌ها و فایل‌های جدید اولین نفر باشید</h4>

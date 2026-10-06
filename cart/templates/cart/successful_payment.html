@@ -27,12 +27,12 @@
                     </ul>
                 </div>
 
-                <main class="cart default">
+                <section class="cart default" aria-labelledby="payment-success-heading">
                     <div class="container text-center cart_empty">
                         <img src="{% static 'img/successful-cart.png' %}" class="" alt="پرداخت موفق"/>
-                        <h6>
+                        <h1 id="payment-success-heading">
                             تبریک، پرداخت با موفقیت انجام شد
-                        </h6>
+                        </h1>
                         <p>
                             کد سفارش: <b>{{ order.order_number }}</b>
                         </p>
@@ -44,7 +44,7 @@
                                 {% for token in tokens %}
                                     <div class="col-12 col-md-6 mb-2">
                                         <a href="{% url 'downloads:download' token.token %}"
-                                           class="btn btn-main-masai" style="width:100%;">
+                                           class="btn btn-main-masai fm-download-token">
                                             <i class="fa fa-download" aria-hidden="true"></i>
                                             دانلود {{ token.product.title|truncatewords:6 }}
                                         </a>
@@ -57,7 +57,7 @@
                             <a href="{% url 'dashboard:my_downloads' %}" class="btn btn-second-masai">دانلودهای من</a>
                         </div>
                     </div>
-                </main>
+                </section>
             </div>
         </div>
     </main>

@@ -211,7 +211,7 @@
                                 <div class="widget widget-product card border_all bglight pad_time_prod" id="shegeft_1">
                                     <header class="card-header">
                                         <h3 class="card-title">
-                                            <span><i class="fa fa-tags colormain" style="font-size: 20px;margin-left: 8px;"></i>تخفیف‌های ویژه فایل‌ها</span>
+                                            <span><i class="fa fa-tags colormain fm-section-title-icon"></i>تخفیف‌های ویژه فایل‌ها</span>
                                         </h3>
                                     </header>
                                     <div class="product-carousel owl-carousel owl-theme">
@@ -285,7 +285,7 @@
                                 <div class="widget widget-product card border_all bglight">
                                     <header class="card-header">
                                         <h3 class="card-title">
-                                            <span><i class="fa fa-fire colormain" style="font-size: 20px;margin-left: 8px;"></i>پرفروش‌ترین فایل‌ها</span>
+                                            <span><i class="fa fa-fire colormain fm-section-title-icon"></i>پرفروش‌ترین فایل‌ها</span>
                                         </h3>
                                     </header>
                                     <div class="product-carousel owl-carousel owl-theme">
@@ -374,9 +374,9 @@
                                                     <img class="img-responsive imgpad" src="{{ category.image.url }}"
                                                          alt="{{ category.title }}"/>
                                                 {% elif category.icon %}
-                                                    <i class="fa {{ category.icon }} imgpad" style="font-size:42px;color:#46a9ae;"></i>
+                                                    <i class="fa {{ category.icon }} imgpad fm-category-icon"></i>
                                                 {% else %}
-                                                    <i class="fa fa-folder imgpad" style="font-size:42px;color:#46a9ae;"></i>
+                                                    <i class="fa fa-folder imgpad fm-category-icon"></i>
                                                 {% endif %}
                                                 <b class="title-3 light-black">{{ category.title }}</b>
                                             </a>
@@ -428,7 +428,7 @@
                                             {% if brand.image %}
                                                 <img src="{{ brand.image.url }}" alt="{{ brand.title }}">
                                             {% else %}
-                                                <i class="fa fa-cube" style="font-size:38px;color:#46a9ae;"></i>
+                                                <i class="fa fa-cube fm-brand-fallback-icon"></i>
                                             {% endif %}
                                         </a>
                                     </div>

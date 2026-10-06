@@ -66,7 +66,7 @@
                                         <td>{{ token.created_at|to_jalali:'%d %B %Y' }}</td>
                                         <td>
                                             {% if token.is_valid %}
-                                                <span class="item_property" class="fm-ico-ok">
+                                                <span class="item_property fm-ico-ok">
                                                     {{ token.remaining_downloads }} دانلود باقی‌مانده
                                                 </span>
                                                 <div><small class="text-muted">انقضا: {{ token.expires_at|to_jalali:'%d %B %Y' }}</small></div>
@@ -77,11 +77,11 @@
                                         <td>
                                             {% if token.is_valid %}
                                                 <a href="{% url 'downloads:download' token.token %}"
-                                                   class="btn btn-main-masai" style="padding: 5px 18px;font-size: 12px;">
+                                                   class="btn btn-main-masai fm-compact-action">
                                                     <i class="fa fa-download" aria-hidden="true"></i> دانلود
                                                 </a>
                                             {% else %}
-                                                <button class="btn btn-second-masai" disabled style="padding: 5px 18px;font-size: 12px;">
+                                                <button class="btn btn-second-masai fm-compact-action" disabled>
                                                     غیرفعال
                                                 </button>
                                             {% endif %}

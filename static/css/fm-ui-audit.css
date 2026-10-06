@@ -1,0 +1,371 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   فایل‌مارکت — ممیزی نهایی یکپارچگی رابط کاربری
+   ───────────────────────────────────────────────────────────────────────
+   این لایه پس از CSSهای legacy بارگذاری می‌شود. هدف آن تغییر منطق Django
+   نیست؛ فقط از سرریز، برش و تداخل اجزای مشترک در تمام قالب‌ها جلوگیری
+   می‌کند و قواعد واکنش‌گرا را یکپارچه نگه می‌دارد.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+    --fm-z-modal-backdrop: 1040;
+    --fm-z-modal: 1050;
+}
+
+/* ───────────── پایهٔ layout و جلوگیری از سرریز ───────────── */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html,
+body { width: 100%; max-width: 100%; }
+
+main,
+section,
+article,
+aside,
+header,
+footer,
+.container,
+.container-fluid,
+.row,
+.row > [class*="col-"] { min-width: 0; }
+
+main { overflow: visible; }
+
+img,
+svg,
+video,
+canvas,
+iframe { max-width: 100%; }
+
+img { height: auto; }
+
+button,
+input,
+select,
+textarea { max-width: 100%; }
+
+input,
+select,
+textarea,
+.form-control,
+.input_all,
+.input_second { box-sizing: border-box; }
+
+/* Bootstrap table wrapper is the single deliberate horizontal-scroll region. */
+.table-responsive {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+}
+
+.table-responsive > .table,
+.table-responsive > .product-table { margin-bottom: 0; }
+
+.table td,
+.table th { overflow-wrap: anywhere; }
+
+/* پیام‌ها، صفحات خالی و دکمه‌ها نباید متن بلند را از قاب بیرون ببرند. */
+.alert,
+.fm-messages .alert,
+.fm-empty,
+.fm-error,
+.coupon-message { overflow-wrap: anywhere; }
+
+.btn,
+.fm-btn,
+.view_more,
+.big_btn { max-width: 100%; }
+
+/* ───────────── Header، منو و لایه‌های dropdown ───────────── */
+header.Masai-header {
+    position: relative;
+    z-index: var(--fm-z-popover);
+    overflow: visible;
+}
+
+header.Masai-header .container-fluid,
+header.Masai-header .row,
+header.Masai-header .logo-area,
+header.Masai-header .search-area,
+header.Masai-header .user_head,
+header.Masai-header .cart { min-width: 0; }
+
+header.Masai-header .search-area form.search {
+    width: 100%;
+    max-width: 100%;
+}
+
+header.Masai-header .nav_header,
+header.Masai-header .submeno { z-index: var(--fm-z-popover); }
+
+nav.header-responsive.fixed-top { z-index: var(--fm-z-mobile-panel); }
+
+/* dropdownهای عادی در محدوده viewport باقی می‌مانند و drawer مستقل بالاتر است. */
+.dropdown-menu {
+    max-width: min(360px, calc(100vw - 24px));
+    overflow-wrap: anywhere;
+}
+
+/* نتیجهٔ جست‌وجوی زنده از منوی موبایل/سبد پایین‌تر است. */
+.live-search-results { z-index: var(--fm-z-popover); }
+
+/* Modal Bootstrap بالاتر از Drawer می‌ماند و محتوای بلندش اسکرول داخلی دارد. */
+.modal-backdrop { z-index: var(--fm-z-modal-backdrop); }
+.modal { z-index: var(--fm-z-modal); }
+.modal-dialog { max-width: calc(100% - 24px); }
+.modal-content { max-height: calc(100dvh - 24px); overflow: hidden; }
+.modal-body { max-height: calc(100dvh - 176px); overflow-y: auto; }
+
+/* ───────────── کارت‌ها، محصول‌ها، لیست و فیلترها ───────────── */
+.card,
+.widget,
+.box,
+.content-section,
+.listing,
+.sidebar-page,
+.sidebar_blog,
+.product_main_details,
+.product-gallery,
+.comments_form,
+.cart_content,
+.cart-page-content { min-width: 0; }
+
+.sidebar-page .box,
+.sidebar_blog,
+.listing-items .product-box {
+    background: var(--fm-surface);
+    border-color: var(--fm-border);
+}
+
+.sidebar-page form { display: block; max-width: 100%; }
+.sidebar-page .view_more { min-height: 44px; }
+
+.listing-items > [class*="col-"] { min-width: 0; }
+
+.listing-items .product-box {
+    min-width: 0;
+    padding: 18px 16px 62px;
+    overflow: hidden;
+}
+
+.product-box-img {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 0;
+    aspect-ratio: 4 / 3;
+}
+
+.product-box-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.product_title {
+    display: -webkit-box;
+    min-height: 46px !important;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    color: var(--fm-text);
+    line-height: 1.75;
+    text-overflow: clip;
+    white-space: normal;
+}
+
+.product_title a { color: inherit; overflow-wrap: anywhere; }
+
+.product_price_search .price {
+    height: auto;
+    min-height: 48px;
+    overflow-wrap: anywhere;
+}
+
+.product-seller-details-item-grid {
+    min-height: 54px;
+    height: auto;
+    background: var(--fm-surface);
+    border-top-color: var(--fm-border);
+}
+
+/* ───────────── Checkout، پرداخت و فاکتور ───────────── */
+.cart_details,
+.cart_details > [class*="col-"],
+.cart-page-aside,
+.divider_details { min-width: 0; }
+
+.cart_details .table_details {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.cart_details .table_details td { overflow-wrap: anywhere; }
+
+.order-steps {
+    display: flex;
+    align-items: flex-start;
+    float: none;
+}
+
+.order-steps li {
+    float: none;
+    min-width: 0;
+}
+
+/* ───────────── داشبورد، سفارش‌ها و وضعیت‌ها ───────────── */
+.profile-page-aside,
+.profile-page-aside .profile-card-1,
+.profile-page-aside .responsive-profile-menu,
+.order-delivered,
+.profile-recent-fav-row,
+.invoice-section,
+.address-card { min-width: 0; }
+
+.status-badges,
+.address-actions,
+.fm-error__actions { row-gap: 8px; }
+
+/* ───────────── فوتر و صفحه‌بندی ───────────── */
+.main-footer,
+.main-footer .container,
+.footer-widgets,
+.footer-widgets [class*="col-"] { min-width: 0; }
+
+.footer-menu a,
+.about_footer,
+.contact-details li { overflow-wrap: anywhere; }
+
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    max-width: 100%;
+}
+
+.page-number,
+.page-arrow {
+    display: inline-grid;
+    place-items: center;
+    min-width: 40px;
+    min-height: 40px;
+    margin: 0;
+}
+
+/* ───────────── تبلت و موبایل ───────────── */
+@media (max-width: 1077px) {
+    /* هدر ثابت موبایل 96px است؛ محتوای صفحات باید دقیقاً بعد از آن شروع شود. */
+    main { scroll-margin-top: 108px; }
+
+    .sidebar-page,
+    .sidebar_blog { position: static !important; }
+}
+
+@media (max-width: 767.98px) {
+    .search-page .sidebar-page,
+    .category-blog .sidebar_blog,
+    .blog-detail .sidebar_blog { margin-top: 20px; }
+
+    .search-page .sidebar-page .box,
+    .sidebar_blog { margin-bottom: 14px; }
+
+    .cart_content .card-header,
+    .cart-page-content > .card-header,
+    .order-delivered .card-header { overflow-wrap: anywhere; }
+
+    .product-seller-details-item-grid { padding-right: 12px; padding-left: 12px; }
+
+    .footer-services .service-item { min-width: 0; }
+
+    .modal-dialog { margin: 12px auto; }
+    .modal-content { max-height: calc(100dvh - 24px); }
+}
+
+@media (max-width: 575.98px) {
+    .container,
+    .container-fluid { padding-right: 12px; padding-left: 12px; }
+
+    .row { margin-right: -12px; margin-left: -12px; }
+    .row > [class*="col-"] { padding-right: 12px; padding-left: 12px; }
+
+    .listing-items .product-box { padding: 14px 12px 60px; }
+    .product-box-img { aspect-ratio: 1 / 1; }
+    .product_title { min-height: 44px !important; font-size: 13px; }
+
+    .sidebar-page .box,
+    .sidebar_blog,
+    .invoice-section,
+    .content-section { border-radius: var(--fm-r-md); }
+
+    .cart_details .table_details { table-layout: auto; }
+
+    .order-steps { font-size: 12px; }
+    .order-steps li { width: 33.333%; }
+
+    .main-footer .widget { margin-bottom: 12px; }
+    .footer-social { display: flex; flex-wrap: wrap; gap: 8px; }
+    .footer-social a { margin-left: 0 !important; }
+}
+
+@media (max-width: 375px) {
+    .page-number,
+    .page-arrow { min-width: 36px; min-height: 36px; }
+
+    .order-steps { font-size: 11px; }
+    .order-steps li a.active { font-size: 13px; }
+
+    .fm-cart-drawer__product { grid-template-columns: 62px minmax(0, 1fr); }
+    .fm-cart-drawer__product img { width: 62px; height: 62px; max-width: 62px; }
+}
+
+/* کلاس‌های کوچکِ جایگزین inline-styleهای مشترک قالب‌ها */
+.theme-toggle--mobile {
+    width: 36px;
+    height: 36px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    font-size: 15px;
+}
+
+.site-logo { display: block; width: auto; object-fit: contain; }
+.site-logo--mobile { max-height: 48px; }
+.site-logo--desktop { max-height: 56px; }
+
+.footer-social { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; font-size: 18px; }
+.footer-social__link { margin-left: 0 !important; }
+.fm-newsletter-wrap { padding-bottom: 6px; }
+.fm-title--page { font-size: clamp(20px, 2.4vw, 28px); font-weight: 800; line-height: 1.6; }
+.fm-compact-action { padding: 5px 18px; font-size: 12px; }
+.fm-download-token { width: 100%; }
+
+.fm-crumb-home { color: var(--fm-primary-500); }
+.fm-section-title-icon { margin-left: 8px; font-size: 20px; }
+.fm-category-icon { color: var(--fm-primary-500); font-size: 42px; }
+.fm-brand-fallback-icon { color: var(--fm-primary-500); font-size: 38px; }
+.fm-card-title--strong { font-size: 18px; font-weight: 800; }
+.fm-alert-pill { border-radius: var(--fm-r-pill); }
+.fm-field-error { margin: 6px 0 0; color: var(--fm-danger); font-size: 13px; }
+.fm-metric-icon--favorite { color: #c62667; }
+.fm-metric-icon--notice { color: #b93b3b; }
+.fm-form-check-label { margin-right: 20px; }
+.fm-compact-link { padding: 6px 18px; font-size: 13px; }
+.fm-download-top { margin-top: 8px; }
+.fm-price-unit { font-size: 13px; }
+
+/* هم‌پوشانی‌های باقی‌مانده از قالب legacy: نقش‌محور و بدون اعداد نجومی. */
+header.Masai-header .main-menu .list .list-item.mega-menu > .sub-menu {
+    z-index: var(--fm-z-popover);
+    min-width: 0;
+    max-width: min(1077px, calc(100vw - 24px));
+}
+
+#offercarousel .imgfinish { z-index: var(--fm-z-floating); }
+.order-steps li a.active::after { z-index: var(--fm-z-content); }
+.order-steps li a.active::before { z-index: var(--fm-z-content); }
+.sidebar-collapse #bodyClick { z-index: var(--fm-z-mobile-backdrop); }

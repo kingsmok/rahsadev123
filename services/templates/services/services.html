@@ -35,7 +35,7 @@
                             <div class="sub">{{ package.subtitle }}</div>
                             <div class="amount">
                                 {% if package.price %}
-                                    <b>{{ package.price|format_price }}</b> <span style="font-size:13px;">تومان</span>
+                                    <b>{{ package.price|format_price }}</b> <span class="fm-price-unit">تومان</span>
                                 {% else %}
                                     <b>استعلام قیمت</b>
                                 {% endif %}
