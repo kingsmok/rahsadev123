@@ -1029,3 +1029,57 @@ textarea:focus {
 .fm-empty-row td { padding: 0 !important; background: transparent !important; }
 .fm-empty-row:hover td { background: transparent !important; }
 .fm-empty-row .fm-empty { padding: var(--fm-sp-6) var(--fm-sp-4); }
+
+/* ───────────── صفحه‌بندی (pagination) ───────────── */
+/* style.css فقط حالت روشن داشت؛ اینجا با توکن‌ها یکدست و شب‌پذیر می‌شود. */
+.page-number,
+.page-arrow {
+    color: var(--fm-text-soft);
+    background: var(--fm-surface);
+    border-color: var(--fm-border);
+    font-weight: 600;
+}
+
+.page-number:hover,
+.page-arrow:hover {
+    background: var(--fm-grad);
+    color: #fff;
+    border-color: transparent;
+}
+
+.page-number.active {
+    background: var(--fm-grad);
+    color: #fff;
+    border-color: transparent;
+}
+
+.page-dots { color: var(--fm-text-faint); }
+
+[data-theme="dark"] .page-arrow { background: var(--fm-surface); }
+
+/* ───────────── لوگوی متنی هدر ───────────── */
+.text-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 23px;
+    color: var(--fm-primary-500);
+    text-decoration: none;
+}
+
+.text-logo i {
+    background: var(--fm-grad);
+    color: #fff;
+    border-radius: var(--fm-r-md);
+    padding: 8px 12px;
+    font-size: 20px;
+}
+
+.text-logo small {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--fm-text-faint);
+    line-height: 1.5;
+}

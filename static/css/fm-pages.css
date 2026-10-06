@@ -1,0 +1,325 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   فایل‌مارکت — استایل صفحات عمومی
+   ───────────────────────────────────────────────────────────────────────
+   این قواعد قبلاً به‌صورت <style> داخل قالب‌ها پخش بودند؛ رنگ‌ها hard-code
+   بود و در حالت شب خوانا نمی‌شد. اینجا با توکن‌های برند یکپارچه شده‌اند.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ───────────── نشان نوع محصول روی کارت ───────────── */
+/* قبلاً با نام‌های .product-type-chip و .type_badge در ۴ قالب تکرار شده بود */
+.product-type-chip,
+.type_badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 5;
+    background: var(--fm-primary-500);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 11px;
+    border-radius: var(--fm-r-pill);
+    box-shadow: 0 2px 6px rgba(23, 42, 52, .18);
+}
+
+/* ───────────── نوار تضمین‌ها در صفحه خانه ───────────── */
+.promise-strip i {
+    font-size: 22px;
+    color: var(--fm-primary-500);
+    display: block;
+    margin-bottom: 6px;
+}
+
+/* ───────────── تیزر خدمات در صفحه خانه ───────────── */
+.home-services-teaser .svc-card {
+    background: var(--fm-surface);
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-r-md);
+    padding: 22px 18px;
+    text-align: center;
+    height: 100%;
+    transition: all .3s var(--fm-ease);
+}
+
+.home-services-teaser .svc-card:hover {
+    border-color: var(--fm-primary-400);
+    box-shadow: 0 8px 24px rgba(70, 169, 174, .15);
+    transform: translateY(-4px);
+}
+
+.home-services-teaser .svc-card i {
+    font-size: 30px;
+    color: var(--fm-primary-500);
+    margin-bottom: 12px;
+    display: inline-block;
+}
+
+.home-services-teaser .svc-card h4 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--fm-text); }
+.home-services-teaser .svc-card p  { font-size: 13px; color: var(--fm-text-soft); line-height: 1.9; margin: 0; }
+
+.svc-cta {
+    background: var(--fm-grad);
+    border-radius: var(--fm-r-md);
+    color: #fff;
+    padding: 34px 26px;
+    text-align: center;
+}
+
+.svc-cta h3 { color: #fff; font-weight: 800; margin-bottom: 10px; }
+.svc-cta p  { color: #e9fbfb; margin-bottom: 18px; }
+
+.svc-cta a.btn {
+    background: #fff;
+    color: var(--fm-primary-600);
+    font-weight: 700;
+    border-radius: var(--fm-r-pill);
+    padding: 10px 34px;
+}
+
+/* ═════════════ صفحه خدمات طراحی سایت ═════════════ */
+.svc-hero {
+    background: var(--fm-grad);
+    color: #fff;
+    border-radius: var(--fm-r-lg);
+    padding: 45px 30px;
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.svc-hero h1 { color: #fff; font-size: clamp(21px, 2.8vw, 28px); font-weight: 800; margin-bottom: 12px; }
+.svc-hero p  { color: #e9fbfb; font-size: 15px; line-height: 2.1; max-width: 760px; margin: 0 auto 18px; }
+
+.svc-hero .btn {
+    background: #fff;
+    color: var(--fm-primary-600);
+    font-weight: 700;
+    border-radius: var(--fm-r-pill);
+    padding: 11px 38px;
+    font-size: 15px;
+}
+
+.svc-section-title {
+    font-size: clamp(18px, 2.2vw, 22px);
+    font-weight: 800;
+    color: var(--fm-text);
+    margin: 45px 0 20px;
+    text-align: center;
+}
+
+.svc-section-title i { color: var(--fm-primary-500); margin-left: 8px; }
+
+/* کارت تعرفه */
+.price-card {
+    background: var(--fm-surface);
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-r-lg);
+    padding: 26px 22px;
+    height: 100%;
+    position: relative;
+    transition: all .3s var(--fm-ease);
+}
+
+.price-card:hover { box-shadow: var(--fm-shadow-md); transform: translateY(-3px); }
+
+.price-card.featured {
+    border: 2px solid var(--fm-primary-500);
+    box-shadow: 0 10px 30px rgba(70, 169, 174, .16);
+}
+
+.price-card .featured-badge {
+    position: absolute;
+    top: -13px;
+    right: 50%;
+    transform: translateX(50%);
+    background: var(--fm-grad);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 18px;
+    border-radius: var(--fm-r-pill);
+    white-space: nowrap;
+}
+
+.price-card h3 { font-size: 19px; font-weight: 800; color: var(--fm-text); text-align: center; }
+.price-card .sub { text-align: center; font-size: 13px; color: var(--fm-text-soft); margin-bottom: 14px; }
+.price-card .amount { text-align: center; margin-bottom: 6px; }
+.price-card .amount b { font-size: 24px; color: var(--fm-primary-600); }
+.price-card .meta { text-align: center; font-size: 12px; color: var(--fm-text-faint); margin-bottom: 16px; }
+.price-card ul { list-style: none; padding: 0; margin: 0 0 20px; }
+
+.price-card ul li {
+    font-size: 13px;
+    color: var(--fm-text-soft);
+    padding: 7px 0;
+    border-bottom: 1px dashed var(--fm-border-soft);
+}
+
+.price-card ul li i { color: var(--fm-primary-500); margin-left: 8px; }
+
+.price-card .btn-order {
+    display: block;
+    text-align: center;
+    background: var(--fm-grad);
+    color: #fff;
+    border-radius: var(--fm-r-pill);
+    padding: 10px;
+    font-weight: 700;
+    transition: all .22s var(--fm-ease);
+}
+
+.price-card .btn-order:hover { color: #fff; box-shadow: 0 8px 20px rgba(70, 169, 174, .3); }
+
+.price-card .btn-order.outline {
+    background: var(--fm-surface);
+    color: var(--fm-primary-600);
+    border: 1px solid var(--fm-primary-500);
+}
+
+.price-card .btn-order.outline:hover { background: var(--fm-primary-50); color: var(--fm-primary-700); }
+
+/* مراحل انجام پروژه */
+.step-card {
+    background: var(--fm-surface);
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-r-lg);
+    padding: 24px 18px;
+    text-align: center;
+    height: 100%;
+}
+
+.step-card .num {
+    width: 46px;
+    height: 46px;
+    line-height: 46px;
+    border-radius: 50%;
+    background: var(--fm-grad);
+    color: #fff;
+    font-weight: 800;
+    font-size: 18px;
+    margin: 0 auto 12px;
+}
+
+.step-card h4 { font-size: 15px; font-weight: 800; margin-bottom: 8px; color: var(--fm-text); }
+.step-card p  { font-size: 13px; color: var(--fm-text-soft); line-height: 2; margin: 0; }
+
+/* نمونه کار */
+.portfolio-card {
+    background: var(--fm-surface);
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-r-lg);
+    overflow: hidden;
+    transition: all .3s var(--fm-ease);
+    height: 100%;
+}
+
+.portfolio-card:hover {
+    border-color: var(--fm-primary-400);
+    box-shadow: 0 8px 24px rgba(70, 169, 174, .14);
+    transform: translateY(-3px);
+}
+
+.portfolio-card img { width: 100%; height: 190px; object-fit: cover; display: block; }
+.portfolio-card .body { padding: 14px 16px; }
+.portfolio-card h4 { font-size: 15px; font-weight: 800; margin-bottom: 4px; color: var(--fm-text); }
+.portfolio-card .cat { font-size: 12px; color: var(--fm-primary-600); font-weight: 700; }
+.portfolio-card p { font-size: 12.5px; color: var(--fm-text-soft); line-height: 1.9; margin: 6px 0 0; }
+
+/* فرم درخواست پروژه */
+.req-form {
+    background: var(--fm-surface);
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-r-lg);
+    padding: 28px;
+}
+
+.req-form .form-control { border-radius: var(--fm-r-sm); font-size: 13px; }
+.req-form label { font-size: 13px; font-weight: 700; color: var(--fm-text-soft); }
+
+/* تکنولوژی‌ها */
+.tech-item {
+    text-align: center;
+    background: var(--fm-surface);
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-r-md);
+    padding: 16px 8px;
+    transition: border-color .22s var(--fm-ease);
+}
+
+.tech-item:hover { border-color: var(--fm-primary-300); }
+.tech-item i { font-size: 26px; color: var(--fm-primary-500); display: block; margin-bottom: 8px; }
+.tech-item span { font-size: 13px; font-weight: 700; color: var(--fm-text-soft); }
+
+/* ═════════════ سبد خرید و پرداخت ═════════════ */
+.coupon-message {
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-radius: var(--fm-r-sm);
+    font-size: 13px;
+    border: 1px solid transparent;
+}
+
+.coupon-success { background: var(--fm-success-bg); color: var(--fm-success); border-color: rgba(31, 157, 99, .22); }
+.coupon-error   { background: var(--fm-danger-bg);  color: var(--fm-danger);  border-color: rgba(217, 72, 72, .22); }
+.coupon-warning { background: var(--fm-warning-bg); color: var(--fm-warning); border-color: rgba(201, 138, 4, .24); }
+
+.digital-note {
+    background: var(--fm-primary-50);
+    border: 1px dashed var(--fm-primary-500);
+    border-radius: var(--fm-r-md);
+    padding: 18px 20px;
+    margin-bottom: 25px;
+}
+
+.digital-note h5 { font-weight: 800; color: var(--fm-primary-700); margin-bottom: 8px; }
+.digital-note ul { margin: 0; padding-right: 18px; }
+.digital-note li { font-size: 13px; color: var(--fm-text-soft); line-height: 2.2; }
+
+.payment-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--fm-text);
+    margin: 0 0 15px;
+}
+
+.order-files li {
+    font-size: 13px;
+    color: var(--fm-text-soft);
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--fm-border);
+}
+
+.order-files li:last-child { border-bottom: none; }
+
+/* ═════════════ صفحه محصول ═════════════ */
+.favorites_heart.active i { color: #e74c3c !important; }
+
+.digital-spec-badge {
+    display: inline-block;
+    background: var(--fm-primary-50);
+    color: var(--fm-primary-700);
+    border: 1px solid var(--fm-primary-200);
+    border-radius: var(--fm-r-sm);
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-left: 6px;
+    margin-bottom: 4px;
+}
+
+.download-box {
+    background: var(--fm-primary-50);
+    border: 1px dashed var(--fm-primary-500);
+    border-radius: var(--fm-r-md);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+}
+
+.download-box a { font-weight: 700; }
+
+/* ───────────── ریسپانسیو ───────────── */
+@media (max-width: 767.98px) {
+    .svc-hero { padding: 32px 20px; margin-bottom: 28px; }
+    .svc-section-title { margin: 32px 0 16px; }
+    .price-card, .req-form { padding: 20px 16px; }
+    .portfolio-card img { height: 160px; }
+}

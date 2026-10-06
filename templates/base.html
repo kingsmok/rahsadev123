@@ -45,11 +45,6 @@
     {% if site_settings.google_site_verification %}<meta name="google-site-verification" content="{{ site_settings.google_site_verification }}">{% endif %}
     {% if site_settings.bing_site_verification %}<meta name="msvalidate.01" content="{{ site_settings.bing_site_verification }}">{% endif %}
 
-    <style>
-        .text-logo{display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:24px;color:#46A9AE;}
-        .text-logo i{background:linear-gradient(135deg,#61bec3,#46a9ae);color:#fff;border-radius:12px;padding:8px 12px;font-size:20px;}
-        .text-logo small{display:block;font-size:11px;font-weight:400;color:#8a97a8;line-height:1.4;}
-    </style>
     <meta name="author" content="{{ site_name }}">
     {# اسکیمای سراسری: سازمان و وب‌سایت (همه صفحات) #}
     {% organization_schema %}
@@ -81,6 +76,7 @@
     <link href="{% static 'css/modern-2026.css' %}" rel="stylesheet"/>
     <!-- لایه نهایی ۲۰۲۶: توکن‌های رنگ، تایپوگرافی، کامپوننت‌های مشترک -->
     <link href="{% static 'css/fm-design-system.css' %}" rel="stylesheet"/>
+    <link href="{% static 'css/fm-pages.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/fm-dashboard.css' %}" rel="stylesheet"/>
 </head>
 
@@ -577,8 +573,6 @@
     });
 </script>
 
+{% block extra_js %}{% endblock %}
 </body>
-
-
-<!-- Mirrored from garzak.ir/garzak_them/Masai/M_01/Masai/template_01/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 27 Mar 2025 20:20:37 GMT -->
 </html>
