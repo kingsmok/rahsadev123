@@ -90,6 +90,7 @@ header.Masai-header .container-fluid,
 header.Masai-header .row,
 header.Masai-header .logo-area,
 header.Masai-header .search-area,
+header.Masai-header .header-actions,
 header.Masai-header .user_head,
 header.Masai-header .cart { min-width: 0; }
 
@@ -529,17 +530,36 @@ header.Masai-header .main-menu .list .list-item.mega-menu > .sub-menu {
         display: flex;
         align-items: center;
         justify-content: flex-end;
+        min-width: max-content;
+        padding: 0;
+    }
+    /* کنترل‌های حساب/سبد در یک wrapper هستند تا قواعد legacyِ float یا
+       responsive ستون Bootstrap آن‌ها را به دو سطر نشکند. */
+    header.Masai-header .header-actions {
+        display: inline-flex;
+        flex: 0 0 auto;
+        align-items: center;
+        justify-content: flex-end;
         gap: 7px;
+        white-space: nowrap;
     }
     header.Masai-header .user_head {
-        display: flex;
+        display: inline-flex;
+        flex: 0 0 auto;
         align-items: center;
         justify-content: flex-end;
         gap: 7px;
         width: auto;
         margin: 0;
     }
-    header.Masai-header .cart { display: flex; align-items: center; float: none; width: auto; }
+    header.Masai-header .cart {
+        display: inline-flex;
+        flex: 0 0 auto;
+        align-items: center;
+        float: none;
+        width: auto;
+        margin: 0;
+    }
     header.Masai-header .divider {
         height: 28px;
         margin: 0 3px 0 4px;
@@ -703,6 +723,9 @@ header.Masai-header .main-menu .list .list-item.mega-menu > .sub-menu {
         text-align: right;
     }
 }
+
+/* لینک تعرفه‌ها مستقیماً بخش قیمت‌گذاری را باز می‌کند و زیر سربرگ ثابت پنهان نمی‌شود. */
+#packages { scroll-margin-top: 124px; }
 
 /* صفحهٔ نخست بدون JS نیز اولین اسلاید را نشان می‌دهد؛ در preview هیچ فضای سفید
    ناشی از تأخیر یا خطای Carousel باقی نمی‌ماند. */

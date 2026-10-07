@@ -13,10 +13,12 @@
         if (themeMeta) themeMeta.setAttribute('content', theme === 'dark' ? '#0f1720' : '#ffffff');
     }
 
-    // مقدار اولیه در <head> ست شده (ضد فلش)؛ اینجا فقط همگام‌سازی
+    // مقدار اولیه در <head> ست شده (ضد فلش)؛ حالت روشن پیش‌فرض محصول است.
+    // تنها ترجیحی که کاربر با دکمهٔ تغییر حالت ثبت کرده باشد اعمال می‌شود؛
+    // تم سیستم نباید ظاهر پیش‌فرض فروشگاه را ناخواسته تیره کند.
     var saved = null;
     try { saved = localStorage.getItem('fm-theme'); } catch (e) {}
-    applyTheme(saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+    applyTheme(saved === 'dark' ? 'dark' : 'light');
 
     document.addEventListener('click', function (e) {
         var btn = e.target.closest('.theme-toggle');
