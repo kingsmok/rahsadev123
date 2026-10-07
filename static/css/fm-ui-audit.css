@@ -877,3 +877,346 @@ header.Masai-header .main-menu .list .list-item.mega-menu > .sub-menu {
     nav.header-responsive .search-nav ul li a,
     nav.header-responsive .theme-toggle--mobile { width: 30px; height: 30px; }
 }
+
+/* ─────────────────────────────────────────────────────────────────────
+   بازبینی موبایل: سربرگ، فیلترها و کارت‌های خانه
+   ───────────────────────────────────────────────────────────────────── */
+
+/* در حالت شب علامت قابل‌درک «روشن‌کردن» نمایش داده می‌شود؛ در حالت روشن
+   هلال ماه یعنی با لمس آن حالت شب فعال می‌شود. */
+[data-theme="dark"] .theme-toggle__symbol { font-size: 0; }
+[data-theme="dark"] .theme-toggle__symbol::after {
+    content: "☀";
+    font-family: Arial, sans-serif;
+    font-size: 18px;
+    line-height: 1;
+}
+
+@media (max-width: 1077px) {
+    /* جست‌وجو دیگر با سه کنترل حساب/سبد/تم روی یک خط رقابت نمی‌کند:
+       controls در ردیف اول و input تمام‌عرض در ردیف دوم است. */
+    nav.header-responsive {
+        min-height: 102px;
+        height: 102px;
+    }
+    nav.header-responsive .container {
+        width: 100%;
+        padding-right: 12px;
+        padding-left: 12px;
+    }
+    nav.header-responsive .navbar-translate {
+        position: relative;
+        min-height: 102px;
+        height: 102px;
+    }
+    nav.header-responsive .navbar-toggler,
+    nav.header-responsive .navbar-toggler.navbar-toggler-right {
+        position: absolute;
+        top: 9px;
+        right: auto;
+        left: 0;
+        z-index: 2;
+        margin: 0;
+    }
+    nav.header-responsive .search-nav {
+        position: absolute;
+        top: 7px;
+        right: 0;
+        left: 48px;
+        width: auto;
+        height: 88px;
+        float: none;
+    }
+    nav.header-responsive .search-nav ul {
+        position: absolute;
+        top: 0;
+        right: 0;
+        left: auto;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        width: auto;
+        height: 34px;
+        margin: 0;
+        padding: 0;
+        float: none;
+    }
+    nav.header-responsive .search-nav ul li {
+        display: block;
+        float: none;
+        margin: 0 0 0 6px;
+    }
+    nav.header-responsive .search-nav ul li:last-child { margin-left: 0; }
+    nav.header-responsive .search-nav ul li a,
+    nav.header-responsive .theme-toggle--mobile {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        padding: 0;
+        border: 1px solid rgba(70,169,174,.16);
+        border-radius: 9px;
+        background: var(--fm-surface, #fff);
+        box-shadow: 0 2px 7px rgba(23,42,52,.07);
+    }
+    nav.header-responsive .theme-toggle--mobile .theme-toggle__symbol {
+        color: var(--fm-primary-600, #287e83);
+        font-size: 17px;
+    }
+    nav.header-responsive .search-nav form {
+        position: absolute;
+        top: 43px;
+        right: 0;
+        left: 0;
+        width: auto;
+        height: 42px;
+        margin: 0;
+        float: none;
+    }
+    nav.header-responsive .search-nav form input {
+        width: 100%;
+        height: 42px;
+        padding: 8px 45px 8px 13px;
+        border-color: rgba(70,169,174,.18);
+        border-radius: 11px;
+        background: var(--fm-surface, #fff);
+        font-size: 12px;
+    }
+    nav.header-responsive .search-nav form button {
+        right: 4px;
+        width: 36px;
+        height: 36px;
+    }
+    nav.header-responsive .search-nav .search-submit-symbol { font-size: 22px; }
+    nav.header-responsive .live-search-results {
+        top: 90px;
+        right: 0;
+        left: 0;
+        max-width: none;
+    }
+
+    /* جای کافی برای سربرگ ثابتِ دو ردیفه، بدون پوشاندن عنوان صفحه. */
+    main { margin-top: 114px !important; }
+    .shopping-page main.cart-page { margin-top: 114px !important; }
+}
+
+@media (max-width: 767.98px) {
+    /* فیلترهای «همه فایل‌ها» در موبایل یک ستون قابل لمس و خوانا دارند. */
+    .search-page .sidebar-page { margin-top: 0; }
+    .search-page .sidebar-page .box {
+        margin-bottom: 12px;
+        overflow: hidden;
+        border: 1px solid var(--fm-border, rgba(23,42,52,.1));
+        border-radius: 14px;
+        box-shadow: none;
+    }
+    .search-page .sidebar-page .box .card-header {
+        min-height: 48px;
+        margin: 0;
+        padding: 13px 15px 9px;
+        border-bottom: 1px solid var(--fm-border, rgba(23,42,52,.1));
+    }
+    .search-page .sidebar-page .box .card-header .card-title {
+        margin: 0;
+        padding: 0;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+    .search-page .sidebar-page .box-content { padding: 6px 15px 10px; }
+    .search-page .sidebar-page .form-account-agree,
+    .search-page .sidebar-page .form-check {
+        display: flex;
+        align-items: center;
+        min-height: 40px;
+        margin: 0;
+        padding: 6px 34px 6px 0;
+        font-size: 13px;
+        line-height: 1.65;
+    }
+    .search-page .sidebar-page .form-account-agree .checkbox-form {
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+    }
+    .search-page .sidebar-page .form-account-agree > label:last-child,
+    .search-page .sidebar-page .form-check-label {
+        margin: 0;
+        cursor: pointer;
+        color: var(--fm-text, #22333f);
+    }
+    .search-page .sidebar-page .form-check-input {
+        position: static;
+        width: 18px;
+        height: 18px;
+        margin: 0 0 0 9px;
+        accent-color: #46a9ae;
+    }
+    .search-page .sidebar-page .box-content:has(.bootstrap-switch) {
+        display: flex;
+        align-items: center;
+        min-height: 58px;
+        padding: 10px 15px;
+    }
+    .search-page .sidebar-page input.bootstrap-switch {
+        -webkit-appearance: none;
+        appearance: none;
+        position: relative;
+        width: 42px;
+        min-width: 42px;
+        height: 23px;
+        margin: 0 0 0 10px;
+        border: 0;
+        border-radius: 20px;
+        outline: 0;
+        background: #cad7dc;
+        cursor: pointer;
+        opacity: 1;
+        visibility: visible;
+    }
+    .search-page .sidebar-page input.bootstrap-switch::after {
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        width: 17px;
+        height: 17px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(0,0,0,.24);
+        content: "";
+        transition: transform .18s ease;
+    }
+    .search-page .sidebar-page input.bootstrap-switch:checked { background: #46a9ae; }
+    .search-page .sidebar-page input.bootstrap-switch:checked::after { transform: translateX(-19px); }
+    .search-page .sidebar-page .view_more {
+        width: 100%;
+        max-width: none;
+        min-height: 46px;
+        margin: 4px 0 20px;
+        line-height: 44px;
+        font-size: 14px;
+    }
+
+    /* کارت‌های carousel خانه در 320px هم تصویر، عنوان، قیمت و سبد را در
+       محدوده خود نگه می‌دارند. */
+    .widget-product { padding: 14px 10px 16px; border-radius: 15px; }
+    .widget-product .card-header { margin-bottom: 12px; }
+    .widget-product .card-header .card-title { font-size: 14px; }
+    .widget-product .product-carousel .owl-stage { display: flex; }
+    .widget-product .product-carousel .owl-item {
+        display: flex;
+        min-width: 0;
+        height: auto;
+    }
+    .widget-product .product-carousel .item {
+        display: flex;
+        width: 100%;
+        min-width: 0;
+        min-height: 320px;
+        padding: 0 6px 49px;
+        overflow: hidden;
+        border: 1px solid var(--fm-border, rgba(23,42,52,.1));
+        border-radius: 14px;
+        background: var(--fm-surface, #fff);
+        flex-direction: column;
+        text-align: right;
+    }
+    .widget-product .product-carousel .item > a:first-child {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        aspect-ratio: 1 / 1;
+        min-height: 0;
+        overflow: hidden;
+        border-radius: 11px;
+        background: #f1f8f8;
+    }
+    .widget-product .product-carousel .item > a:first-child > img:first-child {
+        width: 100% !important;
+        height: 100%;
+        margin: 0;
+        border-radius: 11px;
+        object-fit: cover;
+    }
+    .widget-product .product-carousel .product_title {
+        display: -webkit-box;
+        min-height: 47px !important;
+        margin: 8px 2px 4px;
+        overflow: hidden;
+        color: var(--fm-text, #22333f);
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.85;
+        text-align: right;
+        text-overflow: clip;
+        white-space: normal;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+    .widget-product .product-carousel .product_title a { color: inherit; }
+    .widget-product .product-carousel .item .price {
+        display: flex;
+        min-height: 48px;
+        height: auto;
+        margin-top: auto;
+        align-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 2px 4px;
+        color: #248187;
+        font-size: 12px;
+        line-height: 1.55;
+    }
+    .widget-product .product-carousel .item .price del {
+        display: block;
+        width: 100%;
+        color: var(--fm-text-faint, #71838d);
+        font-size: 9px;
+        line-height: 1.4;
+    }
+    .widget-product .product-carousel .item ins {
+        display: inline;
+        height: auto;
+        color: inherit;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1.6;
+    }
+    .widget-product .product-carousel .discount_badge {
+        margin: 0;
+        padding: 2px 5px;
+        border-radius: 6px;
+        font-size: 9px;
+    }
+    .widget-product .product-carousel .product-seller-details-item-grid {
+        display: flex;
+        height: 43px;
+        padding: 5px 8px;
+        border-top-color: var(--fm-border, rgba(23,42,52,.1));
+        border-radius: 0 0 14px 14px;
+        background: var(--fm-surface, #fff);
+    }
+    .widget-product .product-carousel .search_prod_btn {
+        position: static;
+        display: inline-grid;
+        place-items: center;
+        padding: 0;
+        background: transparent;
+    }
+    .widget-product .product-carousel .search_prod_btn .search_icon_cart {
+        width: 31px;
+        height: 31px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 375px) {
+    nav.header-responsive .search-nav { left: 43px; }
+    nav.header-responsive .search-nav ul li { margin-left: 4px; }
+    nav.header-responsive .search-nav ul li a,
+    nav.header-responsive .theme-toggle--mobile { width: 31px; height: 31px; min-width: 31px; }
+    .widget-product .product-carousel .item { min-height: 296px; padding-right: 5px; padding-left: 5px; }
+    .widget-product .product-carousel .product_title { font-size: 10px; }
+    .widget-product .product-carousel .item ins { font-size: 11px; }
+}
