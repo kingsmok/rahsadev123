@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %}{% if article.meta_title %}{{ article.meta_title }}{% else %}{{ article.title }}{% endif %}{% endblock %}
 {% block meta_description %}{{ article.meta_description|default:article.description|striptags|truncatechars:160 }}{% endblock %}
-{% block canonical %}<link rel="canonical" href="{% if article.canonical_url %}{{ article.canonical_url }}{% else %}{{ request.build_absolute_uri }}{% endif %}">{% endblock %}
+{% block canonical %}<link rel="canonical" href="{% if article.canonical_url %}{{ article.canonical_url }}{% else %}{{ canonical_url }}{% endif %}">{% endblock %}
 {% load seo_tags %}
 {% block og_type %}article{% endblock %}
 {% block og_title %}{{ article.meta_title|default:article.title }}{% endblock %}

@@ -5,7 +5,7 @@
 {% endblock %}
 {% block title %}{% if products.meta_title %}{{ products.meta_title }}{% else %}دانلود {{ products.title|truncatewords:12 }}{% endif %}{% endblock %}
 {% block meta_description %}{{ products.meta_description|default:products.description|striptags|truncatechars:160 }}{% endblock %}
-{% block canonical %}<link rel="canonical" href="{% if products.canonical_url %}{{ products.canonical_url }}{% else %}{{ request.build_absolute_uri }}{% endif %}">{% endblock %}
+{% block canonical %}<link rel="canonical" href="{% if products.canonical_url %}{{ products.canonical_url }}{% else %}{{ canonical_url }}{% endif %}">{% endblock %}
 {% load seo_tags %}
 {% block og_type %}product{% endblock %}
 {% block og_title %}{{ products.meta_title|default:products.title }}{% endblock %}

@@ -20,3 +20,20 @@ class ArticleVisibilityTests(TestCase):
         article.category.add(self.category)
 
         self.assertEqual(self.client.get('/blog/draft-article/').status_code, 404)
+
+    def test_article_canonical_drops_tracking_parameters(self):
+        article = Article.objects.create(
+            author=self.author,
+            title='مقاله عمومی',
+            slug='public-article',
+            description='محتوای عمومی برای تست canonical',
+            status='published',
+        )
+        article.category.add(self.category)
+
+        response = self.client.get('/blog/public-article/?utm_source=test')
+        self.assertContains(
+            response,
+            '<link rel="canonical" href="http://testserver/blog/public-article/">',
+            html=True,
+        )

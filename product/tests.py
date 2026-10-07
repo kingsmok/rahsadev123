@@ -19,6 +19,16 @@ class ProductFlowTests(TestCase):
         response = self.client.get(f'/products/{self.product.pid}/{self.product.slug}/unexpected/')
         self.assertEqual(response.status_code, 404)
 
+    def test_product_canonical_drops_tracking_parameters(self):
+        response = self.client.get(
+            f'/products/{self.product.pid}/{self.product.slug}/?utm_source=test&campaign=launch'
+        )
+        self.assertContains(
+            response,
+            f'<link rel="canonical" href="http://testserver/products/{self.product.pid}/{self.product.slug}/">',
+            html=True,
+        )
+
     def test_product_price_cannot_be_negative_in_database(self):
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
