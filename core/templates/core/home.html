@@ -5,6 +5,13 @@
 {% load custom_filters %}
 {% load jalali_tags %}
 
+{% block preload %}
+    {# نخستین اسلاید بالای fold است؛ زودتر از تصاویر پایین صفحه دریافت شود. #}
+    {% if main_sliders %}
+        <link rel="preload" as="image" href="{{ main_sliders.0.image.url }}">
+    {% endif %}
+{% endblock %}
+
 {% block extra_css %}
     <link href="{% static 'css/plugins/owl.carousel.css' %}" rel="stylesheet">
     <link href="{% static 'css/plugins/owl.theme.default.min.css' %}" rel="stylesheet">
@@ -18,8 +25,8 @@
             <div class="slider_main owl-carousel owl-theme">
                 {% for slider in main_sliders %}
                     <div class="item">
-                        <a href="{{ slider.url }}">
-                            <img src="{{ slider.image.url }}" class="img-fluid imgslider" alt="{{ slider.title }}">
+                        <a href="{{ slider.url }}" aria-label="{{ slider.title }}">
+                            <img {% if forloop.first %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async" src="{{ slider.image.url }}" class="img-fluid imgslider" alt="{{ slider.title }}" onerror="this.hidden=true">
                         </a>
                     </div>
                 {% endfor %}
@@ -29,37 +36,37 @@
             <div class="row space-bottom-30 promise-strip">
                 <div class="col-6 col-sm-4 col-md-2 contact-miniicon text-center">
                     <div class="space-5">
-                        <i class="fa fa-bolt" aria-hidden="true"></i>
+                        <span class="promise-icon promise-icon--download" aria-hidden="true">↓</span>
                         <b class="title-3 light-black">دانلود آنی</b>
                     </div>
                 </div>
                 <div class="col-6 col-sm-4 col-md-2 contact-miniicon text-center">
                     <div class="space-5">
-                        <i class="fa fa-file-shield" aria-hidden="true"></i>
+                        <span class="promise-icon promise-icon--license" aria-hidden="true">✓</span>
                         <b class="title-3 light-black">لایسنس اورجینال</b>
                     </div>
                 </div>
                 <div class="col-6 col-sm-4 col-md-2 contact-miniicon text-center">
                     <div class="space-5">
-                        <i class="fa fa-rotate" aria-hidden="true"></i>
+                        <span class="promise-icon promise-icon--update" aria-hidden="true">↻</span>
                         <b class="title-3 light-black">به‌روزرسانی منظم</b>
                     </div>
                 </div>
                 <div class="col-6 col-sm-4 col-md-2 contact-miniicon text-center">
                     <div class="space-5">
-                        <i class="fa fa-headset" aria-hidden="true"></i>
+                        <span class="promise-icon promise-icon--support" aria-hidden="true">؟</span>
                         <b class="title-3 light-black">پشتیبانی فنی</b>
                     </div>
                 </div>
                 <div class="col-6 col-sm-4 col-md-2 contact-miniicon text-center">
                     <div class="space-5">
-                        <i class="fa fa-shield-halved" aria-hidden="true"></i>
+                        <span class="promise-icon promise-icon--secure" aria-hidden="true">✓</span>
                         <b class="title-3 light-black">پرداخت امن</b>
                     </div>
                 </div>
                 <div class="col-6 col-sm-4 col-md-2 contact-miniicon text-center">
                     <div class="space-5">
-                        <i class="fa fa-rotate-left" aria-hidden="true"></i>
+                        <span class="promise-icon promise-icon--return" aria-hidden="true">↶</span>
                         <b class="title-3 light-black">۷ روز ضمانت بازگشت</b>
                     </div>
                 </div>
@@ -85,19 +92,19 @@
                                                 <a class="w-100 text-center"
                                                    href="{% url 'product:product_detail' product.pid product.slug %}">
                                                     {% if product.image %}
-                                                        <img src="{{ product.image.url }}" class="img-fluid"
-                                                             alt="{{ product.title|truncatewords:10 }}">
+                                                        <img loading="lazy" decoding="async" src="{{ product.image.url }}" class="img-fluid"
+                                                             alt="{{ product.title|truncatewords:10 }}" onerror="this.hidden=true">
                                                     {% else %}
-                                                        <img src="{% static 'img/product_image_not_found.jpg' %}"
+                                                        <img loading="lazy" decoding="async" src="{% static 'img/product_image_not_found.jpg' %}"
                                                              class="img-fluid"
-                                                             alt="{{ product.title|truncatewords:10 }}">
+                                                             alt="{{ product.title|truncatewords:10 }}" onerror="this.hidden=true">
                                                     {% endif %}
                                                     {% if product.discount_percentage %}
                                                         <span class="discount-percent">%{{ product.discount_percentage }} تخفیف</span>
                                                     {% endif %}
 
                                                     {% if not product.is_available %}
-                                                        <img src="{% static 'img/sell.png' %}" class="imgfinish" alt="فروش ویژه">
+                                                        <img loading="lazy" decoding="async" src="{% static 'img/sell.png' %}" class="imgfinish" alt="فروش ویژه">
                                                     {% endif %}
 
                                                 </a>
@@ -159,14 +166,14 @@
                                 <div class="item">
                                     <a href="{% url 'product:product_detail' product.pid product.slug %}">
                                         {% if product.image %}
-                                            <img src="{{ product.image.url }}" class="w-100"
-                                                 alt="{{ product.title|truncatewords:7 }}">
+                                            <img loading="lazy" decoding="async" src="{{ product.image.url }}" class="w-100"
+                                                 alt="{{ product.title|truncatewords:7 }}" onerror="this.hidden=true">
                                         {% else %}
-                                            <img src="{% static 'img/product_image_not_found.jpg' %}" class="w-100"
-                                                 alt="{{ product.title|truncatewords:7 }}">
+                                            <img loading="lazy" decoding="async" src="{% static 'img/product_image_not_found.jpg' %}" class="w-100"
+                                                 alt="{{ product.title|truncatewords:7 }}" onerror="this.hidden=true">
                                         {% endif %}
                                         {% if not product.is_available %}
-                                            <img src="{% static 'img/img_icon.png' %}" class="type_icon" alt="">
+                                            <img loading="lazy" decoding="async" src="{% static 'img/img_icon.png' %}" class="type_icon" alt="">
                                         {% endif %}
 
                                     </a>
@@ -193,8 +200,8 @@
                                     <div class="col-6 col-lg-3">
                                         <div class="widget-banner card border_all">
                                             <a href="{{ banner.url }}">
-                                                <img class="img-fluid" src="{{ banner.image.url }}"
-                                                     alt="{{ banner.title }}">
+                                                <img loading="lazy" decoding="async" class="img-fluid" src="{{ banner.image.url }}"
+                                                     alt="{{ banner.title }}" onerror="this.hidden=true">
                                             </a>
                                         </div>
                                     </div>
@@ -219,15 +226,15 @@
                                             <div class="item">
                                                 <a href="{% url 'product:product_detail' product.pid product.slug %}">
                                                     {% if product.image %}
-                                                        <img src="{{ product.image.url }}" class="img-fluid"
-                                                             alt="{{ product.title|truncatewords:10 }}">
+                                                        <img loading="lazy" decoding="async" src="{{ product.image.url }}" class="img-fluid"
+                                                             alt="{{ product.title|truncatewords:10 }}" onerror="this.hidden=true">
                                                     {% else %}
-                                                        <img src="{% static 'img/product_image_not_found.jpg' %}"
+                                                        <img loading="lazy" decoding="async" src="{% static 'img/product_image_not_found.jpg' %}"
                                                              class="img-fluid"
-                                                             alt="{{ product.title|truncatewords:10 }}">
+                                                             alt="{{ product.title|truncatewords:10 }}" onerror="this.hidden=true">
                                                     {% endif %}
                                                     {% if not product.is_available %}
-                                                        <img src="{% static 'img/img_icon.png' %}" class="type_icon" alt="">
+                                                        <img loading="lazy" decoding="async" src="{% static 'img/img_icon.png' %}" class="type_icon" alt="">
                                                     {% endif %}
                                                     <span class="type_badge">{{ product.get_product_type_display }}</span>
                                                 </a>
@@ -270,8 +277,8 @@
                                     <div class="col-12 col-lg-6">
                                         <div class="widget-banner card border_all">
                                             <a href="{{ banner.url }}">
-                                                <img class="img-fluid" src="{{ banner.image.url }}"
-                                                     alt="{{ banner.title }}">
+                                                <img loading="lazy" decoding="async" class="img-fluid" src="{{ banner.image.url }}"
+                                                     alt="{{ banner.title }}" onerror="this.hidden=true">
                                             </a>
                                         </div>
                                     </div>
@@ -293,15 +300,15 @@
                                             <div class="item">
                                                 <a href="{% url 'product:product_detail' product.pid product.slug %}">
                                                     {% if product.image %}
-                                                        <img src="{{ product.image.url }}" class="img-fluid"
-                                                             alt="{{ product.title|truncatewords:10 }}">
+                                                        <img loading="lazy" decoding="async" src="{{ product.image.url }}" class="img-fluid"
+                                                             alt="{{ product.title|truncatewords:10 }}" onerror="this.hidden=true">
                                                     {% else %}
-                                                        <img src="{% static 'img/product_image_not_found.jpg' %}"
+                                                        <img loading="lazy" decoding="async" src="{% static 'img/product_image_not_found.jpg' %}"
                                                              class="img-fluid"
-                                                             alt="{{ product.title|truncatewords:10 }}">
+                                                             alt="{{ product.title|truncatewords:10 }}" onerror="this.hidden=true">
                                                     {% endif %}
                                                     {% if not product.is_available %}
-                                                        <img src="{% static 'img/img_icon.png' %}" class="type_icon" alt="">
+                                                        <img loading="lazy" decoding="async" src="{% static 'img/img_icon.png' %}" class="type_icon" alt="">
                                                     {% endif %}
                                                     <span class="type_badge">{{ product.get_product_type_display }}</span>
                                                 </a>
@@ -347,8 +354,8 @@
                             <div class="col-12">
                                 <div class="widget widget-banner card border_all">
                                     <a href="{{ single_banner.url }}">
-                                        <img class="img-fluid" src="{{ single_banner.image.url }}"
-                                             alt="{{ single_banner.title }}">
+                                        <img loading="lazy" decoding="async" class="img-fluid" src="{{ single_banner.image.url }}"
+                                             alt="{{ single_banner.title }}" onerror="this.hidden=true">
                                     </a>
                                 </div>
                             </div>
@@ -371,7 +378,7 @@
                                         <div class="col-6 col-md-2 contact-bigicon">
                                             <a href="{% url 'product:category_product_list' category.slug %}">
                                                 {% if category.image %}
-                                                    <img class="img-responsive imgpad" src="{{ category.image.url }}"
+                                                    <img loading="lazy" decoding="async" class="img-responsive imgpad" src="{{ category.image.url }}"
                                                          alt="{{ category.title }}"/>
                                                 {% elif category.icon %}
                                                     <i class="fa {{ category.icon }} imgpad fm-category-icon"></i>
@@ -426,7 +433,7 @@
                                     <div class="item borderitem">
                                         <a href="{% url 'product:brand_product_list' brand.slug %}">
                                             {% if brand.image %}
-                                                <img src="{{ brand.image.url }}" alt="{{ brand.title }}">
+                                                <img loading="lazy" decoding="async" src="{{ brand.image.url }}" alt="{{ brand.title }}">
                                             {% else %}
                                                 <i class="fa fa-cube fm-brand-fallback-icon"></i>
                                             {% endif %}
@@ -453,10 +460,10 @@
                                     <div class="item">
                                         <a href="{% url 'blog:article_detail' article.slug %}">
                                             {% if article.image %}
-                                                <img src="{{ article.image.url }}" class="img-fluid"
+                                                <img loading="lazy" decoding="async" src="{{ article.image.url }}" class="img-fluid"
                                                      alt="{{ article.title|truncatewords:13 }}">
                                             {% else %}
-                                                <img src="{% static 'img/article_image_not_found.jpg' %}"
+                                                <img loading="lazy" decoding="async" src="{% static 'img/article_image_not_found.jpg' %}"
                                                      class="img-fluid" alt="{{ article.title|truncatewords:13 }}">
                                             {% endif %}
                                         </a>

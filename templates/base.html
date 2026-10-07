@@ -11,6 +11,9 @@
     <link rel="icon" type="image/png" href="{% static 'img/favicon.png' %}">
     <link rel="manifest" href="{% static 'json/manifest.webmanifest' %}">
     <link rel="preload" href="{% static 'fonts/vazirmatn/Vazirmatn-FD-Regular.woff2' %}" as="font" type="font/woff2" crossorigin>
+    {# آیکن‌های هدر و نوار اعتماد در اولین paint استفاده می‌شوند؛ preload از نمایش مربع‌های موقت جلوگیری می‌کند. #}
+    <link rel="preload" href="{% static 'fonts/font-awesome/webfonts/fa-solid-900.woff2' %}" as="font" type="font/woff2" crossorigin>
+    {% block preload %}{% endblock %}
     <script>
         /* حالت شب/روز — ست‌کردن قبل از رندر برای جلوگیری از فلش روشن */
         (function () {
@@ -86,8 +89,9 @@
     window.FM_NL_URL = '{% url "core:newsletter_subscribe" %}';
     window.FM_FALLBACK_IMG = '{% static "img/product_image_not_found.jpg" %}';
 </script>
+{# نوار برند کاملاً CSS-based است تا هدر به یک تصویر تزئینیِ خارجی وابسته نباشد. #}
 <div class="top-section fullscreen-container" aria-hidden="true">
-    <img src="{% static 'img/banner_img/bg_top.jpg' %}" class="h-100" alt="">
+    <div class="top-section__brand-band"></div>
 </div>
 <!--start mobile header -->
 <nav class="navbar direction-ltr fixed-top header-responsive">
@@ -104,7 +108,7 @@
             <div class="search-nav default">
                 <form action="{% url 'product:product_search' %}" method="get">
                     <input type="search" name="search" placeholder="جستجو در فایل‌ها..." autocomplete="off" aria-label="جستجو در فایل‌ها">
-                    <button type="submit" aria-label="جستجو"><img src="{% static 'img/search.png' %}" alt=""></button>
+                    <button type="submit" aria-label="جستجو"><span class="search-submit-symbol" aria-hidden="true">⌕</span></button>
                 </form>
 
                 <ul>
@@ -124,7 +128,7 @@
                     {% if site_settings.logo %}
                         <img src="{{ site_settings.logo.url }}" alt="{{ site_name }}" class="site-logo site-logo--mobile">
                     {% else %}
-                        <i class="fa fa-cloud-arrow-down" aria-hidden="true"></i>
+                        <span class="brand-mark" aria-hidden="true">ف</span>
                         <span>{{ site_name }}</span>
                     {% endif %}
                 </a>
@@ -172,7 +176,7 @@
                             {% if site_settings.logo %}
                                 <img src="{{ site_settings.logo.url }}" alt="{{ site_name }}" class="site-logo site-logo--desktop">
                             {% else %}
-                                <i class="fa fa-cloud-arrow-down" aria-hidden="true"></i>
+                                <span class="brand-mark" aria-hidden="true">ف</span>
                                 <span>{{ site_name }}<small>{{ site_settings.site_slogan|default:'فایل | نرم‌افزار | محصولات مجازی' }}</small></span>
                             {% endif %}
                         </a>
@@ -182,32 +186,33 @@
                     <div class="search-area default">
                         <form action="{% url 'product:product_search' %}" method="get" class="search">
                             <input type="search" name="search" value="{{ request.GET.search }}" placeholder="جستجو در فایل‌ها، قالب‌ها و نرم‌افزارها..." aria-label="جستجو در فروشگاه">
-                            <button type="submit" aria-label="جستجو"><img src="{% static 'img/search.png' %}" alt=""></button>
+                            <button type="submit" aria-label="جستجو"><span class="search-submit-symbol" aria-hidden="true">⌕</span></button>
                         </form>
                     </div>
                 </div>
                 <div class="col-md-2 col-sm-12">
                     <div class="user_head d-flex align-items-center justify-content-end">
                         <button type="button" class="theme-toggle" aria-label="تغییر حالت شب/روز" title="حالت شب/روز">
+                            <span class="theme-toggle__symbol" aria-hidden="true">☾</span>
                             <i class="fa fa-moon" aria-hidden="true"></i>
                             <i class="fa fa-sun" aria-hidden="true"></i>
                         </button>
                         {% if request.user.is_authenticated %}
-                            <a href="{% url 'dashboard:home' %}" class="iconhead" aria-label="پنل کاربری">
-                                <i class="fa fa-user-tie font-20" aria-hidden="true"></i>
+                            <a href="{% url 'dashboard:home' %}" class="iconhead header-action" aria-label="پنل کاربری">
+                                <span aria-hidden="true">حساب</span>
                             </a>
                         {% else %}
-                            <a href="{% url 'account:login' %}" class="iconhead" aria-label="ورود به حساب کاربری">
-                                <i class="fa fa-user-large font-20" aria-hidden="true"></i>
+                            <a href="{% url 'account:login' %}" class="iconhead header-action" aria-label="ورود به حساب کاربری">
+                                <span aria-hidden="true">ورود</span>
                             </a>
                         {% endif %}
                     </div>
                     <div class="cart masai_cart">
                         <span class="divider"></span>
-                        <a href="{% url 'cart:cart' %}" class="iconhead js-cart-drawer-toggle"
+                        <a href="{% url 'cart:cart' %}" class="iconhead header-action js-cart-drawer-toggle"
                            id="desktop-cart-toggle" aria-label="باز کردن سبد خرید" aria-controls="fm-cart-drawer"
                            aria-expanded="false">
-                            <i class="fa fa-cart-arrow-down font-20" aria-hidden="true"></i>
+                            <span aria-hidden="true">سبد</span>
                         </a>
                     </div>
                 </div>

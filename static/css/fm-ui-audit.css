@@ -369,3 +369,488 @@ header.Masai-header .main-menu .list .list-item.mega-menu > .sub-menu {
 .order-steps li a.active::after { z-index: var(--fm-z-content); }
 .order-steps li a.active::before { z-index: var(--fm-z-content); }
 .sidebar-collapse #bodyClick { z-index: var(--fm-z-mobile-backdrop); }
+
+/* ─────────────────────────────────────────────────────────────────────
+   بازسازی سربرگ و ابتدای خانه
+   قالب قبلی چند نسل CSS متعارض داشت: نوار تصویریِ نامعتبر، آیکن‌های
+   وابسته به فایل در مسیرهای حساس و ارتفاع‌های ثابت کاروسل باعث همان
+   صفحهٔ شکسته‌ای می‌شد که در preview دیده می‌شد. این بخش وابستگی ناحیهٔ
+   نخست به تصویر را حذف و desktop/mobile را به دو چیدمان قطعی تبدیل می‌کند.
+   ───────────────────────────────────────────────────────────────────── */
+
+/* نوار هویتی بدون درخواست تصویر؛ هیچ فضای سفید یا تصویر شکسته باقی نمی‌ماند. */
+.top-section.fullscreen-container {
+    height: 14px;
+    background: linear-gradient(90deg, #10212d 0%, #193646 46%, #46a9ae 100%);
+}
+.top-section__brand-band {
+    width: min(1360px, calc(100% - 40px));
+    height: 100%;
+    margin: 0 auto;
+    opacity: .9;
+    background-image: radial-gradient(circle at 12% 50%, rgba(255,255,255,.34) 0 1px, transparent 1.8px),
+                      radial-gradient(circle at 88% 50%, rgba(255,255,255,.24) 0 1px, transparent 1.8px);
+    background-size: 44px 14px, 58px 14px;
+}
+
+.brand-mark {
+    width: 39px;
+    height: 39px;
+    display: inline-grid;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 12px;
+    background: var(--fm-grad);
+    box-shadow: 0 7px 16px rgba(70,169,174,.24);
+    color: #fff;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.search-submit-symbol {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    color: var(--fm-primary-700, #216f75);
+    font-family: Arial, sans-serif !important;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+    transform: rotate(-18deg);
+}
+
+.theme-toggle__symbol { display: inline-block; font-size: 19px; line-height: 1; }
+.theme-toggle .fa-moon,
+.theme-toggle .fa-sun { display: none !important; }
+
+/* Desktop header: یک ردیف مشخص، بدون float و با ستون‌های منعطف. */
+@media (min-width: 1078px) {
+    header.Masai-header {
+        padding: 0;
+        background: var(--fm-surface, #fff);
+        border-bottom: 1px solid rgba(23, 42, 52, .08);
+        box-shadow: 0 3px 18px rgba(23,42,52,.045);
+    }
+
+    header.Masai-header > .container-fluid {
+        width: min(1360px, 100%);
+        padding-right: 24px;
+        padding-left: 24px;
+    }
+
+    header.Masai-header > .container-fluid > .row {
+        display: grid;
+        grid-template-columns: minmax(190px, 1fr) minmax(300px, 3.1fr) auto;
+        align-items: center;
+        min-height: 88px;
+        margin: 0;
+        column-gap: 26px;
+    }
+
+    header.Masai-header > .container-fluid > .row > [class*="col-"] {
+        width: auto;
+        max-width: none;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        flex: initial;
+    }
+
+    header.Masai-header .logo-area {
+        display: flex;
+        align-items: center;
+        width: auto;
+        max-width: none;
+        min-height: 0;
+        padding: 0;
+    }
+
+    header.Masai-header .text-logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--fm-text, #22333f);
+        font-size: 21px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    header.Masai-header .text-logo > span:last-child { line-height: 1.2; }
+    header.Masai-header .text-logo small {
+        display: block;
+        margin-top: 4px;
+        color: var(--fm-text-soft, #5d7285);
+        font-size: 10.5px;
+        font-weight: 500;
+        white-space: normal;
+    }
+
+    header.Masai-header .site-logo--desktop {
+        width: auto;
+        max-width: 190px;
+        max-height: 56px;
+        float: none;
+    }
+
+    header.Masai-header .search-area { width: 100%; }
+    header.Masai-header .search-area form.search { height: 48px; }
+    header.Masai-header .search-area form.search input {
+        width: 100%;
+        height: 48px;
+        padding: 11px 52px 11px 20px;
+        border: 1px solid rgba(70,169,174,.15);
+        border-radius: 14px;
+        background: #f4f9fa;
+        color: var(--fm-text, #22333f);
+        font-size: 13px;
+        transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+    header.Masai-header .search-area form.search input:focus {
+        background: #fff;
+        border-color: #46a9ae;
+        box-shadow: 0 0 0 4px rgba(70,169,174,.12) !important;
+    }
+    header.Masai-header .search-area form.search button {
+        top: 5px;
+        right: 7px;
+        bottom: 5px;
+        width: 38px;
+        height: 38px;
+        margin: 0;
+        padding: 0;
+        border-radius: 10px;
+        background: transparent;
+    }
+    header.Masai-header .search-area form.search button:hover { background: rgba(70,169,174,.1); }
+
+    header.Masai-header > .container-fluid > .row > .col-md-2 {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+    }
+    header.Masai-header .user_head {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+        width: auto;
+        margin: 0;
+    }
+    header.Masai-header .cart { display: flex; align-items: center; float: none; width: auto; }
+    header.Masai-header .divider {
+        height: 28px;
+        margin: 0 3px 0 4px;
+        padding: 0;
+        border-color: rgba(23,42,52,.12);
+    }
+    header.Masai-header .theme-toggle,
+    header.Masai-header .header-action {
+        display: inline-grid;
+        place-items: center;
+        min-width: 42px;
+        height: 42px;
+        margin: 0;
+        padding: 0 11px;
+        border: 1px solid rgba(23,42,52,.10);
+        border-radius: 11px;
+        background: transparent;
+        color: var(--fm-text-soft, #5d7285);
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1;
+        box-shadow: none;
+        -webkit-text-fill-color: currentColor;
+        transition: color .2s ease, background .2s ease, border-color .2s ease;
+    }
+    header.Masai-header .theme-toggle:hover,
+    header.Masai-header .header-action:hover {
+        border-color: rgba(70,169,174,.32);
+        background: rgba(70,169,174,.09);
+        color: #287e83;
+        text-decoration: none;
+    }
+
+    header.Masai-header .nav_header {
+        display: block;
+        min-height: 52px;
+        padding: 0;
+        border: 0;
+        background: #12222e;
+    }
+    header.Masai-header .nav__ullist {
+        display: flex;
+        align-items: stretch;
+        width: min(1360px, 100%);
+        min-height: 52px;
+        margin: 0 auto;
+        padding: 0 24px;
+    }
+    header.Masai-header .nav__ullist .list_style {
+        display: flex;
+        align-items: center;
+        margin: 0;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    header.Masai-header .nav__ullist .list_style > .icon-icon,
+    header.Masai-header .nav__ullist .list_style .fa-chevron-down { display: none; }
+    header.Masai-header .nav__ullist .list__link {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        min-height: 52px;
+        margin: 0;
+        padding: 0 15px;
+        border: 0;
+        background: transparent;
+        color: rgba(255,255,255,.86);
+        font: inherit;
+        white-space: nowrap;
+    }
+    header.Masai-header .nav__ullist .list__link::after {
+        top: auto;
+        right: 15px;
+        bottom: 0;
+        left: 15px;
+        width: auto;
+        height: 3px;
+        border-radius: 3px 3px 0 0;
+        background: #64c6c9;
+        transform: scaleX(0);
+        transform-origin: center;
+    }
+    header.Masai-header .nav__ullist .list__link:hover,
+    header.Masai-header .nav__ullist .list__link.is-active { color: #fff; text-decoration: none; }
+    header.Masai-header .nav__ullist .list__link:hover::after,
+    header.Masai-header .nav__ullist .list__link.is-active::after { width: auto; transform: scaleX(1); }
+    header.Masai-header .nav__ullist .list_style--categories { margin-left: auto; }
+    header.Masai-header .nav__ullist .list_style--categories .list__link::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        margin-left: 8px;
+        border-bottom: 1.5px solid currentColor;
+        border-left: 1.5px solid currentColor;
+        transform: rotate(-45deg) translateY(-2px);
+    }
+    header.Masai-header .submeno {
+        top: 51px;
+        right: auto;
+        left: 0;
+        width: min(250px, calc(100vw - 40px));
+        margin: 0;
+        overflow: hidden;
+        border: 1px solid rgba(23,42,52,.10);
+        border-radius: 0 0 13px 13px;
+        box-shadow: 0 15px 30px rgba(10,31,43,.16);
+    }
+    header.Masai-header .nav_header .nav__ullist .list_style:hover .submeno { top: 52px; }
+    header.Masai-header .submeno .run { padding: 11px 17px; font-size: 13px; }
+}
+
+/* موبایل: سربرگ مستقل است؛ هیچ‌گاه همزمان با هدر دسکتاپ دیده نمی‌شود. */
+@media (max-width: 1077px) {
+    .top-section.fullscreen-container { height: 8px; }
+    nav.header-responsive {
+        min-height: 94px;
+        height: 94px;
+        padding: 0;
+        border-bottom: 1px solid rgba(23,42,52,.09);
+        box-shadow: 0 3px 16px rgba(23,42,52,.08);
+    }
+    nav.header-responsive .container { position: relative; height: 100%; max-width: none; }
+    nav.header-responsive .navbar-translate { min-height: 38px; }
+    nav.header-responsive .navbar-toggler { margin-top: 8px; }
+    nav.header-responsive .search-nav {
+        top: 46px;
+        right: 12px;
+        left: 12px;
+        width: auto;
+    }
+    nav.header-responsive form { width: calc(100% - 132px); }
+    nav.header-responsive .search-nav ul { width: 124px; }
+    nav.header-responsive .search-nav ul li { margin: 0 2px; }
+    nav.header-responsive .search-nav ul li a,
+    nav.header-responsive .theme-toggle--mobile {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        background: #f1f9fa;
+    }
+    nav.header-responsive .search-nav form button { width: 38px; }
+    nav.header-responsive .search-nav .search-submit-symbol { font-size: 23px; }
+    nav.header-responsive .navbar-collapse { top: 0; }
+    nav.header-responsive .logo-nav-res .text-logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--fm-text, #22333f);
+        font-weight: 800;
+    }
+    nav.header-responsive .brand-mark { width: 36px; height: 36px; border-radius: 10px; font-size: 19px; }
+    nav.header-responsive .mobile-menu-toggle {
+        width: 100%;
+        padding: 11px 22px;
+        border: 0;
+        background: #fff;
+        color: #216f75;
+        font: inherit;
+        text-align: right;
+    }
+}
+
+/* صفحهٔ نخست بدون JS نیز اولین اسلاید را نشان می‌دهد؛ در preview هیچ فضای سفید
+   ناشی از تأخیر یا خطای Carousel باقی نمی‌ماند. */
+.slider_main:not(.owl-loaded) { display: block; }
+.slider_main:not(.owl-loaded) .item:not(:first-child) { display: none; }
+.slider_main .item > a {
+    display: block;
+    min-height: clamp(148px, 20vw, 300px);
+    overflow: hidden;
+    border-radius: 18px;
+    background: linear-gradient(125deg, #14303e, #2a7881 55%, #67cbd0);
+}
+.slider_main .imgslider {
+    display: block;
+    width: 100%;
+    min-height: clamp(148px, 20vw, 300px);
+    margin: 0;
+    border-radius: 18px;
+    object-fit: cover;
+}
+
+/* کارت پیشنهاد ویژهٔ قدیمی ارتفاع ثابتی داشت و navigation آن به شکل یک نوار
+   عمودی خراب دیده می‌شد. dots استاندارد زیر کارت نمایش داده می‌شوند. */
+@media (min-width: 1078px) {
+    #offercarousel {
+        height: auto;
+        min-height: 340px;
+        margin-bottom: 22px;
+        overflow: hidden;
+        border: 1px solid rgba(23,42,52,.10);
+        border-radius: 18px;
+        box-shadow: 0 10px 26px rgba(23,42,52,.08);
+    }
+    #offercarousel > .row { height: auto; }
+    #offercarousel .carousel-inner { padding: 0; }
+    #offercarousel .carousel-inner .carousel-item {
+        height: auto;
+        min-height: 340px;
+        margin-top: 0;
+        padding: 30px 34px 46px;
+    }
+    #offercarousel .carousel-inner .carousel-item .right-col,
+    #offercarousel .carousel-inner .carousel-item .left-col { min-height: 0; }
+    #offercarousel .carousel-inner .carousel-item .right-col > a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 250px;
+        border-radius: 14px;
+        background: #f5fafb;
+        overflow: hidden;
+    }
+    #offercarousel .carousel-inner .carousel-item .right-col img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    #offercarousel .carousel-inner .carousel-item .left-col { padding-right: 24px; }
+    #offercarousel .carousel-inner .carousel-item .row .left-col .product-title {
+        margin: 11px 0 4px;
+        color: var(--fm-text, #22333f);
+        font-size: 18px;
+        font-weight: 800;
+        line-height: 1.9;
+    }
+    #offercarousel .carousel-inner .carousel-item .row .left-col .list-group-item { line-height: 2.1; }
+    #offercarousel .carousel-indicators {
+        right: 0;
+        bottom: 16px;
+        left: 0;
+        top: auto;
+        display: flex;
+        flex-direction: row !important;
+        justify-content: center;
+        gap: 7px;
+        width: auto;
+        height: 10px;
+        margin: 0;
+    }
+    #offercarousel .carousel-indicators li,
+    #offercarousel .carousel-indicators li.active {
+        display: block;
+        width: 8px;
+        height: 8px;
+        min-height: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 50% !important;
+        background: #c9d9dd;
+    }
+    #offercarousel .carousel-indicators li.active { background: #46a9ae; }
+    #offercarousel .carousel-indicators li.active::after { display: none; }
+}
+
+/* نوار اعتماد خانه: آیکن‌ها self-contained هستند و با عدم بارگیری فونت آیکن
+   به مربع‌های خالی تبدیل نمی‌شوند. */
+.promise-strip { align-items: stretch; }
+.promise-strip .contact-miniicon { margin-bottom: 12px; }
+.promise-strip .contact-miniicon > div {
+    display: flex;
+    min-height: 92px;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 8px;
+    border: 1px solid rgba(70,169,174,.12);
+    border-radius: 14px;
+    background: var(--fm-surface, #fff);
+}
+.promise-icon {
+    display: inline-grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: rgba(70,169,174,.12);
+    color: #257e83;
+    font-family: Arial, sans-serif !important;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+}
+.promise-strip .contact-miniicon .title-3 {
+    display: block;
+    margin: 0;
+    color: var(--fm-text, #22333f);
+    font-size: 12px;
+    line-height: 1.8;
+}
+
+@media (max-width: 767.98px) {
+    .slider_main .item > a,
+    .slider_main .imgslider { min-height: 140px; border-radius: 13px; }
+    .promise-strip { margin-right: -5px; margin-left: -5px; }
+    .promise-strip .contact-miniicon { padding-right: 5px; padding-left: 5px; }
+    .promise-strip .contact-miniicon > div { min-height: 76px; gap: 7px; padding: 10px 7px; border-radius: 11px; }
+    .promise-icon { width: 28px; height: 28px; border-radius: 9px; font-size: 17px; }
+    .promise-strip .contact-miniicon .title-3 { font-size: 10.5px; }
+}
+
+@media (max-width: 575.98px) {
+    .top-section.fullscreen-container { height: 6px; }
+    nav.header-responsive { min-height: 88px; height: 88px; }
+    nav.header-responsive .search-nav { top: 42px; }
+    nav.header-responsive form { width: calc(100% - 116px); }
+    nav.header-responsive .search-nav ul { width: 108px; }
+    nav.header-responsive .search-nav ul li a,
+    nav.header-responsive .theme-toggle--mobile { width: 30px; height: 30px; }
+}
