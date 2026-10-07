@@ -3,8 +3,9 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from . import settings
 from product import views
-from django.views.generic import TemplateView
+from django.views.generic import RedirectView, TemplateView
 from django.contrib.sitemaps.views import sitemap
+from django.templatetags.static import static as static_url
 from core.sitemaps import (
     ProductSitemap, CategorySitemap, BrandSitemap, ArticleSitemap,
     StaticPageSitemap, SectionSitemap,
@@ -19,6 +20,9 @@ handler404 = 'core.views.custom_404'
 handler500 = 'core.views.custom_500'
 
 urlpatterns = [
+    # Browsers and crawlers still probe this conventional root URL even when
+    # the HTML head already declares the PNG favicon.
+    path('favicon.ico', RedirectView.as_view(url=static_url('favicon.ico'), permanent=True), name='favicon'),
     path('admin/', admin.site.urls),
     path('admin-panel/', admin_home, name='admin_home'),
     path('sitemap.xml', sitemap, {'sitemaps': {

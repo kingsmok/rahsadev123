@@ -88,6 +88,10 @@ class PublicFormAndSafetyTests(TestCase):
         self.assertContains(offline, 'اینترنت در دسترس نیست')
         self.assertContains(offline, 'noindex')
 
+        favicon = self.client.get('/favicon.ico')
+        self.assertEqual(favicon.status_code, 301)
+        self.assertEqual(favicon['Location'], '/static/favicon.ico')
+
     def test_json_ld_is_script_safe_and_reports_iranian_currency_correctly(self):
         injected_value = '</script><script>alert("xss")</script>'
         serialized = _json({'name': injected_value})
