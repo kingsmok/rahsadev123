@@ -67,7 +67,7 @@ class Banner(models.Model):
 
     def banner_image(self):
         if self.image:
-            return format_html(f'<img src="{self.image.url}" width="100px" height="50px">')
+            return format_html('<img src="{}" width="100px" height="50px">', self.image.url)
         return format_html('<h3 style="color: red">تصویر ندارد</h3>')
 
     def __str__(self):
