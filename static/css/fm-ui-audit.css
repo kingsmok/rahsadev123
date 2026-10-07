@@ -1220,3 +1220,137 @@ header.Masai-header .main-menu .list .list-item.mega-menu > .sub-menu {
     .widget-product .product-carousel .product_title { font-size: 10px; }
     .widget-product .product-carousel .item ins { font-size: 11px; }
 }
+
+/* ─────────────────────────────────────────────────────────────────────
+   فیلترهای فروشگاه: کنترل‌های قدیمی دو label و bootstrap-switch داشتند و
+   در sidebar باریک به شکل مربع‌های سفید/نامرتب رندر می‌شدند. کنترل‌ها
+   اکنون در همهٔ breakpointها یک الگوی واحد، قابل کلیک و دارای focus دارند.
+   ───────────────────────────────────────────────────────────────────── */
+.sidebar-page .filter-choice-list {
+    display: grid;
+    gap: 3px;
+    padding: 2px 0;
+}
+.sidebar-page .filter-choice {
+    position: relative;
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    align-items: center;
+    gap: 9px;
+    min-height: 38px;
+    margin: 0;
+    padding: 7px 4px;
+    border-radius: 9px;
+    color: var(--fm-text, #22333f);
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1.55;
+    transition: background .18s ease, color .18s ease;
+}
+.sidebar-page .filter-choice:hover { background: rgba(70,169,174,.09); }
+.sidebar-page .filter-choice__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+.sidebar-page .filter-choice__box {
+    position: relative;
+    display: grid;
+    width: 20px;
+    height: 20px;
+    place-items: center;
+    border: 1.5px solid #79bec1;
+    border-radius: 6px;
+    background: var(--fm-surface, #fff);
+    transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+.sidebar-page .filter-choice__box::after {
+    width: 9px;
+    height: 5px;
+    border-bottom: 2px solid #fff;
+    border-left: 2px solid #fff;
+    content: "";
+    opacity: 0;
+    transform: rotate(-45deg) translate(1px, -1px);
+    transition: opacity .15s ease;
+}
+.sidebar-page .filter-choice__input:checked + .filter-choice__box {
+    border-color: #359aa0;
+    background: #46a9ae;
+}
+.sidebar-page .filter-choice__input:checked + .filter-choice__box::after { opacity: 1; }
+.sidebar-page .filter-choice__input:focus-visible + .filter-choice__box {
+    outline: 3px solid rgba(70,169,174,.28);
+    outline-offset: 2px;
+}
+.sidebar-page .filter-choice__label {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.sidebar-page .filter-switch-box .box-content { padding: 10px 14px; }
+.sidebar-page .filter-switch {
+    display: flex;
+    align-items: center;
+    min-height: 35px;
+    gap: 10px;
+    margin: 0;
+    color: var(--fm-text, #22333f);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.7;
+}
+.sidebar-page .filter-switch__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+}
+.sidebar-page .filter-switch__track {
+    position: relative;
+    display: inline-block;
+    flex: 0 0 auto;
+    width: 42px;
+    height: 23px;
+    border-radius: 999px;
+    background: #aabcc2;
+    box-shadow: inset 0 1px 2px rgba(23,42,52,.18);
+    transition: background .18s ease;
+}
+.sidebar-page .filter-switch__track::after {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.24);
+    content: "";
+    transition: transform .18s ease;
+}
+.sidebar-page .filter-switch__input:checked + .filter-switch__track { background: #46a9ae; }
+.sidebar-page .filter-switch__input:checked + .filter-switch__track::after { transform: translateX(-19px); }
+.sidebar-page .filter-switch__input:focus-visible + .filter-switch__track {
+    outline: 3px solid rgba(70,169,174,.28);
+    outline-offset: 2px;
+}
+
+@media (max-width: 767.98px) {
+    .search-page .sidebar-page .filter-choice-list { padding: 2px 0; }
+    .search-page .sidebar-page .filter-choice {
+        min-height: 42px;
+        padding: 8px 4px;
+        font-size: 13.5px;
+    }
+    .search-page .sidebar-page .filter-switch-box .box-content { padding: 10px 15px; }
+}
