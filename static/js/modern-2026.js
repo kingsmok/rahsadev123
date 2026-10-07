@@ -220,4 +220,18 @@
             setTimeout(function () { el.remove(); }, 420);
         }, 6000);
     });
+
+    /* ---------- ۸) PWA آفلاین و نصب‌پذیر ----------
+       worker فقط shell عمومی را cache می‌کند. checkout، دانلود، پرداخت و
+       dashboard عمداً network-only می‌مانند تا دادهٔ حساس/کاربر دیگر cache نشود. */
+    function registerServiceWorker() {
+        if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
+        var workerUrl = window.FM_SERVICE_WORKER_URL || '/service-worker.js';
+        navigator.serviceWorker.register(workerUrl, {scope: '/'})
+            .catch(function () {
+                // نصب PWA یک enhancement است؛ سایت در مرورگرهای قدیمی کاملاً کار می‌کند.
+            });
+    }
+    if (document.readyState === 'complete') registerServiceWorker();
+    else window.addEventListener('load', registerServiceWorker, {once: true});
 })();

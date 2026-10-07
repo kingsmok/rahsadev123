@@ -71,6 +71,18 @@ class PublicFormAndSafetyTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.product.title)
 
+    def test_pwa_worker_has_root_scope_and_offline_fallback_is_public(self):
+        worker = self.client.get(reverse('core:service_worker'))
+        self.assertEqual(worker.status_code, 200)
+        self.assertTrue(worker['Content-Type'].startswith('application/javascript'))
+        self.assertEqual(worker['Service-Worker-Allowed'], '/')
+        self.assertIn(b"url.pathname.startsWith('/downloads/')", worker.content)
+
+        offline = self.client.get(reverse('core:offline'))
+        self.assertEqual(offline.status_code, 200)
+        self.assertContains(offline, 'اینترنت در دسترس نیست')
+        self.assertContains(offline, 'noindex')
+
     def test_state_changing_endpoints_require_post_and_profile_isolation(self):
         self.assertTrue(self.client.login(username='seller', password='Safe-pass-123!'))
         self.assertEqual(self.client.get(reverse('account:logout')).status_code, 405)

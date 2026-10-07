@@ -48,6 +48,25 @@ def home(request):
     return render(request, 'core/home.html', context)
 
 
+def offline(request):
+    """Fallback کوچک و مستقل PWA هنگامی که navigation بدون اینترنت انجام شود."""
+    response = render(request, 'offline.html', status=200)
+    response['Cache-Control'] = 'public, max-age=300'
+    return response
+
+
+def service_worker(request):
+    """Service worker در ریشهٔ origin ارائه می‌شود تا scope آن کل فروشگاه باشد.
+
+    URL فایل عمداً static نیست: مرورگر برای گسترده‌تر شدن scope از دایرکتوری
+    اسکریپت به هدر Service-Worker-Allowed نیاز دارد.
+    """
+    response = render(request, 'service-worker.js', content_type='application/javascript; charset=utf-8')
+    response['Service-Worker-Allowed'] = '/'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return response
+
+
 def contact(request):
     if request.method == 'POST':
         form = ContactUsForm(request.POST)

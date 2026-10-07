@@ -153,7 +153,9 @@ python manage.py seed_demo    # ساخت دسته‌ها، ۱۴ محصول با 
 - احترام به `prefers-reduced-motion` (کاربران حساس به انیمیشن)
 
 ### PWA و موبایل
-- `manifest.webmanifest` با هویت فارسی (fa-IR، RTL) — قابل نصب روی موبایل
+- `manifest.webmanifest` با هویت فارسی (fa-IR، RTL)، آیکن‌های نصب و shortcutهای «فایل‌ها»، «تخفیف‌ها» و «دانلودها»
+- service worker با scope ریشه و ثبت graceful در مرورگرهای امن؛ فقط shell عمومی/static cache می‌شود
+- navigationها همیشه network-first هستند و در نبود اینترنت به `/offline/` می‌رسند؛ checkout، پرداخت، دانلود، سبد خرید و dashboard هرگز cache نمی‌شوند
 - رفع باگ فرم جست‌وجوی موبایل (به سرچ واقعی وصل شد)
 - سال شمسی خودکار در کپی‌رایت فوتر
 
