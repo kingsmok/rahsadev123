@@ -15,6 +15,10 @@ class ProductFlowTests(TestCase):
     def test_search(self):
         self.assertEqual(self.client.get('/products/product_search/?search=تست').status_code, 200)
 
+    def test_product_routes_do_not_accept_trailing_garbage(self):
+        response = self.client.get(f'/products/{self.product.pid}/{self.product.slug}/unexpected/')
+        self.assertEqual(response.status_code, 404)
+
     def test_product_price_cannot_be_negative_in_database(self):
         with self.assertRaises(IntegrityError):
             with transaction.atomic():

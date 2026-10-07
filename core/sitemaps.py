@@ -6,7 +6,6 @@
 """
 from django.contrib.sitemaps import Sitemap
 from blog.models import Article
-from core.models import SiteSettings
 from pages.models import StaticPage
 from product.models import Product, ProductBrand, ProductCategory
 from services.models import PortfolioItem
@@ -105,8 +104,6 @@ class PortfolioSitemap(Sitemap):
 
 class SectionSitemap(Sitemap):
     """صفحات اصلی سایت (خانه، فروشگاه، وبلاگ، خدمات و...)."""
-    changefreq = 'daily'
-    priority = 0.8
 
     def items(self):
         return [

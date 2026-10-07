@@ -10,6 +10,25 @@ from django.http import HttpResponseRedirect, HttpResponsePermanentRedirect
 from core.models import Redirect
 
 
+class BrowserPolicyMiddleware:
+    """Apply a small, compatibility-safe browser feature policy everywhere.
+
+    The storefront does not use sensors, device hardware, or the Payment
+    Request API (payments are redirected to a gateway), so disabling them
+    reduces attack surface without changing checkout behavior.
+    """
+
+    _POLICY = 'camera=(), geolocation=(), microphone=(), payment=(), usb=()'
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        response.setdefault('Permissions-Policy', self._POLICY)
+        return response
+
+
 class RedirectMiddleware:
     """ریدایرکت آدرس‌های ثبت‌شده در پنل مدیریت."""
 

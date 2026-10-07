@@ -1,12 +1,16 @@
+import json
 import os
+import re
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.core.management.base import CommandError
-from django.test import TestCase, override_settings
+from django.template import Context
+from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 
 from core.management.commands.seed_demo import _seed_password
+from core.templatetags.seo_tags import _json, product_schema
 
 from core.models import ContactUs
 from product.models import Product, ProductCategory
@@ -76,12 +80,25 @@ class PublicFormAndSafetyTests(TestCase):
         self.assertEqual(worker.status_code, 200)
         self.assertTrue(worker['Content-Type'].startswith('application/javascript'))
         self.assertEqual(worker['Service-Worker-Allowed'], '/')
+        self.assertEqual(worker['Permissions-Policy'], 'camera=(), geolocation=(), microphone=(), payment=(), usb=()')
         self.assertIn(b"url.pathname.startsWith('/downloads/')", worker.content)
 
         offline = self.client.get(reverse('core:offline'))
         self.assertEqual(offline.status_code, 200)
         self.assertContains(offline, 'اینترنت در دسترس نیست')
         self.assertContains(offline, 'noindex')
+
+    def test_json_ld_is_script_safe_and_reports_iranian_currency_correctly(self):
+        injected_value = '</script><script>alert("xss")</script>'
+        serialized = _json({'name': injected_value})
+        self.assertNotIn('</script>', serialized)
+        self.assertEqual(json.loads(serialized)['name'], injected_value)
+
+        request = RequestFactory().get('/')
+        html = str(product_schema(Context({'request': request, 'site_name': 'فایل‌مارکت'}), self.product))
+        payload = json.loads(re.search(r'>(.*)</script>', html).group(1))
+        self.assertEqual(payload['offers']['priceCurrency'], 'IRR')
+        self.assertEqual(payload['offers']['price'], '10000')
 
     def test_state_changing_endpoints_require_post_and_profile_isolation(self):
         self.assertTrue(self.client.login(username='seller', password='Safe-pass-123!'))

@@ -3,6 +3,13 @@ from .models import Article, Category
 from django.core.paginator import Paginator
 
 
+def _published_articles():
+    """Relations rendered by article cards and headers, fetched in bulk."""
+    return Article.objects.filter(status='published').select_related(
+        'author', 'author__profile'
+    ).prefetch_related('category')
+
+
 def get_pages_to_show(current_page, total_pages):
     if total_pages <= 3:
         return list(range(1, total_pages + 1))
@@ -18,8 +25,8 @@ def get_pages_to_show(current_page, total_pages):
 
 def article_list(request):
     categories = Category.objects.all()
-    articles = Article.objects.filter(status='published')
-    latest_articles = Article.objects.filter(status='published').order_by('-created_at')[:6]
+    articles = _published_articles()
+    latest_articles = _published_articles().order_by('-created_at')[:6]
 
     # Pagination
     page_number = request.GET.get('page')
@@ -39,8 +46,8 @@ def article_list(request):
 def category_article(request, slug):
     category = get_object_or_404(Category, slug=slug)
     categories = Category.objects.all()
-    articles = category.articles.filter(status='published')
-    latest_articles = Article.objects.filter(status='published').order_by('-created_at')[:6]
+    articles = _published_articles().filter(category=category)
+    latest_articles = _published_articles().order_by('-created_at')[:6]
 
     # Pagination
     page_number = request.GET.get('page')
@@ -61,8 +68,8 @@ def category_article(request, slug):
 def article_detail(request, slug):
     categories = Category.objects.all()
     # A guessed slug must not expose an unpublished editorial draft.
-    article = get_object_or_404(Article, slug=slug, status='published')
-    latest_articles = Article.objects.filter(status='published').exclude(id=article.id).order_by('-created_at')[:6]
+    article = get_object_or_404(_published_articles(), slug=slug)
+    latest_articles = _published_articles().exclude(id=article.id).order_by('-created_at')[:6]
 
     viewed_article = request.session.get('viewed_article', [])
     if article.id not in viewed_article:

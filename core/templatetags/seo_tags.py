@@ -7,7 +7,6 @@
 import json
 
 from django import template
-from django.urls import reverse
 from django.utils.html import strip_tags
 from django.utils.safestring import mark_safe
 
@@ -16,9 +15,21 @@ from core.models import SiteSettings
 register = template.Library()
 
 
+# JSON-LD is placed inside a <script> element.  Escaping these characters is
+# required even though ``json.dumps`` has serialized the value: a stored title
+# such as ``</script><script>…`` would otherwise close the JSON-LD element.
+_JSON_SCRIPT_ESCAPE = str.maketrans({
+    '<': chr(92) + 'u003C',
+    '>': chr(92) + 'u003E',
+    '&': chr(92) + 'u0026',
+    chr(0x2028): chr(92) + 'u2028',
+    chr(0x2029): chr(92) + 'u2029',
+})
+
+
 def _json(data):
-    """خروجی JSON امن و فشرده برای جاسازی در صفحه."""
-    return json.dumps(data, ensure_ascii=False, separators=(',', ':'))
+    """Return compact, script-element-safe JSON-LD without changing its data."""
+    return json.dumps(data, ensure_ascii=False, separators=(',', ':')).translate(_JSON_SCRIPT_ESCAPE)
 
 
 def _script(data):
@@ -186,7 +197,6 @@ def page_breadcrumb(context, title):
 @register.simple_tag(takes_context=True)
 def product_schema(context, product):
     """محصول دیجیتال — قیمت، موجودی، برند، دسته‌بندی و تصویر."""
-    request = context.get('request')
     url = _absolute(context, '/products/%s/%s/' % (product.pid, product.slug))
     data = {
         '@context': 'https://schema.org',
@@ -216,7 +226,7 @@ def product_schema(context, product):
         '@type': 'Offer',
         'url': url,
         'priceCurrency': 'IRR',
-        'price': str(product.price),
+        'price': str(product.price * 10),  # model/UI amounts are تومان; Schema uses IRR.
         'availability': 'https://schema.org/InStock' if product.is_available else 'https://schema.org/OutOfStock',
         'itemCondition': 'https://schema.org/NewCondition',
         'seller': {'@type': 'Organization', 'name': (context.get('site_name') or 'فایل‌مارکت')},
@@ -367,10 +377,14 @@ def service_schema(context, packages):
         offer = {
             '@type': 'Offer',
             'name': p.title,
-            'price': str(p.price),
-            'priceCurrency': 'IRR',
             'description': _clean(getattr(p, 'short_description', '') or p.title, 300),
         }
+        # ServicePackage prices, like product prices, are stored and displayed
+        # in تومان. schema.org's IRR currency value must therefore be ریال.
+        # A consultation-only package has no price and must not publish "None".
+        if p.price is not None:
+            offer['price'] = str(p.price * 10)
+            offer['priceCurrency'] = 'IRR'
         if getattr(p, 'delivery_days', None):
             offer['deliveryLeadTime'] = {
                 '@type': 'QuantitativeValue', 'value': int(p.delivery_days), 'unitCode': 'DAY',

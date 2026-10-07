@@ -91,6 +91,11 @@ def _price_range(qs):
     return qs.aggregate(min=Min('price'), max=Max('price'))
 
 
+def _product_cards(queryset):
+    """Fetch the relations shown by reusable product-card templates in bulk."""
+    return queryset.select_related('digital_asset').prefetch_related('brand')
+
+
 def _paginate(request, products, per_page=None):
     paginator = Paginator(products, per_page or _products_per_page())
     page_number = request.GET.get('page')
@@ -137,7 +142,7 @@ def _has_purchased_product(user, product):
 
 def product_list(request):
     published = Product.objects.filter(status='published')
-    products = published.order_by('-created_at')
+    products = _product_cards(published.order_by('-created_at'))
 
     products, selected_types, selected_brands, instant_only = _apply_digital_filters(request, products)
     prices = _price_range(published)
@@ -163,7 +168,7 @@ def product_list(request):
 def category_product_list(request, slug):
     category = get_object_or_404(ProductCategory, slug=slug)
     published = Product.objects.filter(status='published')
-    products = published.filter(category=category)
+    products = _product_cards(published.filter(category=category))
 
     products, selected_types, selected_brands, instant_only = _apply_digital_filters(request, products)
     prices = _price_range(published.filter(category=category))
@@ -192,7 +197,7 @@ def category_product_list(request, slug):
 def brand_product_list(request, slug):
     brand = get_object_or_404(ProductBrand, slug=slug)
     published = Product.objects.filter(status='published')
-    products = published.filter(brand=brand)
+    products = _product_cards(published.filter(brand=brand))
 
     products, selected_types, selected_brands, instant_only = _apply_digital_filters(request, products)
     prices = _price_range(published)
@@ -217,13 +222,16 @@ def brand_product_list(request, slug):
 
 def discount_product_list(request):
     published = Product.objects.filter(status='published')
-    products = published.filter(
-        old_price__isnull=False,
-        old_price__gt=models.F('price')
-    ).annotate(
-        discount=models.ExpressionWrapper(
-            (models.F('old_price') - models.F('price')) * 100 / models.F('old_price'),
-            output_field=models.IntegerField())).filter(discount__gt=0).order_by('-discount')
+    products = _product_cards(
+        published.filter(
+            old_price__isnull=False,
+            old_price__gt=models.F('price')
+        ).annotate(
+            discount=models.ExpressionWrapper(
+                (models.F('old_price') - models.F('price')) * 100 / models.F('old_price'),
+                output_field=models.IntegerField())
+        ).filter(discount__gt=0).order_by('-discount')
+    )
 
     products, selected_types, selected_brands, instant_only = _apply_digital_filters(request, products)
     prices = _price_range(published)
@@ -246,13 +254,19 @@ def discount_product_list(request):
 
 def product_search(request):
     products_search = request.GET.get('search', '')
-    products = Product.objects.filter(title__icontains=products_search, status='published').order_by('-created_at')
+    products = _product_cards(
+        Product.objects.filter(title__icontains=products_search, status='published')
+        .order_by('-created_at')
+        .prefetch_related('category')
+    )
 
     # جست‌وجوی زنده (AJAX) — فقط نتایج محدود با JSON
     if request.GET.get('ajax') and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         results = []
-        for p in products.select_related()[:6]:
-            cat = p.category.first()
+        for p in products[:6]:
+            # ``category.all()`` consumes the prefetch cache; ``first()`` did
+            # not consistently do so across supported Django releases.
+            cat = next(iter(p.category.all()), None)
             results.append({
                 'title': p.title,
                 'url': f'/products/{p.pid}/{p.slug}/',
@@ -287,7 +301,9 @@ def product_detail(request, pid, slug):
     # Draft products must be reachable only from Django admin, not through a
     # guessed pid/slug URL.
     products = get_object_or_404(
-        Product.objects.prefetch_related('product_images'),
+        Product.objects.select_related('digital_asset').prefetch_related(
+            'product_images', 'category', 'brand'
+        ),
         pid=pid,
         slug=slug,
         status='published',
@@ -309,7 +325,9 @@ def product_detail(request, pid, slug):
         comment = ProductComment.objects.create(body=body, product=products, author=request.user)
         return JsonResponse({'status': 'success', 'comment_id': comment.id})
 
-    comments = products.product_comments.filter(status='published').order_by('-created_at')
+    comments = products.product_comments.filter(status='published').select_related(
+        'author', 'author__profile'
+    ).order_by('-created_at')
 
     viewed_products = request.session.get('viewed_products', [])
     if products.id not in viewed_products:
