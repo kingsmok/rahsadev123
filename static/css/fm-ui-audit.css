@@ -1354,3 +1354,101 @@ header.Masai-header .main-menu .list .list-item.mega-menu > .sub-menu {
     }
     .search-page .sidebar-page .filter-switch-box .box-content { padding: 10px 15px; }
 }
+
+/* متن روی اسلایدر: پیام برند و CTA در خود اسلاید قرار می‌گیرند تا بنر تنها
+   یک تصویر تزئینی نباشد. لایهٔ تیره خوانایی متن را روی تمام تصاویر حفظ می‌کند. */
+.slider_main .item > a {
+    position: relative;
+    isolation: isolate;
+    color: #fff;
+}
+.slider_main .imgslider { position: relative; z-index: 0; }
+.slider_main__shade {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(to left, rgba(10,30,40,.84) 0%, rgba(12,43,53,.66) 39%, rgba(12,43,53,.12) 72%, transparent 100%);
+    pointer-events: none;
+}
+.slider_main__copy {
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    right: clamp(24px, 7vw, 108px);
+    display: flex;
+    width: min(45%, 540px);
+    transform: translateY(-50%);
+    flex-direction: column;
+    align-items: flex-start;
+    color: #fff;
+    pointer-events: none;
+    text-align: right;
+}
+.slider_main__eyebrow {
+    margin-bottom: 8px;
+    color: #a8eff0;
+    font-size: clamp(11px, 1.1vw, 14px);
+    font-weight: 700;
+    letter-spacing: .02em;
+}
+.slider_main__title {
+    color: #fff;
+    font-size: clamp(22px, 2.5vw, 38px);
+    font-weight: 900;
+    line-height: 1.45;
+    text-shadow: 0 2px 12px rgba(0,0,0,.22);
+}
+.slider_main__description {
+    max-width: 460px;
+    margin-top: 9px;
+    color: rgba(255,255,255,.92);
+    font-size: clamp(12px, 1.25vw, 16px);
+    font-weight: 500;
+    line-height: 1.9;
+}
+.slider_main__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: clamp(13px, 1.7vw, 22px);
+    padding: 9px 16px;
+    border: 1px solid rgba(255,255,255,.62);
+    border-radius: 999px;
+    background: rgba(255,255,255,.14);
+    box-shadow: 0 6px 18px rgba(0,0,0,.14);
+    color: #fff;
+    font-size: clamp(11px, 1.1vw, 14px);
+    font-weight: 700;
+    line-height: 1.25;
+    backdrop-filter: blur(3px);
+}
+.slider_main .item > a:hover .slider_main__cta {
+    border-color: #fff;
+    background: #fff;
+    color: #23747a;
+}
+
+@media (max-width: 767.98px) {
+    .slider_main__shade {
+        background: linear-gradient(to left, rgba(10,30,40,.82) 0%, rgba(12,43,53,.54) 58%, rgba(12,43,53,.08) 100%);
+    }
+    .slider_main__copy {
+        right: 19px;
+        width: min(68%, 290px);
+    }
+    .slider_main__eyebrow { margin-bottom: 3px; font-size: 10px; }
+    .slider_main__title { font-size: clamp(17px, 5.2vw, 23px); line-height: 1.35; }
+    .slider_main__description {
+        margin-top: 4px;
+        font-size: 10.5px;
+        line-height: 1.65;
+    }
+    .slider_main__cta { margin-top: 9px; padding: 7px 11px; font-size: 10px; }
+}
+
+@media (max-width: 375px) {
+    .slider_main__copy { right: 15px; width: min(72%, 250px); }
+    .slider_main__description { display: none; }
+    .slider_main__cta { margin-top: 7px; }
+}
