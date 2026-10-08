@@ -88,6 +88,15 @@ echo "      ساخت کاربر مدیر پیش‌فرض ..."
     --username "$ADMIN_USERNAME" --password "$ADMIN_PASSWORD" --email "$ADMIN_EMAIL"
 
 # ۶) اجرای سرور
+port_in_use() {
+    "$VENV_PY" -c "import socket, sys; s = socket.socket(); sys.exit(0 if s.connect_ex(('127.0.0.1', int(sys.argv[1]))) == 0 else 1)" "$1"
+}
+ATTEMPTS=0
+while port_in_use "$PORT" && [ "$ATTEMPTS" -lt 20 ]; do
+    echo "      پورت $PORT اشغال است؛ پورت $((PORT + 1)) امتحان می‌شود ..."
+    PORT=$((PORT + 1))
+    ATTEMPTS=$((ATTEMPTS + 1))
+done
 echo "[6/6] اجرای سرور توسعه روی پورت $PORT ..."
 echo ""
 echo "══════════════════════════════════════════════════"

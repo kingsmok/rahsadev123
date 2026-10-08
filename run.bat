@@ -134,6 +134,16 @@ if errorlevel 1 (
 )
 
 rem ── ۶) اجرای سرور ──
+set "PORT_TRIES=0"
+:find_port
+netstat -ano | findstr /c:":%PORT% " >nul 2>nul
+if errorlevel 1 goto port_ready
+set /a PORT_TRIES+=1
+if %PORT_TRIES% gtr 20 goto port_ready
+echo       پورت %PORT% اشغال است؛ پورت بعدی امتحان می‌شود ...
+set /a PORT+=1
+goto find_port
+:port_ready
 echo [6/6] اجرای سرور توسعه روی پورت %PORT% ...
 echo.
 echo ══════════════════════════════════════════════════
