@@ -12,6 +12,49 @@ python manage.py seed_demo      # داده‌های نمونه کامل + کار
 python manage.py runserver
 ```
 
+## ⚡ اجرای یک‌کلیکی — `run.bat`
+
+روی ویندوز کافی است فایل **`run.bat`** را دابل‌کلیک کنید (یا در cmd اجرا کنید). این اسکریپت همهٔ مراحل را خودش انجام می‌دهد:
+
+1. پیدا کردن پایتون نصب‌شده (`py -3` و در غیر این صورت `python`)
+2. ساخت محیط مجازی `.venv` (اگر نباشد)
+3. نصب بسته‌ها از `requirements.txt`
+4. ساخت فایل `.env` محلی با `DEBUG=True` و یک `SECRET_KEY` تصادفی (فقط اگر `.env` وجود نداشته باشد)
+5. اجرای `migrate`
+6. **ساخت کاربر مدیر پیش‌فرض** با دستور `create_default_admin`
+7. اجرای سرور روی پورت ۸۰۰۰ و بازکردن `/admin-panel/` در مرورگر
+
+**اطلاعات ورود پیش‌فرض:** `admin` / `admin1234`
+
+```bat
+run.bat                                  :: کاربر admin با رمز admin1234
+run.bat reza My-Long-Pass-123            :: کاربر و رمز دلخواه
+run.bat admin admin1234 9000             :: پورت دلخواه
+run.bat admin admin1234 8000 --seed      :: همراه با داده‌های نمونه (seed_demo)
+run.bat --no-browser                     :: بدون بازشدن خودکار مرورگر
+```
+
+روی لینوکس و مک معادل همین اسکریپت با نام **`run.sh`** در دسترس است:
+
+```bash
+chmod +x run.sh
+./run.sh                       # یا: ./run.sh reza My-Long-Pass-123 8000 --seed
+```
+
+### ساخت/مدیریت کاربر مدیر
+
+دستور `create_default_admin` آیدمپوتنت است: اگر کاربر وجود داشته باشد **رمز او تغییر نمی‌کند** (مگر با `--reset-password`)، فقط دسترسی مدیر/superuser را تضمین می‌کند.
+
+```bash
+python manage.py create_default_admin                                  # admin / admin1234
+python manage.py create_default_admin --username reza --password My-Long-Pass-123
+python manage.py create_default_admin --username admin --password New-Pass-123 --reset-password
+```
+
+- رمز باید حداقل ۸ کاراکتر باشد.
+- در محیط عملیاتی (`DEBUG=False`) ساخت حساب با رمز پیش‌فرض `admin1234` **رد می‌شود**؛ رمز قوی را با `--password` یا متغیر محیطی `ADMIN_DEFAULT_PASSWORD` بدهید.
+- نام کاربری/ایمیل پیش‌فرض هم با `ADMIN_DEFAULT_USERNAME` و `ADMIN_DEFAULT_EMAIL` قابل تغییر است.
+
 **کاربران نمونه (فقط توسعه):**
 
 | کاربر | نام کاربری | رمز عبور | توضیح |

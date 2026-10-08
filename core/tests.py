@@ -9,6 +9,7 @@ from unittest.mock import patch
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.template import Context
 from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
@@ -368,3 +369,64 @@ class AdminCsvExportTests(TestCase):
         self.assertNotIn('<', image_cell)
         self.assertEqual(image_cell, 'تصویر ندارد')
         self.assertEqual(admin_instance._csv_header('get_created_at_jalali'), 'تاریخ ایجاد')
+
+
+class CreateDefaultAdminTests(TestCase):
+    """دستور ساخت کاربر پیش‌فرض که run.bat/run.sh آن را صدا می‌زند."""
+
+    def run_command(self, *args):
+        out = StringIO()
+        call_command('create_default_admin', *args, stdout=out)
+        return out.getvalue()
+
+    def test_creates_superuser_and_reports_credentials(self):
+        output = self.run_command('--username', 'newadmin', '--password', 'Strong-Pass-123')
+
+        user = User.objects.get(username='newadmin')
+        self.assertTrue(user.is_superuser)
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.check_password('Strong-Pass-123'))
+        self.assertIn('newadmin', output)
+        self.assertIn('Strong-Pass-123', output)
+        self.assertIn('/admin-panel/', output)
+
+    def test_is_idempotent_and_keeps_the_existing_password(self):
+        self.run_command('--username', 'keepadmin', '--password', 'First-Pass-123')
+        output = self.run_command('--username', 'keepadmin', '--password', 'Second-Pass-999')
+
+        user = User.objects.get(username='keepadmin')
+        self.assertTrue(user.check_password('First-Pass-123'))
+        self.assertFalse(user.check_password('Second-Pass-999'))
+        # خلاصهٔ خروجی نباید رمزی را نشان دهد که اعمال نشده است
+        self.assertNotIn('Second-Pass-999', output)
+        self.assertIn('تغییر نکرد', output)
+
+    def test_reset_password_flag_overrides_the_existing_password(self):
+        self.run_command('--username', 'resetadmin', '--password', 'First-Pass-123')
+        self.run_command('--username', 'resetadmin', '--password', 'Reset-Pass-777', '--reset-password')
+
+        self.assertTrue(User.objects.get(username='resetadmin').check_password('Reset-Pass-777'))
+
+    def test_existing_user_is_promoted_to_superuser(self):
+        User.objects.create_user('plainuser', password='Plain-Pass-123!')
+        self.run_command('--username', 'plainuser', '--password', 'Ignored-Pass-1')
+
+        user = User.objects.get(username='plainuser')
+        self.assertTrue(user.is_superuser)
+        self.assertTrue(user.check_password('Plain-Pass-123!'))
+
+    def test_short_password_is_rejected(self):
+        with self.assertRaises(CommandError):
+            self.run_command('--username', 'shorty', '--password', 'abc')
+        self.assertFalse(User.objects.filter(username='shorty').exists())
+
+    @override_settings(DEBUG=False)
+    def test_default_password_is_refused_in_production(self):
+        with self.assertRaises(CommandError):
+            self.run_command('--username', 'prodadmin')
+        self.assertFalse(User.objects.filter(username='prodadmin').exists())
+
+    @override_settings(DEBUG=False)
+    def test_strong_password_is_allowed_in_production(self):
+        self.run_command('--username', 'prodadmin', '--password', 'Str0ng-Pr0d-Pass-2026')
+        self.assertTrue(User.objects.get(username='prodadmin').is_superuser)
