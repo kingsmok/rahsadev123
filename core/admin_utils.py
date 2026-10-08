@@ -12,7 +12,6 @@ from datetime import date, datetime
 from django.contrib import admin
 from django.db.models import Manager, QuerySet
 from django.http import HttpResponse
-from django.utils import timezone
 from django.utils.html import strip_tags
 from jalali_date import datetime2jalali
 
