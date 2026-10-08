@@ -1,15 +1,18 @@
 import json
 import os
 import re
+import sys
 import tempfile
-from io import BytesIO
+from io import BytesIO, StringIO
 from unittest.mock import patch
 
+from django.contrib import admin
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.template import Context
-from django.test import RequestFactory, TestCase, override_settings
+from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from PIL import Image
 
@@ -17,6 +20,8 @@ from core.image_optimization import optimise_uploaded_image
 from core.management.commands.seed_demo import _seed_password
 from core.storage import CkeditorImageStorage
 from core.templatetags.seo_tags import _json, product_schema, webpage_schema
+
+import manage
 
 from core.models import ContactUs
 from product.models import Product, ProductCategory
@@ -265,3 +270,163 @@ class SeedCommandSafetyTests(TestCase):
                 _seed_password('SEED_ADMIN_PASSWORD', 'admin1234'),
                 'A-secure-production-password',
             )
+
+
+class ManagePreflightTests(SimpleTestCase):
+    """The startup check must name the missing package, not just crash."""
+
+    def _write_requirements(self, text):
+        handle = tempfile.NamedTemporaryFile('w', suffix='.txt', delete=False, encoding='utf-8')
+        handle.write(text)
+        handle.close()
+        self.addCleanup(os.unlink, handle.name)
+        return handle.name
+
+    def test_parse_requirements_skips_noise(self):
+        path = self._write_requirements(
+            '# a comment\n'
+            '\n'
+            'Django==5.2.17  # trailing note\n'
+            '-r other.txt\n'
+            '--index-url https://example.invalid\n'
+            'Pillow>=11\n'
+            'somepkg[extra]==1.0\n'
+        )
+        self.assertEqual(
+            manage._parse_requirements(path),
+            [('Django', '==5.2.17'), ('Pillow', '>=11'), ('somepkg', '[extra]==1.0')],
+        )
+
+    def test_missing_requirements_ignores_name_spelling(self):
+        path = self._write_requirements('DJANGO==5.2.17\ndjango-ckeditor-5==0.2.20\nnot-a-real-package==9.9.9\n')
+        self.assertEqual(manage.missing_requirements(path), [('not-a-real-package', '==9.9.9')])
+
+    def test_missing_requirements_handles_absent_file(self):
+        self.assertEqual(manage.missing_requirements(self._write_requirements('') + '.missing'), [])
+
+    def test_shipped_requirements_are_installed(self):
+        self.assertEqual(manage.missing_requirements(), [])
+
+    def test_preflight_reports_missing_package_and_honours_skip_flag(self):
+        buffer = StringIO()
+        with patch.object(manage, 'missing_requirements', return_value=[('django-ckeditor-5', '==0.2.20')]):
+            with patch.dict(os.environ, {manage.SKIP_PREFLIGHT_ENV: ''}, clear=False):
+                missing = manage._preflight_requirements(stream=buffer)
+
+        self.assertEqual(missing, [('django-ckeditor-5', '==0.2.20')])
+        message = buffer.getvalue()
+        self.assertIn('django-ckeditor-5==0.2.20', message)
+        self.assertIn('requirements.txt', message)
+        self.assertIn(sys.executable, message)
+
+        buffer = StringIO()
+        with patch.object(manage, 'missing_requirements', return_value=[('django-ckeditor-5', '==0.2.20')]):
+            with patch.dict(os.environ, {manage.SKIP_PREFLIGHT_ENV: '1'}, clear=False):
+                self.assertEqual(manage._preflight_requirements(stream=buffer), [])
+        self.assertEqual(buffer.getvalue(), '')
+
+
+class AdminCsvExportTests(TestCase):
+    """اکشن خروجی CSV که به همه ادمین‌های اصلی اضافه شده است."""
+
+    def setUp(self):
+        self.admin_user = User.objects.create_superuser('csv-admin', password='Admin-pass-123!')
+        self.assertTrue(self.client.login(username='csv-admin', password='Admin-pass-123!'))
+        self.product = Product.objects.create(
+            vendor=self.admin_user, title='قالب شرکتی آریا', slug='aria-corporate-theme',
+            description='توضیحات', price=320000, old_price=400000, stock_count=3,
+        )
+
+    def test_export_uses_persian_headers_and_bom(self):
+        response = self.client.post('/admin/product/product/', {
+            'action': 'export_selected_as_csv',
+            '_selected_action': [self.product.pk],
+            'index': 0,
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/csv; charset=utf-8')
+        self.assertIn('attachment', response['Content-Disposition'])
+
+        content = response.content.decode('utf-8')
+        self.assertTrue(content.startswith('\ufeff'))
+        lines = content.strip().splitlines()
+        self.assertEqual(len(lines), 2)
+        self.assertIn('شناسه محصول', lines[0])
+        self.assertIn('قالب شرکتی آریا', lines[1])
+        self.assertIn('320000', lines[1])
+        # ستون پیش‌نمایش تصویر نباید HTML را به CSV ببرد
+        self.assertNotIn('<img', content)
+
+    def test_export_renders_m2m_and_html_columns_as_plain_text(self):
+        category = ProductCategory.objects.create(title='قالب وردپرس', slug='wp-themes')
+        self.product.category.add(category)
+
+        admin_instance = admin.site._registry[Product]
+        self.assertIn('قالب وردپرس', admin_instance._csv_value(self.product, 'category'))
+        # ستون پیش‌نمایش تصویر متن ساده می‌دهد، نه تگ HTML
+        image_cell = admin_instance._csv_value(self.product, 'product_image')
+        self.assertNotIn('<', image_cell)
+        self.assertEqual(image_cell, 'تصویر ندارد')
+        self.assertEqual(admin_instance._csv_header('get_created_at_jalali'), 'تاریخ ایجاد')
+
+
+class CreateDefaultAdminTests(TestCase):
+    """دستور ساخت کاربر پیش‌فرض که run.bat/run.sh آن را صدا می‌زند."""
+
+    def run_command(self, *args):
+        out = StringIO()
+        call_command('create_default_admin', *args, stdout=out)
+        return out.getvalue()
+
+    def test_creates_superuser_and_reports_credentials(self):
+        output = self.run_command('--username', 'newadmin', '--password', 'Strong-Pass-123')
+
+        user = User.objects.get(username='newadmin')
+        self.assertTrue(user.is_superuser)
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.check_password('Strong-Pass-123'))
+        self.assertIn('newadmin', output)
+        self.assertIn('Strong-Pass-123', output)
+        self.assertIn('/admin-panel/', output)
+
+    def test_is_idempotent_and_keeps_the_existing_password(self):
+        self.run_command('--username', 'keepadmin', '--password', 'First-Pass-123')
+        output = self.run_command('--username', 'keepadmin', '--password', 'Second-Pass-999')
+
+        user = User.objects.get(username='keepadmin')
+        self.assertTrue(user.check_password('First-Pass-123'))
+        self.assertFalse(user.check_password('Second-Pass-999'))
+        # خلاصهٔ خروجی نباید رمزی را نشان دهد که اعمال نشده است
+        self.assertNotIn('Second-Pass-999', output)
+        self.assertIn('تغییر نکرد', output)
+
+    def test_reset_password_flag_overrides_the_existing_password(self):
+        self.run_command('--username', 'resetadmin', '--password', 'First-Pass-123')
+        self.run_command('--username', 'resetadmin', '--password', 'Reset-Pass-777', '--reset-password')
+
+        self.assertTrue(User.objects.get(username='resetadmin').check_password('Reset-Pass-777'))
+
+    def test_existing_user_is_promoted_to_superuser(self):
+        User.objects.create_user('plainuser', password='Plain-Pass-123!')
+        self.run_command('--username', 'plainuser', '--password', 'Ignored-Pass-1')
+
+        user = User.objects.get(username='plainuser')
+        self.assertTrue(user.is_superuser)
+        self.assertTrue(user.check_password('Plain-Pass-123!'))
+
+    def test_short_password_is_rejected(self):
+        with self.assertRaises(CommandError):
+            self.run_command('--username', 'shorty', '--password', 'abc')
+        self.assertFalse(User.objects.filter(username='shorty').exists())
+
+    @override_settings(DEBUG=False)
+    def test_default_password_is_refused_in_production(self):
+        with self.assertRaises(CommandError):
+            self.run_command('--username', 'prodadmin')
+        self.assertFalse(User.objects.filter(username='prodadmin').exists())
+
+    @override_settings(DEBUG=False)
+    def test_strong_password_is_allowed_in_production(self):
+        self.run_command('--username', 'prodadmin', '--password', 'Str0ng-Pr0d-Pass-2026')
+        self.assertTrue(User.objects.get(username='prodadmin').is_superuser)

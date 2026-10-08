@@ -1,0 +1,27 @@
+{% load custom_filters %}
+<section class="fm-admin-stats" aria-label="شاخص‌های سریع">
+    <a href="{% url 'admin:cart_order_changelist' %}">
+        <span><i class="fa-solid fa-receipt" aria-hidden="true"></i> کل سفارش‌ها</span>
+        <b>{{ orders_count|persian_digits }}</b>
+    </a>
+    <a href="{% url 'admin:cart_order_changelist' %}?status__exact=paid">
+        <span><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i> درآمد موفق (تومان)</span>
+        <b>{{ revenue_total|format_price|persian_digits }}</b>
+    </a>
+    <a href="{% url 'admin:product_product_changelist' %}">
+        <span><i class="fa-solid fa-box-open" aria-hidden="true"></i> محصولات</span>
+        <b>{{ products_count|persian_digits }} <small style="font-size:11px;font-weight:600;color:var(--body-quiet-color)">/ {{ published_products|persian_digits }} منتشرشده</small></b>
+    </a>
+    <a href="{% url 'admin:auth_user_changelist' %}">
+        <span><i class="fa-solid fa-users" aria-hidden="true"></i> کاربران</span>
+        <b>{{ users_count|persian_digits }}</b>
+    </a>
+    <a href="{% url 'admin:services_servicerequest_changelist' %}?status__exact=new">
+        <span><i class="fa-solid fa-envelope-open-text" aria-hidden="true"></i> درخواست طراحی جدید</span>
+        <b>{{ new_service_requests|persian_digits }}</b>
+    </a>
+    <a href="{% url 'admin:cart_order_changelist' %}?status__exact=pending">
+        <span><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> سفارش در انتظار</span>
+        <b>{{ pending_orders|persian_digits }}</b>
+    </a>
+</section>

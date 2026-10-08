@@ -1,0 +1,187 @@
+{% extends 'dashboard/admin_panel_base.html' %}
+{% load custom_filters %}
+
+{% block panel_title %}سلامت فروشگاه{% endblock %}
+{% block panel_heading %}سلامت فروشگاه{% endblock %}
+{% block panel_eyebrow %}بررسی {{ today_jalali }} — داده‌های ناقص و کارهای نیمه‌تمام{% endblock %}
+
+{% block panel_tools %}
+    <a class="ap-btn" href="{% url 'admin_home' %}">
+        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i> بازگشت به داشبورد
+    </a>
+{% endblock %}
+
+{% block panel_content %}
+    <section class="ap-card">
+        <div class="ap-card__head">
+            <h2 class="ap-card__title"><i class="fa-solid fa-stethoscope" aria-hidden="true"></i> خلاصه سلامت</h2>
+            <span class="ap-card__hint">این فهرست‌ها فقط خواندنی‌اند؛ اصلاح از لینک هر ردیف انجام می‌شود</span>
+        </div>
+        <div class="ap-alerts">
+            <div class="ap-alert {% if products_without_asset %}is-danger{% else %}is-success{% endif %}">
+                <i class="fa-solid fa-file-circle-xmark" aria-hidden="true"></i>
+                <div><b class="ap-num">{{ products_without_asset|length|persian_digits }} محصول بدون فایل</b><span>مشتری پس از پرداخت چیزی برای دانلود ندارد</span></div>
+            </div>
+            <div class="ap-alert {% if low_stock %}is-warning{% else %}is-success{% endif %}">
+                <i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>
+                <div><b class="ap-num">{{ low_stock|length|persian_digits }} لایسنس روبه‌اتمام</b><span>موجودی کمتر از ۵ عدد</span></div>
+            </div>
+            <div class="ap-alert {% if products_without_image %}is-warning{% else %}is-success{% endif %}">
+                <i class="fa-solid fa-image" aria-hidden="true"></i>
+                <div><b class="ap-num">{{ products_without_image|length|persian_digits }} محصول بدون تصویر</b><span>روی نرخ کلیک اثر مستقیم دارد</span></div>
+            </div>
+            <div class="ap-alert {% if products_without_seo %}is-warning{% else %}is-success{% endif %}">
+                <i class="fa-solid fa-magnifying-glass-chart" aria-hidden="true"></i>
+                <div><b class="ap-num">{{ products_without_seo|length|persian_digits }} محصول بدون توضیح سئو</b><span>meta description خالی</span></div>
+            </div>
+            <div class="ap-alert {% if draft_products or draft_articles %}is-warning{% else %}is-success{% endif %}">
+                <i class="fa-solid fa-pen-ruler" aria-hidden="true"></i>
+                <div><b class="ap-num">{{ draft_products|length|persian_digits }} محصول و {{ draft_articles|length|persian_digits }} مقاله پیش‌نویس</b><span>منتظر انتشار</span></div>
+            </div>
+            <div class="ap-alert {% if unconfigured_gateways %}is-danger{% else %}is-success{% endif %}">
+                <i class="fa-solid fa-credit-card" aria-hidden="true"></i>
+                <div><b class="ap-num">{{ unconfigured_gateways|length|persian_digits }} درگاه فعال بدون کلید</b><span>پرداخت در سایت ناموفق می‌شود</span></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="ap-grid ap-grid--2">
+        <article class="ap-card">
+            <div class="ap-card__head">
+                <h2 class="ap-card__title"><i class="fa-solid fa-file-circle-xmark" aria-hidden="true"></i> محصولات منتشرشده بدون فایل</h2>
+                <a class="ap-card__action" href="{% url 'admin:product_product_changelist' %}?status__exact=published">همه محصولات</a>
+            </div>
+            <div class="ap-table-wrap">
+                <table class="ap-table">
+                    <thead><tr><th>محصول</th><th>قیمت</th><th>فروش</th></tr></thead>
+                    <tbody>
+                    {% for product in products_without_asset %}
+                        <tr>
+                            <td><a href="{% url 'admin:product_product_change' product.pk %}">{{ product.title|truncatechars:44 }}</a></td>
+                            <td class="ap-num">{{ product.price|format_price|persian_digits }}</td>
+                            <td class="ap-num">{{ product.sales_count|persian_digits }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="3" class="ap-muted-cell">همه محصولات منتشرشده فایل قابل دانلود دارند. ✔</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </article>
+
+        <article class="ap-card">
+            <div class="ap-card__head">
+                <h2 class="ap-card__title"><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i> لایسنس‌های روبه‌اتمام</h2>
+            </div>
+            <div class="ap-table-wrap">
+                <table class="ap-table">
+                    <thead><tr><th>محصول</th><th>موجودی</th><th>فروش</th></tr></thead>
+                    <tbody>
+                    {% for product in low_stock %}
+                        <tr>
+                            <td><a href="{% url 'admin:product_product_change' product.pk %}">{{ product.title|truncatechars:44 }}</a></td>
+                            <td><span class="ap-badge {% if product.stock_count == 0 %}is-danger{% else %}is-warning{% endif %} ap-num">{{ product.stock_count|persian_digits }}</span></td>
+                            <td class="ap-num">{{ product.sales_count|persian_digits }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="3" class="ap-muted-cell">موجودی همه لایسنس‌ها کافی است. ✔</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </article>
+
+        <article class="ap-card">
+            <div class="ap-card__head">
+                <h2 class="ap-card__title"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> سفارش‌های در انتظار پرداخت</h2>
+                <a class="ap-card__action" href="{% url 'admin:cart_order_changelist' %}?status__exact=pending">در Django Admin</a>
+            </div>
+            <div class="ap-table-wrap">
+                <table class="ap-table">
+                    <thead><tr><th>شماره</th><th>مشتری</th><th>مبلغ</th><th>ثبت</th></tr></thead>
+                    <tbody>
+                    {% for order in pending_orders %}
+                        <tr>
+                            <td><a class="ap-num" href="{% url 'admin:cart_order_change' order.pk %}">{{ order.order_number }}</a></td>
+                            <td>{{ order.user.get_username }}</td>
+                            <td class="ap-num">{{ order.final_price|format_price|persian_digits }}</td>
+                            <td class="ap-muted-cell ap-num">{{ order.created_at|date:"Y/m/d H:i" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4" class="ap-muted-cell">سفارش بلاتکلیفی وجود ندارد. ✔</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </article>
+
+        <article class="ap-card">
+            <div class="ap-card__head">
+                <h2 class="ap-card__title"><i class="fa-solid fa-circle-xmark" aria-hidden="true"></i> تراکنش‌های ناموفق اخیر</h2>
+                <a class="ap-card__action" href="{% url 'admin:payments_paymenttransaction_changelist' %}?status__exact=failed">گزارش کامل</a>
+            </div>
+            <div class="ap-table-wrap">
+                <table class="ap-table">
+                    <thead><tr><th>سفارش</th><th>درگاه</th><th>مبلغ</th><th>شناسه</th></tr></thead>
+                    <tbody>
+                    {% for payment in failed_payments %}
+                        <tr>
+                            <td><a class="ap-num" href="{% url 'admin:cart_order_change' payment.order_id %}">{{ payment.order.order_number }}</a></td>
+                            <td>{{ payment.get_gateway_display }}</td>
+                            <td class="ap-num">{{ payment.amount|format_price|persian_digits }}</td>
+                            <td class="ap-muted-cell">{{ payment.authority|truncatechars:18|default:"—" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4" class="ap-muted-cell">تراکنش ناموفقی ثبت نشده است. ✔</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </article>
+    </section>
+
+    <section class="ap-card">
+        <div class="ap-card__head">
+            <h2 class="ap-card__title"><i class="fa-solid fa-list-check" aria-hidden="true"></i> محتوای نیمه‌تمام</h2>
+            <span class="ap-card__hint">پیش‌نویس‌ها و موارد غیرفعال</span>
+        </div>
+        <div class="ap-table-wrap">
+            <table class="ap-table">
+                <thead><tr><th>مورد</th><th>نوع</th><th>وضعیت</th></tr></thead>
+                <tbody>
+                {% for product in draft_products %}
+                    <tr>
+                        <td><a href="{% url 'admin:product_product_change' product.pk %}">{{ product.title|truncatechars:52 }}</a></td>
+                        <td>محصول</td>
+                        <td><span class="ap-badge is-warning">پیش‌نویس</span></td>
+                    </tr>
+                {% endfor %}
+                {% for article in draft_articles %}
+                    <tr>
+                        <td><a href="{% url 'admin:blog_article_change' article.pk %}">{{ article.title|truncatechars:52 }}</a></td>
+                        <td>مقاله</td>
+                        <td><span class="ap-badge is-warning">پیش‌نویس</span></td>
+                    </tr>
+                {% endfor %}
+                {% for package in inactive_packages %}
+                    <tr>
+                        <td><a href="{% url 'admin:services_servicepackage_change' package.pk %}">{{ package.title }}</a></td>
+                        <td>پکیج طراحی</td>
+                        <td><span class="ap-badge is-neutral">غیرفعال</span></td>
+                    </tr>
+                {% endfor %}
+                {% for item in inactive_portfolio %}
+                    <tr>
+                        <td><a href="{% url 'admin:services_portfolioitem_change' item.pk %}">{{ item.title }}</a></td>
+                        <td>نمونه‌کار</td>
+                        <td><span class="ap-badge is-neutral">غیرفعال</span></td>
+                    </tr>
+                {% endfor %}
+                {% if not draft_products and not draft_articles and not inactive_packages and not inactive_portfolio %}
+                    <tr><td colspan="3" class="ap-muted-cell">محتوای نیمه‌تمامی وجود ندارد. ✔</td></tr>
+                {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endblock %}
