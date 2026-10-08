@@ -9,5 +9,6 @@ class CoreConfig(AppConfig):
     def ready(self):
         # پچ‌های سازگاری با پایتون ۳.۱۴ (خطای 'super' object has no attribute 'dicts')
         from MasaiShop.compat import apply_patches
+        from . import signals  # noqa: F401 - registers content automation hooks
 
         apply_patches()

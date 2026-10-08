@@ -51,7 +51,7 @@ _NOINDEX_PATTERNS = [
     _re.compile(r'^/cart/'),
     _re.compile(r'^/payments/'),
     _re.compile(r'^/downloads/'),
-    _re.compile(r'^/ckeditor/'),
+    _re.compile(r'^/ckeditor5/'),
     _re.compile(r'^/products/product_search/'),
     _re.compile(r'^/services/request/'),
 ]

@@ -646,7 +646,8 @@ header.Masai-header .main-menu .list .list-item.mega-menu > .sub-menu {
     header.Masai-header .nav__ullist .list__link.is-active { color: #fff; text-decoration: none; }
     header.Masai-header .nav__ullist .list__link:hover::after,
     header.Masai-header .nav__ullist .list__link.is-active::after { width: auto; transform: scaleX(1); }
-    header.Masai-header .nav__ullist .list_style--categories { margin-left: auto; }
+    /* منوی RTL از راست با دسته‌بندی، خانه و سپس پیوندهای فروشگاه ادامه پیدا می‌کند. */
+    header.Masai-header .nav__ullist .list_style--categories { margin-left: 0; }
     header.Masai-header .nav__ullist .list_style--categories .list__link::before {
         content: "";
         width: 7px;

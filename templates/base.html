@@ -54,6 +54,7 @@
     {# اسکیمای سراسری: سازمان و وب‌سایت (همه صفحات) #}
     {% organization_schema %}
     {% website_schema %}
+    {% webpage_schema %}
     {# اسکیمای اختصاصی هر صفحه #}
     {% block extra_schema %}{% endblock %}
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
@@ -146,6 +147,9 @@
                             </li>
                         {% endfor %}
                     </ul>
+                </li>
+                <li>
+                    <a href="{% url 'core:home' %}" {% if request.resolver_match.namespace == 'core' and request.resolver_match.url_name == 'home' %}aria-current="page" class="is-active"{% endif %}>خانه</a>
                 </li>
                 <li>
                     <a href="{% url 'product:product_list' %}" {% if request.resolver_match.namespace == 'product' and request.resolver_match.url_name != 'discount_product' %}aria-current="page" class="is-active"{% endif %}>همه فایل‌ها</a>
@@ -242,6 +246,10 @@
                             {% endfor %}
                         </ul>
                     </div>
+                </li>
+                <li class="list_style list_style--home">
+                    <i class="fa fa-house icon-icon" aria-hidden="true"></i>
+                    <a href="{% url 'core:home' %}" class="list__link {% if request.resolver_match.namespace == 'core' and request.resolver_match.url_name == 'home' %}is-active{% endif %}" {% if request.resolver_match.namespace == 'core' and request.resolver_match.url_name == 'home' %}aria-current="page"{% endif %}>خانه</a>
                 </li>
                 <li class="list_style">
                     <i class="fa fa-folder-open icon-icon" aria-hidden="true"></i><a href="{% url 'product:product_list' %}" class="list__link {% if request.resolver_match.namespace == 'product' and request.resolver_match.url_name != 'discount_product' %}is-active{% endif %}" {% if request.resolver_match.namespace == 'product' and request.resolver_match.url_name != 'discount_product' %}aria-current="page"{% endif %}>همه فایل‌ها</a>

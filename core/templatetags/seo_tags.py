@@ -46,8 +46,21 @@ def _absolute(context, path):
     return request.build_absolute_uri(path)
 
 
-def _settings():
+def _settings(context=None):
+    """Prefer the already-loaded global template setting over another query."""
+    if context is not None:
+        marker = object()
+        value = context.get('site_settings', marker)
+        if value is not marker:
+            return value
     return SiteSettings.objects.first()
+
+
+def _site_logo(context, settings_obj):
+    """Use the configured brand logo when available, otherwise a stable fallback."""
+    if settings_obj and settings_obj.logo:
+        return _absolute(context, settings_obj.logo.url)
+    return _absolute(context, '/static/img/favicon.png')
 
 
 def _clean(text, limit=300):
@@ -60,14 +73,14 @@ def _clean(text, limit=300):
 @register.simple_tag(takes_context=True)
 def organization_schema(context):
     """سازمان/ کسب‌وکار — در همه صفحات."""
-    s = _settings()
+    s = _settings(context)
     site_name = s.site_name if s else 'فایل‌مارکت'
     data = {
         '@context': 'https://schema.org',
         '@type': 'Organization',
         'name': site_name,
         'url': _absolute(context, '/'),
-        'logo': _absolute(context, '/static/img/favicon.png'),
+        'logo': _site_logo(context, s),
     }
     if s:
         same_as = [link for link in [
@@ -98,7 +111,7 @@ def organization_schema(context):
 @register.simple_tag(takes_context=True)
 def website_schema(context):
     """وب‌سایت با اکشن جست‌وجو (SearchAction) — در همه صفحات."""
-    s = _settings()
+    s = _settings(context)
     site_name = s.site_name if s else 'فایل‌مارکت'
     data = {
         '@context': 'https://schema.org',
@@ -115,6 +128,73 @@ def website_schema(context):
             'query-input': 'required name=search_term_string',
         },
     }
+    return _script(data)
+
+
+@register.simple_tag(takes_context=True)
+def webpage_schema(context):
+    """Create a truthful WebPage/ItemPage graph for every indexable page.
+
+    Detail views already add richer Product or BlogPosting entities. This common
+    layer connects those entities to a stable canonical URL without publishing
+    a schema graph for private, transactional or noindex routes.
+    """
+    if str(context.get('meta_robots', '')).startswith('noindex'):
+        return ''
+
+    request = context.get('request')
+    if request is None:
+        return ''
+
+    settings_obj = _settings(context)
+    site_name = context.get('site_name') or (settings_obj.site_name if settings_obj else 'فایل‌مارکت')
+    entity = next(
+        (
+            context.get(key)
+            for key in ('products', 'product', 'article', 'page', 'category', 'brand')
+            if getattr(context.get(key), 'title', None)
+        ),
+        None,
+    )
+    resolver = getattr(request, 'resolver_match', None)
+    resolver_name = getattr(resolver, 'url_name', '') or ''
+    is_collection = resolver_name.endswith('_list') or resolver_name in {
+        'category_product_list', 'brand_product_list', 'discount_product', 'article_category',
+    }
+    page_type = 'ItemPage' if entity and not is_collection else ('CollectionPage' if is_collection else 'WebPage')
+
+    title = _clean(
+        getattr(entity, 'meta_title', '') or getattr(entity, 'title', '') or site_name,
+        110,
+    )
+    description = _clean(
+        getattr(entity, 'meta_description', '')
+        or getattr(entity, 'summary', '')
+        or getattr(entity, 'short_description', '')
+        or getattr(entity, 'description', '')
+        or (settings_obj.default_meta_description if settings_obj else ''),
+        300,
+    )
+    canonical = getattr(entity, 'canonical_url', '') or context.get('canonical_url') or request.build_absolute_uri(request.path)
+    data = {
+        '@context': 'https://schema.org',
+        '@type': page_type,
+        'name': title,
+        'url': canonical,
+        'inLanguage': 'fa-IR',
+        'isPartOf': {'@type': 'WebSite', 'name': site_name, 'url': _absolute(context, '/')},
+    }
+    if description:
+        data['description'] = description
+    image = getattr(entity, 'image', None)
+    if image:
+        data['primaryImageOfPage'] = {
+            '@type': 'ImageObject',
+            'url': _absolute(context, image.url),
+        }
+    modified = getattr(entity, 'updated_at', None)
+    if modified:
+        data['dateModified'] = modified.isoformat()
     return _script(data)
 
 
@@ -231,12 +311,9 @@ def product_schema(context, product):
         'itemCondition': 'https://schema.org/NewCondition',
         'seller': {'@type': 'Organization', 'name': (context.get('site_name') or 'فایل‌مارکت')},
     }
-    if getattr(product, 'old_price', None):
-        offer['priceSpecification'] = {
-            '@type': 'PriceSpecification',
-            'price': str(product.price),
-            'priceCurrency': 'IRR',
-        }
+    # ``old_price`` is a visual crossed-out amount, not a second current offer;
+    # publishing it as PriceSpecification would make the structured data
+    # ambiguous. The current purchasable price above is the only offer emitted.
     data['offers'] = offer
     return _script(data)
 
@@ -259,6 +336,32 @@ def item_list_schema(context, products):
                 'url': _absolute(context, '/products/%s/%s/' % (p.pid, p.slug)),
                 'name': p.title,
             })
+    except TypeError:
+        return ''
+    if not items:
+        return ''
+    return _script({
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        'itemListElement': items,
+    })
+
+
+@register.simple_tag(takes_context=True)
+def article_list_schema(context, articles):
+    """ItemList for the first page of public articles."""
+    if hasattr(articles, 'number') and getattr(articles, 'number', 1) != 1:
+        return ''
+    try:
+        items = [
+            {
+                '@type': 'ListItem',
+                'position': index,
+                'url': _absolute(context, '/blog/%s/' % article.slug),
+                'name': article.title,
+            }
+            for index, article in enumerate(list(articles)[:12], start=1)
+        ]
     except TypeError:
         return ''
     if not items:
@@ -294,7 +397,7 @@ def article_schema(context, article):
         'publisher': {
             '@type': 'Organization',
             'name': (context.get('site_name') or 'فایل‌مارکت'),
-            'logo': {'@type': 'ImageObject', 'url': _absolute(context, '/static/img/favicon.png')},
+            'logo': {'@type': 'ImageObject', 'url': _site_logo(context, _settings(context))},
         },
     }
     if getattr(article, 'image', None) and article.image:
@@ -347,7 +450,7 @@ def strip_scripts(html):
 @register.simple_tag(takes_context=True)
 def contact_page_schema(context):
     """صفحه تماس با ما + اطلاعات تماس سازمان."""
-    s = _settings()
+    s = _settings(context)
     data = {
         '@context': 'https://schema.org',
         '@type': 'ContactPage',

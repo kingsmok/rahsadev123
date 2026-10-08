@@ -1,7 +1,12 @@
+import os
+import tempfile
+
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError, transaction
-from django.test import TestCase
-from .models import Product, ProductCategory
+from django.test import TestCase, override_settings
+
+from .models import DigitalAsset, Product, ProductCategory
 
 class ProductFlowTests(TestCase):
     def setUp(self):
@@ -51,3 +56,35 @@ class ProductFlowTests(TestCase):
         )
         response = self.client.get(f'/products/{draft.pid}/{draft.slug}/')
         self.assertEqual(response.status_code, 404)
+
+
+class PrivateDigitalAssetStorageTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('private-file-owner', password='safe-pass-123')
+        self.temp_media = tempfile.TemporaryDirectory()
+        self.temp_private = tempfile.TemporaryDirectory()
+        self.settings_override = override_settings(
+            MEDIA_ROOT=self.temp_media.name,
+            PRIVATE_MEDIA_ROOT=self.temp_private.name,
+        )
+        self.settings_override.enable()
+        self.addCleanup(self.settings_override.disable)
+        self.addCleanup(self.temp_media.cleanup)
+        self.addCleanup(self.temp_private.cleanup)
+
+    def test_paid_asset_is_written_outside_public_media_root(self):
+        product = Product.objects.create(
+            vendor=self.user,
+            title='فایل خصوصی',
+            slug='private-file',
+            description='فایل فروشی خصوصی',
+            price=1000,
+        )
+        asset = DigitalAsset.objects.create(
+            product=product,
+            file=SimpleUploadedFile('paid-file.zip', b'private-download-content'),
+        )
+
+        self.assertTrue(asset.file.path.startswith(self.temp_private.name))
+        self.assertTrue(os.path.isfile(asset.file.path))
+        self.assertFalse(os.path.exists(os.path.join(self.temp_media.name, asset.file.name)))

@@ -1,5 +1,5 @@
 from django.db import models
-from ckeditor_uploader.fields import RichTextUploadingField
+from django_ckeditor_5.fields import CKEditor5Field
 from django.utils.html import format_html
 
 
@@ -21,7 +21,7 @@ class SiteSettings(models.Model):
     site_slogan = models.CharField(max_length=200, blank=True, default='مارکت فایل، نرم‌افزار و محصولات مجازی', verbose_name='شعار سایت')
     logo = models.ImageField(upload_to='settings/', null=True, blank=True, verbose_name='لوگو (اختیاری)',
                              help_text='اگر خالی باشد لوگوی متنی نمایش داده می‌شود')
-    text_about_us = RichTextUploadingField(null=True, blank=True, verbose_name='متن درباره ما')
+    text_about_us = CKEditor5Field(config_name='default', null=True, blank=True, verbose_name='متن درباره ما')
     text_contact_us = models.TextField(null=True, blank=True, verbose_name='متن تماس با ما')
     footer_description = models.TextField(blank=True, verbose_name='متن معرفی فوتر',
                                           help_text='اگر خالی باشد متن پیش‌فرض نمایش داده می‌شود')

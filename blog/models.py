@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.html import format_html
-from ckeditor_uploader.fields import RichTextUploadingField
+from django_ckeditor_5.fields import CKEditor5Field
 
 
 STATUS = (
@@ -36,7 +36,7 @@ class Article(models.Model):
     tags = models.ManyToManyField(Tag, blank=True, related_name='articles', verbose_name='برچسب‌ها')
     title = models.CharField(max_length=200, unique=True, verbose_name='عنوان مقاله')
     slug = models.SlugField(max_length=200, unique=True, allow_unicode=True, verbose_name='نامک')
-    description = RichTextUploadingField(verbose_name='متن مقاله')
+    description = CKEditor5Field(config_name='default', verbose_name='متن مقاله')
     image = models.ImageField(upload_to='articles/', blank=True, null=True, verbose_name='تصویر مقاله')
     status = models.CharField(choices=STATUS, max_length=10, verbose_name='وضعیت')
     views = models.IntegerField(default=0, editable=False, verbose_name='بازدید')

@@ -4,7 +4,7 @@
 {% load seo_tags %}
 {% block og_title %}مقالات {{ category.title }} | وبلاگ {{ site_name }}{% endblock %}
 {% block og_description %}مجموعه مقالات و آموزش‌های دسته {{ category.title }} در وبلاگ {{ site_name }}{% endblock %}
-{% block extra_schema %}{% blog_breadcrumb category.title %}{% endblock %}
+{% block extra_schema %}{% blog_breadcrumb category.title %}{% article_list_schema articles %}{% endblock %}
 {% load static %}
 {% load jalali_tags %}
 

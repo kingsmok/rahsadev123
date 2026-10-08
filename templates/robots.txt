@@ -19,7 +19,7 @@ Disallow: /dashboard/
 Disallow: /cart/
 Disallow: /payments/
 Disallow: /downloads/
-Disallow: /ckeditor/
+Disallow: /ckeditor5/
 Disallow: /products/product_search/
 Disallow: /*?sort=
 Disallow: /*?min_price=

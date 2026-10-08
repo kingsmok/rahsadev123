@@ -4,7 +4,7 @@
 {% load seo_tags %}
 {% block og_title %}وبلاگ | آموزش‌ها و اخبار {{ site_name }}{% endblock %}
 {% block og_description %}آموزش‌های تخصصی، اخبار و ترفندهای وب، طراحی سایت و فروش فایل‌های دیجیتال در وبلاگ {{ site_name }}{% endblock %}
-{% block extra_schema %}{% blog_breadcrumb %}{% endblock %}
+{% block extra_schema %}{% blog_breadcrumb %}{% article_list_schema articles %}{% endblock %}
 {% load static %}
 {% load jalali_tags %}
 

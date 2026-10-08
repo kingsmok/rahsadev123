@@ -1,8 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
-from ckeditor_uploader.fields import RichTextUploadingField
+from django_ckeditor_5.fields import CKEditor5Field
 from django.utils.html import format_html
 from shortuuid.django_fields import ShortUUIDField
+
+from .storage import PrivateDigitalStorage
 
 
 STATUS = (
@@ -120,7 +122,7 @@ class Product(models.Model):
     title = models.CharField(max_length=300, unique=True, verbose_name='عنوان محصول')
     slug = models.SlugField(max_length=300, unique=True, allow_unicode=True, verbose_name='نامک')
     short_description = models.CharField(max_length=300, blank=True, verbose_name='توضیح کوتاه')
-    description = RichTextUploadingField(verbose_name='توضیحات تکمیلی')
+    description = CKEditor5Field(config_name='default', verbose_name='توضیحات تکمیلی')
     published_at = models.DateTimeField(null=True, blank=True, verbose_name='تاریخ انتشار')
     is_featured = models.BooleanField(default=False, verbose_name='ویژه')
     old_price = models.IntegerField(null=True, blank=True, verbose_name='قیمت قدیمی محصول')
@@ -215,7 +217,11 @@ class Product(models.Model):
 
 class DigitalAsset(models.Model):
     product = models.OneToOneField(Product, related_name='digital_asset', on_delete=models.CASCADE, verbose_name='محصول')
-    file = models.FileField(upload_to='digital-products/', verbose_name='فایل محصول')
+    file = models.FileField(
+        upload_to='digital-products/',
+        storage=PrivateDigitalStorage(),
+        verbose_name='فایل محصول',
+    )
     preview_file = models.FileField(upload_to='digital-previews/', null=True, blank=True, verbose_name='فایل پیش‌نمایش')
     file_size = models.PositiveBigIntegerField(default=0, editable=False, verbose_name='حجم فایل')
     file_type = models.CharField(max_length=80, blank=True, verbose_name='فرمت فایل')
