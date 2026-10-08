@@ -21,6 +21,36 @@ python manage.py runserver
 
 > در محیط عملیاتی، `seed_demo` هرگز با این رمزهای شناخته‌شده حساب ایجاد نمی‌کند. پیش از اجرای آن، برای حساب‌های تازه `SEED_ADMIN_PASSWORD` و `SEED_DEMO_PASSWORD` را با رمزهای حداقل ۱۲ کاراکتری تنظیم کنید.
 
+### 🩺 رفع `ModuleNotFoundError` (مثلاً `No module named 'django_ckeditor_5'`)
+
+این خطا یعنی بسته‌های `requirements.txt` در **همان مفسر پایتونی** که `manage.py` را اجرا می‌کند نصب نشده‌اند — معمولاً چون `pip install -r requirements.txt` اجرا نشده، یا در محیط مجازی (venv) نصب شده‌اند اما `python manage.py` با پایتون سیستم اجرا می‌شود.
+
+```powershell
+# ویندوز (PowerShell)
+cd C:\path\to\MasaiShop
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1          # اگر اسکریپت فعال نشد: .\.venv\Scripts\activate.bat
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -c "import sys, django_ckeditor_5; print(sys.executable)"   # باید مسیر .venv را چاپ کند
+python manage.py migrate
+```
+
+```bash
+# مک/لینوکس
+python3 -m venv .venv && source .venv/bin/activate
+python -m pip install -r requirements.txt
+python manage.py migrate
+```
+
+نکته‌ها:
+
+- همیشه از `python -m pip install ...` استفاده کنید، نه `pip install ...`؛ این‌طور مطمئن می‌شوید بسته در همان پایتونی نصب می‌شود که بعداً `manage.py` را اجرا می‌کند.
+- برای دیدن اینکه کدام پایتون در حال اجراست: `python -c "import sys; print(sys.executable)"`. مسیر باید داخل `.venv` باشد.
+- در PowerShell، اگر فعال‌سازی venv با خطای Execution Policy مواجه شد: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
+- `manage.py` اکنون پیش از استارت جنگو، بسته‌های نصب‌نشده را فهرست می‌کند و دستور نصب دقیق را با مسیر همان پایتون چاپ می‌کند. اگر محیط شما با ابزار دیگری (مثلاً Docker یا Poetry) آماده می‌شود، با `MASAISHOP_SKIP_PREFLIGHT=1` این بررسی را رد کنید.
+- حداقل نسخهٔ پشتیبانی‌شدهٔ پایتون ۳.۱۰ است (پشتیبانی از ۳.۱۴ از جنگو ۵.۲.۸ به بعد؛ پروژه روی ۵.۲.۱۷ پین شده است).
+
 ## 🧩 بخش‌های فروشگاه
 
 `فروش فایل‌ها`

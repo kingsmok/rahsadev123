@@ -1,15 +1,16 @@
 import json
 import os
 import re
+import sys
 import tempfile
-from io import BytesIO
+from io import BytesIO, StringIO
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management.base import CommandError
 from django.template import Context
-from django.test import RequestFactory, TestCase, override_settings
+from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from PIL import Image
 
@@ -17,6 +18,8 @@ from core.image_optimization import optimise_uploaded_image
 from core.management.commands.seed_demo import _seed_password
 from core.storage import CkeditorImageStorage
 from core.templatetags.seo_tags import _json, product_schema, webpage_schema
+
+import manage
 
 from core.models import ContactUs
 from product.models import Product, ProductCategory
@@ -265,3 +268,57 @@ class SeedCommandSafetyTests(TestCase):
                 _seed_password('SEED_ADMIN_PASSWORD', 'admin1234'),
                 'A-secure-production-password',
             )
+
+
+class ManagePreflightTests(SimpleTestCase):
+    """The startup check must name the missing package, not just crash."""
+
+    def _write_requirements(self, text):
+        handle = tempfile.NamedTemporaryFile('w', suffix='.txt', delete=False, encoding='utf-8')
+        handle.write(text)
+        handle.close()
+        self.addCleanup(os.unlink, handle.name)
+        return handle.name
+
+    def test_parse_requirements_skips_noise(self):
+        path = self._write_requirements(
+            '# a comment\n'
+            '\n'
+            'Django==5.2.17  # trailing note\n'
+            '-r other.txt\n'
+            '--index-url https://example.invalid\n'
+            'Pillow>=11\n'
+            'somepkg[extra]==1.0\n'
+        )
+        self.assertEqual(
+            manage._parse_requirements(path),
+            [('Django', '==5.2.17'), ('Pillow', '>=11'), ('somepkg', '[extra]==1.0')],
+        )
+
+    def test_missing_requirements_ignores_name_spelling(self):
+        path = self._write_requirements('DJANGO==5.2.17\ndjango-ckeditor-5==0.2.20\nnot-a-real-package==9.9.9\n')
+        self.assertEqual(manage.missing_requirements(path), [('not-a-real-package', '==9.9.9')])
+
+    def test_missing_requirements_handles_absent_file(self):
+        self.assertEqual(manage.missing_requirements(self._write_requirements('') + '.missing'), [])
+
+    def test_shipped_requirements_are_installed(self):
+        self.assertEqual(manage.missing_requirements(), [])
+
+    def test_preflight_reports_missing_package_and_honours_skip_flag(self):
+        buffer = StringIO()
+        with patch.object(manage, 'missing_requirements', return_value=[('django-ckeditor-5', '==0.2.20')]):
+            with patch.dict(os.environ, {manage.SKIP_PREFLIGHT_ENV: ''}, clear=False):
+                missing = manage._preflight_requirements(stream=buffer)
+
+        self.assertEqual(missing, [('django-ckeditor-5', '==0.2.20')])
+        message = buffer.getvalue()
+        self.assertIn('django-ckeditor-5==0.2.20', message)
+        self.assertIn('requirements.txt', message)
+        self.assertIn(sys.executable, message)
+
+        buffer = StringIO()
+        with patch.object(manage, 'missing_requirements', return_value=[('django-ckeditor-5', '==0.2.20')]):
+            with patch.dict(os.environ, {manage.SKIP_PREFLIGHT_ENV: '1'}, clear=False):
+                self.assertEqual(manage._preflight_requirements(stream=buffer), [])
+        self.assertEqual(buffer.getvalue(), '')
