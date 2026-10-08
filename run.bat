@@ -7,6 +7,10 @@ title فایل‌مارکت — سرور توسعه
 rem ══════════════════════════════════════════════════════════════════════
 rem  فایل‌مارکت — اسکریپت اجرای سریع (ویندوز)
 rem  ────────────────────────────────────────────────────────────────────
+rem  ⚠ ویرایش این فایل: باید با پایان‌خط CRLF (ویندوزی) و انکودینگ
+rem     «UTF-8 بدون BOM» ذخیره شود؛ وگرنه پرش‌های برچسبی (goto)
+rem     در cmd کار نمی‌کنند و پنجره بلافاصله بسته می‌شود.
+rem
 rem  کارها: ساخت venv، نصب وابستگی‌ها، ساخت .env محلی، migrate،
 rem          ساخت کاربر مدیر پیش‌فرض و اجرای سرور توسعه
 rem
@@ -159,5 +163,15 @@ if not "%OPEN_BROWSER%"=="1" goto serve
 start "" /min cmd /c "timeout /t 4 /nobreak >nul && start http://127.0.0.1:%PORT%/admin-panel/"
 :serve
 "%VENV_PY%" "%~dp0manage.py" runserver 0.0.0.0:%PORT%
+set "SERVER_EXIT=%errorlevel%"
 
-endlocal
+echo.
+if not "%SERVER_EXIT%"=="0" (
+    echo [خطا] سرور با کد %SERVER_EXIT% متوقف شد. پیام خطای بالا را بفرستید.
+) else (
+    echo سرور متوقف شد.
+)
+echo این پنجره بسته نشده تا بتوانید پیام‌های بالا را بخوانید.
+pause
+
+endlocal & exit /b %SERVER_EXIT%
