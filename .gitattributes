@@ -1,0 +1,18 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  Windows batch files MUST keep CRLF line endings, stored verbatim in the repo.
+#
+#  Why `-text` (and not `text eol=crlf`)?
+#    cmd.exe fails to resolve `goto` labels in LF-only batch files and the
+#    window closes instantly. Storing the CRLF bytes as-is guarantees the file
+#    works whether it arrives via `git clone` **or** a ZIP/tarball download
+#    (GitHub archives do not apply eol conversion).
+#
+#  Encoding rule: batch files must be UTF-8 **without BOM**. A BOM is read as
+#  part of the first command (`@echo off` -> "not recognized"), and the files
+#  switch the console to UTF-8 themselves with `chcp 65001`.
+# ─────────────────────────────────────────────────────────────────────────────
+*.bat -text
+*.cmd -text
+
+# Shell scripts are the opposite: LF only, normalized on checkout.
+*.sh text eol=lf
