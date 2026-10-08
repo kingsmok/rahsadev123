@@ -1,5 +1,6 @@
 from django.contrib import admin
 from . import models
+from .admin_utils import EnhancedAdminMixin
 from jalali_date import datetime2jalali
 from jalali_date.admin import ModelAdminJalaliMixin
 
@@ -50,8 +51,11 @@ class BannerAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.ContactUs)
-class ContactUsAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
+class ContactUsAdmin(EnhancedAdminMixin, ModelAdminJalaliMixin, admin.ModelAdmin):
     list_display = ['first_name', 'last_name', 'phone', 'short_message', 'get_date_send_jalali']
+    search_fields = ['first_name', 'last_name', 'phone', 'message']
+    date_hierarchy = 'date_send'
+    csv_filename = 'masaishop-messages.csv'
 
     def short_message(self, obj):
         if len(obj.message) > 20:
@@ -61,7 +65,7 @@ class ContactUsAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
 
     @admin.display(description='تاریخ ارسال', ordering='date_send')
     def get_date_send_jalali(self, obj):
-        return datetime2jalali(obj.date_send).strftime('%a, %d %b %Y')
+        return datetime2jalali(obj.date_send).strftime('%Y/%m/%d — %H:%M')
 
 
 @admin.register(models.Redirect)
@@ -78,12 +82,14 @@ class RedirectAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.NewsletterSubscriber)
-class NewsletterSubscriberAdmin(admin.ModelAdmin):
+class NewsletterSubscriberAdmin(EnhancedAdminMixin, admin.ModelAdmin):
     list_display = ['email', 'is_active', 'get_joined_jalali']
-    list_filter = ['is_active']
+    list_filter = ['is_active', 'created_at']
     search_fields = ['email']
     list_editable = ['is_active']
+    date_hierarchy = 'created_at'
+    csv_filename = 'masaishop-newsletter.csv'
 
     @admin.display(description='تاریخ عضویت', ordering='created_at')
     def get_joined_jalali(self, obj):
-        return datetime2jalali(obj.created_at).strftime('%Y/%m/%d - %H:%M')
+        return datetime2jalali(obj.created_at).strftime('%Y/%m/%d — %H:%M')

@@ -11,7 +11,8 @@ from core.sitemaps import (
     StaticPageSitemap, SectionSitemap,
 )
 from core import views as core_views
-from dashboard.admin_views import admin_home
+from dashboard.admin_views import admin_export_orders, admin_health, admin_home
+from MasaiShop.admin_branding import configure_admin_site
 
 # هندلر خطاهای سفارشی (قالب اختصاصی + noindex)
 handler400 = 'core.views.custom_400'
@@ -19,12 +20,17 @@ handler403 = 'core.views.custom_403'
 handler404 = 'core.views.custom_404'
 handler500 = 'core.views.custom_500'
 
+# عنوان و سربرگ ادمین در یک نقطه تنظیم می‌شود.
+configure_admin_site()
+
 urlpatterns = [
     # Browsers and crawlers still probe this conventional root URL even when
     # the HTML head already declares the PNG favicon.
     path('favicon.ico', RedirectView.as_view(url=static_url('favicon.ico'), permanent=True), name='favicon'),
     path('admin/', admin.site.urls),
     path('admin-panel/', admin_home, name='admin_home'),
+    path('admin-panel/export/orders/', admin_export_orders, name='admin_export_orders'),
+    path('admin-panel/health/', admin_health, name='admin_health'),
     path('sitemap.xml', sitemap, {'sitemaps': {
         'sections': SectionSitemap,
         'products': ProductSitemap,

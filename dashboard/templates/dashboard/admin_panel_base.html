@@ -1,0 +1,179 @@
+{% load static %}{% load custom_filters %}<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#0b1720">
+    <title>{% block panel_title %}داشبورد مدیریت{% endblock %} | فایل‌مارکت</title>
+    <link rel="icon" type="image/png" href="{% static 'img/favicon.png' %}">
+    <link rel="stylesheet" href="{% static 'fonts/font-awesome/css/fontawesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'fonts/font-awesome/css/solid.css' %}">
+    <link rel="stylesheet" href="{% static 'css/fm-admin-panel.css' %}">
+    <script>
+        /* حالت شب/روز پنل — همان کلید فروشگاه تا انتخاب کاربر یکجا حفظ شود */
+        (function () {
+            try {
+                var theme = localStorage.getItem('fm-theme');
+                document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    {% block panel_head %}{% endblock %}
+</head>
+<body class="ap-shell">
+<aside class="ap-sidebar" aria-label="منوی مدیریت">
+    <div class="ap-brand">
+        <span class="ap-brand__mark"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
+        <span class="ap-brand__text">
+            <b class="ap-brand__title">فایل‌مارکت</b>
+            <small class="ap-brand__sub">مرکز کنترل فروشگاه</small>
+        </span>
+    </div>
+
+    <nav class="ap-nav">
+        <div class="ap-nav__label">خلاصه</div>
+        <a class="ap-nav__item{% if request.path == '/admin-panel/' %} is-active{% endif %}" href="{% url 'admin_home' %}">
+            <i class="fa-solid fa-chart-pie" aria-hidden="true"></i> داشبورد
+        </a>
+        <a class="ap-nav__item{% if '/admin-panel/health' in request.path %} is-active{% endif %}" href="{% url 'admin_health' %}">
+            <i class="fa-solid fa-stethoscope" aria-hidden="true"></i> سلامت فروشگاه
+            {% if pending.draft_products or pending.draft_articles %}
+                <span class="ap-nav__count is-alert ap-num">{{ pending.draft_products|add:pending.draft_articles|persian_digits }}</span>
+            {% endif %}
+        </a>
+
+        <div class="ap-nav__label">فروشگاه</div>
+        <a class="ap-nav__item" href="{% url 'admin:product_product_changelist' %}">
+            <i class="fa-solid fa-box-open" aria-hidden="true"></i> محصولات و فایل‌ها
+            {% if catalogue.products %}<span class="ap-nav__count ap-num">{{ catalogue.products|persian_digits }}</span>{% endif %}
+        </a>
+        <a class="ap-nav__item" href="{% url 'admin:product_productcategory_changelist' %}">
+            <i class="fa-solid fa-layer-group" aria-hidden="true"></i> دسته‌بندی‌ها
+        </a>
+        <a class="ap-nav__item" href="{% url 'admin:product_productbrand_changelist' %}">
+            <i class="fa-solid fa-tags" aria-hidden="true"></i> برندها
+        </a>
+        <a class="ap-nav__item" href="{% url 'admin:cart_order_changelist' %}">
+            <i class="fa-solid fa-receipt" aria-hidden="true"></i> سفارش‌ها
+            {% if pending.pending_orders %}<span class="ap-nav__count is-alert ap-num">{{ pending.pending_orders|persian_digits }}</span>{% endif %}
+        </a>
+        <a class="ap-nav__item" href="{% url 'admin:payments_paymenttransaction_changelist' %}">
+            <i class="fa-solid fa-money-bill-transfer" aria-hidden="true"></i> تراکنش‌ها
+        </a>
+        <a class="ap-nav__item" href="{% url 'admin:cart_coupon_changelist' %}">
+            <i class="fa-solid fa-percent" aria-hidden="true"></i> کدهای تخفیف
+        </a>
+        <a class="ap-nav__item" href="{% url 'admin:downloads_downloadtoken_changelist' %}">
+            <i class="fa-solid fa-download" aria-hidden="true"></i> توکن‌های دانلود
+        </a>
+
+        <div class="ap-nav__label">خدمات طراحی سایت</div>
+        <a class="ap-nav__item" href="{% url 'admin:services_servicepackage_changelist' %}">
+            <i class="fa-solid fa-cube" aria-hidden="true"></i> پکیج‌ها
+        </a>
+        <a class="ap-nav__item" href="{% url 'admin:services_servicerequest_changelist' %}">
+            <i class="fa-solid fa-envelope-open-text" aria-hidden="true"></i> درخواست‌ها
+            {% if pending.new_service_requests %}<span class="ap-nav__count is-alert ap-num">{{ pending.new_service_requests|persian_digits }}</span>{% endif %}
+        </a>
+        <a class="ap-nav__item" href="{% url 'admin:services_portfolioitem_changelist' %}">
+            <i class="fa-solid fa-briefcase" aria-hidden="true"></i> نمونه‌کارها
+        </a>
+
+        <div class="ap-nav__label">محتوا و سئو</div>
+        <a class="ap-nav__item" href="{% url 'admin:blog_article_changelist' %}">
+            <i class="fa-solid fa-newspaper" aria-hidden="true"></i> مقالات وبلاگ
+        </a>
+        <a class="ap-nav__item" href="{% url 'admin:pages_staticpage_changelist' %}">
+            <i class="fa-solid fa-file-lines" aria-hidden="true"></i> صفحات سایت
+        </a>
+        <a class="ap-nav__item" href="{% url 'admin:core_banner_changelist' %}">
+            <i class="fa-solid fa-image" aria-hidden="true"></i> بنرها
+        </a>
+        <a class="ap-nav__item" href="{% url 'admin:core_redirect_changelist' %}">
+            <i class="fa-solid fa-arrow-turn-down fa-rotate-90" aria-hidden="true"></i> ریدایرکت‌ها
+            {% if redirects_count %}<span class="ap-nav__count ap-num">{{ redirects_count|persian_digits }}</span>{% endif %}
+        </a>
+        <a class="ap-nav__item" href="{% url 'admin:product_productcomment_changelist' %}">
+            <i class="fa-solid fa-comments" aria-hidden="true"></i> نظرات محصولات
+        </a>
+
+        <div class="ap-nav__label">کاربران</div>
+        <a class="ap-nav__item" href="{% url 'admin:auth_user_changelist' %}">
+            <i class="fa-solid fa-users" aria-hidden="true"></i> کاربران
+            {% if catalogue.users %}<span class="ap-nav__count ap-num">{{ catalogue.users|persian_digits }}</span>{% endif %}
+        </a>
+        <a class="ap-nav__item" href="{% url 'admin:core_newslettersubscriber_changelist' %}">
+            <i class="fa-solid fa-envelope" aria-hidden="true"></i> خبرنامه
+        </a>
+        <a class="ap-nav__item" href="{% url 'admin:core_contactus_changelist' %}">
+            <i class="fa-solid fa-headset" aria-hidden="true"></i> پیام‌های تماس
+        </a>
+
+        <div class="ap-nav__label">تنظیمات</div>
+        <a class="ap-nav__item" href="{% url 'admin:core_sitesettings_changelist' %}">
+            <i class="fa-solid fa-sliders" aria-hidden="true"></i> تنظیمات سایت
+        </a>
+        <a class="ap-nav__item" href="{% url 'admin:payments_gatewaysettings_changelist' %}">
+            <i class="fa-solid fa-credit-card" aria-hidden="true"></i> درگاه‌های پرداخت
+        </a>
+        <a class="ap-nav__item" href="{% url 'admin:index' %}">
+            <i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> همه بخش‌های Django Admin
+        </a>
+    </nav>
+
+    <div class="ap-sidebar__footer">
+        <span class="ap-avatar"><i class="fa-solid fa-user-shield" aria-hidden="true"></i></span>
+        <span class="ap-user">
+            <b>{{ request.user.get_username }}</b>
+            <span>{% if request.user.is_superuser %}مدیر کل{% else %}کاربر مدیر{% endif %}</span>
+        </span>
+        <a class="ap-logout" href="{% url 'admin:logout' %}" title="خروج از حساب">
+            <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+        </a>
+    </div>
+</aside>
+
+<div class="ap-scrim" data-ap-close-nav></div>
+
+<div class="ap-main">
+    <header class="ap-topbar">
+        <button class="ap-btn ap-btn--ghost ap-burger" type="button" data-ap-open-nav aria-label="باز کردن منو">
+            <i class="fa-solid fa-bars" aria-hidden="true"></i>
+        </button>
+        <div class="ap-topbar__title">
+            <span class="ap-topbar__eyebrow">
+                <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+                {% block panel_eyebrow %}امروز {{ today_jalali }}{% endblock %}
+            </span>
+            <h1>{% block panel_heading %}داشبورد مدیریت{% endblock %}</h1>
+        </div>
+        <div class="ap-topbar__tools">
+            {% block panel_tools %}{% endblock %}
+            <button class="ap-btn" type="button" data-ap-theme-toggle aria-pressed="false" title="تغییر حالت شب و روز">
+                <i class="fa-solid fa-moon" aria-hidden="true"></i>
+                <span data-ap-theme-label>حالت شب</span>
+            </button>
+            <a class="ap-btn" href="/" target="_blank" rel="noopener">
+                <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> مشاهده فروشگاه
+            </a>
+        </div>
+    </header>
+
+    <main class="ap-content">
+        {% block panel_content %}{% endblock %}
+    </main>
+
+    <footer class="ap-footer">
+        <span>پنل مدیریت فایل‌مارکت — داده‌ها به‌صورت زنده از پایگاه داده خوانده می‌شوند.</span>
+        <a href="{% url 'admin:index' %}">Django Admin</a>
+        <a href="{% url 'admin:password_change' %}">تغییر رمز عبور</a>
+    </footer>
+</div>
+
+<script src="{% static 'js/fm-admin-panel.js' %}" defer></script>
+{% block panel_scripts %}{% endblock %}
+</body>
+</html>

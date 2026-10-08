@@ -1,0 +1,53 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | مدیریت فایل‌مارکت{% endblock %}
+
+{% block extrastyle %}{{ block.super }}
+    <link rel="stylesheet" href="{% static 'fonts/font-awesome/css/fontawesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'fonts/font-awesome/css/solid.css' %}">
+    <link rel="stylesheet" href="{% static 'css/fm-admin.css' %}">
+{% endblock %}
+
+{% block branding %}
+    <span class="fm-mark" aria-hidden="true"><i class="fa-solid fa-bolt"></i></span>
+    <span>
+        <a href="{% url 'admin:index' %}">{{ site_header|default:"مدیریت فایل‌مارکت" }}</a>
+        <small class="fm-sub">فروشگاه فایل، قالب و محصولات دیجیتال</small>
+    </span>
+    {% if user.is_anonymous %}
+        {% include "admin/color_theme_toggle.html" %}
+    {% endif %}
+{% endblock %}
+
+{% block userlinks %}
+    <a class="fm-panel-link" href="{% url 'admin_home' %}">
+        <i class="fa-solid fa-chart-pie" aria-hidden="true"></i> داشبورد تحلیل فروش
+    </a>
+    {% if site_url %}
+        <a href="{{ site_url }}">{% translate 'View site' %}</a> /
+    {% endif %}
+    {% if user.has_usable_password %}
+        <a href="{% url 'admin:password_change' %}">{% translate 'Change password' %}</a> /
+    {% endif %}
+    <form id="logout-form" method="post" action="{% url 'admin:logout' %}">
+        {% csrf_token %}
+        <button type="submit">{% translate 'Log out' %}</button>
+    </form>
+    {% include "admin/color_theme_toggle.html" %}
+{% endblock %}
+
+{% block nav-global %}
+    {% if user.is_authenticated %}
+        <a href="{% url 'admin_home' %}"><i class="fa-solid fa-gauge-high" aria-hidden="true"></i> پنل مدیریت</a>
+        <a href="{% url 'admin_health' %}"><i class="fa-solid fa-stethoscope" aria-hidden="true"></i> سلامت فروشگاه</a>
+        <a href="{% url 'admin:product_product_add' %}"><i class="fa-solid fa-plus" aria-hidden="true"></i> محصول جدید</a>
+        <a href="{% url 'admin:blog_article_add' %}"><i class="fa-solid fa-newspaper" aria-hidden="true"></i> مقاله جدید</a>
+        <a href="{% url 'admin:cart_coupon_add' %}"><i class="fa-solid fa-percent" aria-hidden="true"></i> کد تخفیف</a>
+        <a href="{% url 'admin:core_redirect_changelist' %}"><i class="fa-solid fa-arrow-turn-down fa-rotate-90" aria-hidden="true"></i> ریدایرکت‌ها</a>
+    {% endif %}
+{% endblock %}
+
+{% block footer %}
+    <span>پنل مدیریت فایل‌مارکت — برای آمار نموداری و گزارش فروش به <a href="{% url 'admin_home' %}">داشبورد تحلیل</a> بروید.</span>
+{% endblock %}

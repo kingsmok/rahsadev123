@@ -6,6 +6,7 @@ import tempfile
 from io import BytesIO, StringIO
 from unittest.mock import patch
 
+from django.contrib import admin
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management.base import CommandError
@@ -322,3 +323,48 @@ class ManagePreflightTests(SimpleTestCase):
             with patch.dict(os.environ, {manage.SKIP_PREFLIGHT_ENV: '1'}, clear=False):
                 self.assertEqual(manage._preflight_requirements(stream=buffer), [])
         self.assertEqual(buffer.getvalue(), '')
+
+
+class AdminCsvExportTests(TestCase):
+    """اکشن خروجی CSV که به همه ادمین‌های اصلی اضافه شده است."""
+
+    def setUp(self):
+        self.admin_user = User.objects.create_superuser('csv-admin', password='Admin-pass-123!')
+        self.assertTrue(self.client.login(username='csv-admin', password='Admin-pass-123!'))
+        self.product = Product.objects.create(
+            vendor=self.admin_user, title='قالب شرکتی آریا', slug='aria-corporate-theme',
+            description='توضیحات', price=320000, old_price=400000, stock_count=3,
+        )
+
+    def test_export_uses_persian_headers_and_bom(self):
+        response = self.client.post('/admin/product/product/', {
+            'action': 'export_selected_as_csv',
+            '_selected_action': [self.product.pk],
+            'index': 0,
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/csv; charset=utf-8')
+        self.assertIn('attachment', response['Content-Disposition'])
+
+        content = response.content.decode('utf-8')
+        self.assertTrue(content.startswith('\ufeff'))
+        lines = content.strip().splitlines()
+        self.assertEqual(len(lines), 2)
+        self.assertIn('شناسه محصول', lines[0])
+        self.assertIn('قالب شرکتی آریا', lines[1])
+        self.assertIn('320000', lines[1])
+        # ستون پیش‌نمایش تصویر نباید HTML را به CSV ببرد
+        self.assertNotIn('<img', content)
+
+    def test_export_renders_m2m_and_html_columns_as_plain_text(self):
+        category = ProductCategory.objects.create(title='قالب وردپرس', slug='wp-themes')
+        self.product.category.add(category)
+
+        admin_instance = admin.site._registry[Product]
+        self.assertIn('قالب وردپرس', admin_instance._csv_value(self.product, 'category'))
+        # ستون پیش‌نمایش تصویر متن ساده می‌دهد، نه تگ HTML
+        image_cell = admin_instance._csv_value(self.product, 'product_image')
+        self.assertNotIn('<', image_cell)
+        self.assertEqual(image_cell, 'تصویر ندارد')
+        self.assertEqual(admin_instance._csv_header('get_created_at_jalali'), 'تاریخ ایجاد')
