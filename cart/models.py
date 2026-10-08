@@ -26,6 +26,16 @@ class Coupon(models.Model):
     class Meta:
         verbose_name = 'کوپن تخفیف'
         verbose_name_plural = 'کوپن ‌های تخفیف'
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(discount_value__gte=0),
+                name='coupon_discount_value_nonnegative',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(usage_count__gte=0),
+                name='coupon_usage_count_nonnegative',
+            ),
+        ]
 
     def __str__(self):
         return self.code
@@ -63,7 +73,9 @@ class Cart(models.Model):
 
     @property
     def final_price(self):
-        return self.total_price - self.coupon_discount
+        # Coupon data can be changed through the admin after it is applied;
+        # never expose a negative payable amount if stale data exists.
+        return max(0, self.total_price - self.coupon_discount)
 
     def clear(self):
         self.items.all().delete()
@@ -84,6 +96,14 @@ class CartItem(models.Model):
         verbose_name_plural = 'آیتم‌ های سبد خرید'
         ordering = ['-created_at', '-id']
         unique_together = ['cart', 'product']
+        constraints = [
+            # فروشگاه فقط فایل دیجیتال می‌فروشد؛ کنترل تعداد در UI گمراه‌کننده
+            # است، پس این قاعده در دیتابیس هم تضمین می‌شود.
+            models.CheckConstraint(
+                condition=models.Q(quantity=1),
+                name='cart_item_quantity_exactly_one',
+            ),
+        ]
 
     def __str__(self):
         return f"{self.product.title} ({self.quantity})"
@@ -103,6 +123,12 @@ class OrderItem(models.Model):
     class Meta:
         verbose_name='آیتم سفارش'; verbose_name_plural='آیتم‌های سفارش'
         indexes=[models.Index(fields=['product']), models.Index(fields=['order'])]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['order', 'product'],
+                name='order_item_unique_product_per_order',
+            ),
+        ]
 
 class Order(models.Model):
     ORDER_STATUS = (

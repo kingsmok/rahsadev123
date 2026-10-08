@@ -58,7 +58,13 @@
     --fm-teal:        var(--fm-primary-500);
     --fm-teal-dark:   var(--fm-primary-700);
     --fm-teal-light:  var(--fm-primary-400);
-    --fm-grad:        linear-gradient(135deg, var(--fm-primary-500) 0%, var(--fm-primary-400) 55%, #5bc8d4 100%);
+    /* سطوحی که متن سفید دارند باید از رنگ‌های تیره‌تر استفاده کنند.
+       نسخهٔ قبلی از primary-500/400 استفاده می‌کرد و نسبت کنتراست متن سفید
+       را تا 1.97:1 پایین می‌آورد. */
+    --fm-action-bg:   #2d6e74;
+    --fm-action-hover:#224a4e;
+    --fm-on-action:   #ffffff;
+    --fm-grad:        linear-gradient(135deg, #2d6e74 0%, #2d7a80 55%, #2d6e74 100%);
     --fm-bg:          var(--fm-neutral-50);
     --fm-surface:     var(--fm-neutral-0);
     --fm-surface-alt: var(--fm-neutral-25);
@@ -94,6 +100,16 @@
     --fm-sp-8: 64px;
 
     --fm-ease: cubic-bezier(.4, 0, .2, 1);
+
+    /* لایه‌ها: مقادیر محدود و نقش‌محور؛ drawer سبد باید فقط از هدر/منوی
+       موبایل بالاتر باشد و همچنان زیر modal استاندارد Bootstrap بماند. */
+    --fm-z-content:          1;
+    --fm-z-floating:         900;
+    --fm-z-popover:          1010;
+    --fm-z-mobile-backdrop:  1025;
+    --fm-z-mobile-panel:     1030;
+    --fm-z-cart-backdrop:    1040;
+    --fm-z-cart-drawer:      1045;
 }
 
 /* ───────────────────────── ۲) حالت شب ───────────────────────── */
@@ -126,6 +142,11 @@
     --fm-info-bg:     rgba(44, 127, 184, .16);
 
     --fm-surface-alt: #15202a;
+    /* رنگ‌های action در شب جدا از primary-500 هستند تا متن سفید همیشه خوانا بماند. */
+    --fm-action-bg:   #1d4e52;
+    --fm-action-hover:#15393c;
+    --fm-on-action:   #ffffff;
+    --fm-grad:        linear-gradient(135deg, #1d4e52 0%, #27595e 55%, #2a6a70 100%);
     --fm-border:      rgba(232, 238, 244, .10);
     --fm-border-soft: rgba(232, 238, 244, .06);
 
@@ -653,14 +674,15 @@ main h4 { font-size: 16px; font-weight: 700; line-height: 1.8; }
 
 .fm-btn--primary {
     background: var(--fm-grad);
-    color: #fff;
-    box-shadow: 0 6px 18px rgba(70, 169, 174, .28);
+    color: var(--fm-on-action);
+    box-shadow: 0 6px 18px rgba(45, 110, 116, .28);
 }
 
 .fm-btn--primary:hover {
-    color: #fff;
+    color: var(--fm-on-action);
     transform: translateY(-2px);
-    box-shadow: 0 10px 26px rgba(70, 169, 174, .36);
+    box-shadow: 0 10px 26px rgba(45, 110, 116, .36);
+    filter: brightness(1.06);
 }
 
 .fm-btn--ghost {
@@ -1022,13 +1044,13 @@ textarea:focus {
 .page-number:hover,
 .page-arrow:hover {
     background: var(--fm-grad);
-    color: #fff;
+    color: var(--fm-on-action);
     border-color: transparent;
 }
 
 .page-number.active {
     background: var(--fm-grad);
-    color: #fff;
+    color: var(--fm-on-action);
     border-color: transparent;
 }
 
@@ -1199,10 +1221,16 @@ textarea:focus {
 
 /* تب فعال باید در حالت شب هم همان فیل فیروزه‌ای برند را داشته باشد.
    دقت: کلاس active روی <a> است نه <li>، پس انتخابگر باید a.active باشد. */
+.box-tabs-tab a.active {
+    background-color: var(--fm-action-bg) !important;
+    color: var(--fm-on-action) !important;
+    border-bottom-color: var(--fm-action-hover) !important;
+}
+
 [data-theme="dark"] .box-tabs-tab a.active {
-    background-color: var(--fm-primary-500) !important;
-    color: #fff !important;
-    border-bottom-color: var(--fm-primary-700) !important;
+    background-color: var(--fm-action-bg) !important;
+    color: var(--fm-on-action) !important;
+    border-bottom-color: var(--fm-action-hover) !important;
 }
 
 [data-theme="dark"] .box-tabs-tab a {

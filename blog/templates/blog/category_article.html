@@ -4,7 +4,7 @@
 {% load seo_tags %}
 {% block og_title %}مقالات {{ category.title }} | وبلاگ {{ site_name }}{% endblock %}
 {% block og_description %}مجموعه مقالات و آموزش‌های دسته {{ category.title }} در وبلاگ {{ site_name }}{% endblock %}
-{% block extra_schema %}{% blog_breadcrumb category.title %}{% endblock %}
+{% block extra_schema %}{% blog_breadcrumb category.title %}{% article_list_schema articles %}{% endblock %}
 {% load static %}
 {% load jalali_tags %}
 
@@ -17,7 +17,7 @@
                     <nav>
                         <ul class="breadcrumb">
                             <li>
-                                <a href="{% url 'core:home' %}" style="color: #61BEC3"><i class="fa fa-home" aria-hidden="true"></i></a>
+                                <a href="{% url 'core:home' %}" class="fm-crumb-home"><i class="fa fa-home" aria-hidden="true"></i></a>
                             </li>
                             <li>
                                 <a href="{% url 'blog:article_list' %}"><span>وبلاگ</span></a>

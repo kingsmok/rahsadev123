@@ -1,3 +1,5 @@
+from django.db import OperationalError, ProgrammingError
+
 from core.models import SiteSettings
 from product.models import ProductCategory, ProductBrand
 from cart.models import Cart, CartItem
@@ -15,9 +17,14 @@ def shop_func(request):
         try:
             cart = Cart.objects.filter(user=request.user).first()
             if cart:
-                cart_items = CartItem.objects.filter(cart=cart).select_related('product')
-                cart_total = cart.total_price
-        except Exception:
+                # Keep one evaluated, joined collection for both the header and
+                # its total. Calling ``cart.total_price`` here issued another
+                # query and then one query per product on every rendered page.
+                cart_items = list(CartItem.objects.filter(cart=cart).select_related('product'))
+                cart_total = sum(item.total_price for item in cart_items)
+        except (OperationalError, ProgrammingError):
+            # A request must still render while migrations are being applied
+            # and the cart tables do not exist yet.
             pass
 
     return {
@@ -44,7 +51,7 @@ _NOINDEX_PATTERNS = [
     _re.compile(r'^/cart/'),
     _re.compile(r'^/payments/'),
     _re.compile(r'^/downloads/'),
-    _re.compile(r'^/ckeditor/'),
+    _re.compile(r'^/ckeditor5/'),
     _re.compile(r'^/products/product_search/'),
     _re.compile(r'^/services/request/'),
 ]

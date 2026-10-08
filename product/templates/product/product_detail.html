@@ -5,7 +5,7 @@
 {% endblock %}
 {% block title %}{% if products.meta_title %}{{ products.meta_title }}{% else %}دانلود {{ products.title|truncatewords:12 }}{% endif %}{% endblock %}
 {% block meta_description %}{{ products.meta_description|default:products.description|striptags|truncatechars:160 }}{% endblock %}
-{% block canonical %}<link rel="canonical" href="{% if products.canonical_url %}{{ products.canonical_url }}{% else %}{{ request.build_absolute_uri }}{% endif %}">{% endblock %}
+{% block canonical %}<link rel="canonical" href="{% if products.canonical_url %}{{ products.canonical_url }}{% else %}{{ canonical_url }}{% endif %}">{% endblock %}
 {% load seo_tags %}
 {% block og_type %}product{% endblock %}
 {% block og_title %}{{ products.meta_title|default:products.title }}{% endblock %}
@@ -169,13 +169,13 @@
                                         <div class="col-12 space-10">
                                             {% if products.demo_url %}
                                                 <a href="{{ products.demo_url }}" target="_blank" rel="nofollow"
-                                                   class="btn btn-second-masai" style="font-size: 13px;padding: 6px 18px;">
+                                                   class="btn btn-second-masai fm-compact-link">
                                                     <i class="fa fa-eye" aria-hidden="true"></i> پیش‌نمایش زنده (دمو)
                                                 </a>
                                             {% endif %}
                                             {% if products.documentation_url %}
                                                 <a href="{{ products.documentation_url }}" target="_blank" rel="nofollow"
-                                                   class="btn btn-second-masai" style="font-size: 13px;padding: 6px 18px;">
+                                                   class="btn btn-second-masai fm-compact-link">
                                                     <i class="fa fa-book" aria-hidden="true"></i> مستندات فایل
                                                 </a>
                                             {% endif %}
@@ -242,7 +242,7 @@
                                                                 {% for token in user_tokens %}
                                                                     {% if token.is_valid %}
                                                                         <a href="{% url 'downloads:download' token.token %}"
-                                                                           class="btn btn-main-masai big_btn" style="margin-top:8px;">
+                                                                           class="btn btn-main-masai big_btn fm-download-top">
                                                                             <i class="fa fa-download" aria-hidden="true"></i> دانلود فایل
                                                                         </a>
                                                                     {% endif %}

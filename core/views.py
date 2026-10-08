@@ -9,6 +9,11 @@ from blog.models import Article
 from services.models import ServicePackage
 
 
+def _storefront_products(queryset):
+    """Load product-card relations once instead of once per card in templates."""
+    return queryset.select_related('digital_asset').prefetch_related('brand')
+
+
 def home(request):
     # Banners
     main_sliders = Banner.objects.filter(banner_type='main_slider', status='published').order_by('-created_at')[:3]
@@ -17,18 +22,29 @@ def home(request):
     single_banner = Banner.objects.filter(banner_type='single_banner', status='published').order_by('-created_at').first()
 
     popular_brands = ProductBrand.objects.all().order_by('-views')[:10]
-    popular_products = Product.objects.filter(status='published').order_by('-views')[:9]
-    latest_products = Product.objects.filter(status='published', old_price=None).order_by('-created_at')[:4]
-    latest_articles = Article.objects.filter(status='published').order_by('-created_at')[:5]
-    discounted_products = Product.objects.filter(
-        status='published',
-        old_price__isnull=False,
-        old_price__gt=models.F('price')
-    ).annotate(
-        discount=models.ExpressionWrapper(
-            (models.F('old_price') - models.F('price')) * 100 / models.F('old_price'),
-            output_field=models.IntegerField())).filter(discount__gt=0).order_by('-discount')[:8]
-    best_selling_products = Product.objects.filter(status='published').order_by('-sales_count')[:7]
+    popular_products = _storefront_products(
+        Product.objects.filter(status='published').order_by('-views')[:9]
+    )
+    latest_products = _storefront_products(
+        Product.objects.filter(status='published', old_price=None).order_by('-created_at')[:4]
+    )
+    latest_articles = Article.objects.filter(status='published').select_related(
+        'author', 'author__profile'
+    ).order_by('-created_at')[:5]
+    discounted_products = _storefront_products(
+        Product.objects.filter(
+            status='published',
+            old_price__isnull=False,
+            old_price__gt=models.F('price')
+        ).annotate(
+            discount=models.ExpressionWrapper(
+                (models.F('old_price') - models.F('price')) * 100 / models.F('old_price'),
+                output_field=models.IntegerField())
+        ).filter(discount__gt=0).order_by('-discount')[:8]
+    )
+    best_selling_products = _storefront_products(
+        Product.objects.filter(status='published').order_by('-sales_count')[:7]
+    )
     service_packages = ServicePackage.objects.filter(is_active=True)[:3]
 
     context = {
@@ -46,6 +62,25 @@ def home(request):
         'service_packages': service_packages,
     }
     return render(request, 'core/home.html', context)
+
+
+def offline(request):
+    """Fallback کوچک و مستقل PWA هنگامی که navigation بدون اینترنت انجام شود."""
+    response = render(request, 'offline.html', status=200)
+    response['Cache-Control'] = 'public, max-age=300'
+    return response
+
+
+def service_worker(request):
+    """Service worker در ریشهٔ origin ارائه می‌شود تا scope آن کل فروشگاه باشد.
+
+    URL فایل عمداً static نیست: مرورگر برای گسترده‌تر شدن scope از دایرکتوری
+    اسکریپت به هدر Service-Worker-Allowed نیاز دارد.
+    """
+    response = render(request, 'service-worker.js', content_type='application/javascript; charset=utf-8')
+    response['Service-Worker-Allowed'] = '/'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return response
 
 
 def contact(request):
@@ -127,7 +162,6 @@ def newsletter_subscribe(request):
     """عضویت در خبرنامه (AJAX) — با CSRF و اعتبارسنجی ایمیل."""
     from django.http import JsonResponse
     from django.views.decorators.http import require_POST
-    from django.middleware.csrf import get_token
 
     @require_POST
     def _subscribe(request):

@@ -164,11 +164,731 @@ header.Masai-header .cart .dropdown-menu .remove-cart-item:disabled { opacity: .
     cursor: pointer;
 }
 
+/* -------------------------------------------------------------------------
+   اصلاح رنگ کنترل‌های قدیمی
+   سطوحی که متن سفید دارند از گرادیان تیرهٔ توکن‌ها استفاده می‌کنند تا
+   کنتراست متن در حالت روشن و تیره از حد استاندارد پایین‌تر نرود.
+   ------------------------------------------------------------------------- */
+.btn-main-masai,
+button.btn-main-masai,
+a.btn-main-masai,
+.btn_cart .btn_pardakht {
+    background: var(--fm-grad) !important;
+    color: var(--fm-on-action) !important;
+    border-color: transparent !important;
+}
+
+.btn-main-masai:hover,
+button.btn-main-masai:hover,
+a.btn-main-masai:hover,
+.btn_cart .btn_pardakht:hover,
+.btn-second-masai:hover,
+.btn_cart .btn_sabad:hover {
+    background: var(--fm-action-hover) !important;
+    color: var(--fm-on-action) !important;
+}
+
+.discount_badge,
+#offercarousel .discount-percent {
+    background: var(--fm-grad) !important;
+    color: var(--fm-on-action) !important;
+}
+
+.search_prod_btn .search_icon_cart {
+    width: 44px;
+    height: 44px;
+    background: var(--fm-action-bg);
+    color: var(--fm-on-action);
+}
+
+.search_prod_btn .search_icon_cart:hover,
+.search_prod_btn:focus-visible .search_icon_cart {
+    background: var(--fm-primary-100);
+    color: var(--fm-action-bg);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, .17);
+}
+
+/* CSS قدیمی آیکن را با مختصات 33px جابه‌جا می‌کرد؛ با هدف لمس 44px، آن را
+   به مرکز grid برمی‌گردانیم. */
+.search_prod_btn .search_icon_cart::before {
+    position: static;
+    top: auto;
+    right: auto;
+}
+
+/* -------------------------------------------------------------------------
+   ناوبری موبایل
+   CSS قدیمی پنل را با translate از صفحه خارج می‌کرد، اما اسکریپت قدیمی که
+   nav-open را اضافه می‌کرد در سایت لود نمی‌شد. این لایه، پنل و backdrop
+   مستقل و سازگار با Bootstrap Collapse را تعریف می‌کند.
+   ------------------------------------------------------------------------- */
+.fm-mobile-nav-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: var(--fm-z-mobile-backdrop);
+    background: rgba(15, 23, 32, .52);
+    opacity: 0;
+    transition: opacity .22s var(--fm-ease);
+}
+
+.fm-mobile-nav-backdrop.is-visible { opacity: 1; }
+
+@media (max-width: 1077px) {
+    html.nav-open { overflow: hidden; }
+
+    nav.header-responsive {
+        height: 116px;
+        background: var(--fm-surface);
+    }
+
+    nav.header-responsive .navbar-translate {
+        min-height: 48px;
+        transform: none !important;
+    }
+
+    nav.header-responsive .navbar-toggler {
+        display: inline-grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        margin: 0;
+        padding: 8px;
+    }
+
+    nav.header-responsive .search-nav {
+        top: 50px;
+        right: 0;
+        width: 100%;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        float: none;
+    }
+
+    nav.header-responsive .search-nav form {
+        width: auto;
+        min-width: 0;
+        height: 44px;
+        flex: 1 1 0;
+        float: none;
+    }
+
+    nav.header-responsive .search-nav ul {
+        display: flex;
+        align-items: center;
+        width: auto;
+        margin: 0;
+        padding: 0;
+        gap: 2px;
+        float: none;
+    }
+
+    nav.header-responsive .search-nav ul li {
+        display: flex;
+        float: none;
+    }
+
+    nav.header-responsive .search-nav ul li a,
+    nav.header-responsive .search-nav .theme-toggle {
+        display: inline-grid;
+        place-items: center;
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px;
+        margin: 0;
+        padding: 0;
+        color: var(--fm-action-bg) !important;
+        font-size: 18px !important;
+    }
+
+    nav.header-responsive .search-nav .theme-toggle {
+        border: 1px solid var(--fm-border) !important;
+        border-radius: var(--fm-r-sm);
+        background: var(--fm-surface) !important;
+        box-shadow: none !important;
+    }
+
+    .sidebar-collapse nav.header-responsive .navbar-collapse {
+        position: fixed !important;
+        top: 0 !important;
+        right: 0 !important;
+        width: min(320px, 88vw) !important;
+        height: 100dvh !important;
+        max-height: none !important;
+        padding: 0 0 24px;
+        overflow-y: auto !important;
+        background: var(--fm-surface) !important;
+        border: 0 !important;
+        box-shadow: var(--fm-shadow-lg);
+        text-align: right;
+        transform: translate3d(110%, 0, 0) !important;
+        transition: transform .25s var(--fm-ease) !important;
+        z-index: var(--fm-z-mobile-panel);
+    }
+
+    .sidebar-collapse nav.header-responsive .navbar-collapse::before { display: none; }
+
+    html.nav-open .sidebar-collapse nav.header-responsive .navbar-collapse {
+        transform: translate3d(0, 0, 0) !important;
+    }
+
+    /* جلوِ جابه‌جایی غیرضروری محتوای صفحه توسط CSS قدیمی گرفته می‌شود. */
+    html.nav-open .sidebar-collapse .navbar-translate,
+    html.nav-open .sidebar-collapse .wrapper {
+        transform: none !important;
+    }
+
+    nav.header-responsive .logo-nav-res {
+        margin: 24px 20px 14px;
+        text-align: center;
+    }
+
+    nav.header-responsive .navbar-nav.default {
+        display: block;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        direction: rtl;
+    }
+
+    nav.header-responsive .navbar-nav.default > li {
+        display: block;
+        width: 100%;
+        margin: 0;
+        border-bottom: 1px solid var(--fm-border-soft);
+    }
+
+    nav.header-responsive .navbar-nav.default > li > a,
+    nav.header-responsive .navbar-nav.default .mobile-menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        min-height: 48px;
+        padding: 12px 20px;
+        color: var(--fm-text) !important;
+        background: transparent;
+        font-size: 15px;
+        font-weight: 650;
+        line-height: 1.6;
+        text-align: right;
+        text-decoration: none;
+    }
+
+    nav.header-responsive .navbar-nav.default > li > a:hover,
+    nav.header-responsive .navbar-nav.default .mobile-menu-toggle:hover,
+    nav.header-responsive .navbar-nav.default > li > a.is-active {
+        color: var(--fm-primary-700) !important;
+        background: var(--fm-primary-50);
+    }
+
+    nav.header-responsive .navbar-nav.default .mobile-menu-toggle {
+        border: 0;
+        border-radius: 0;
+    }
+
+    nav.header-responsive .navbar-nav.default .sub-menu > ul {
+        display: none;
+        margin: 0;
+        padding: 4px 0 8px;
+        direction: rtl;
+        text-align: right;
+        background: var(--fm-surface-alt);
+    }
+
+    nav.header-responsive .navbar-nav.default .sub-menu > ul li { width: 100%; }
+
+    nav.header-responsive .navbar-nav.default .sub-menu > ul li a {
+        display: block;
+        min-height: 44px;
+        padding: 10px 34px 10px 18px;
+        color: var(--fm-text-soft) !important;
+        background: transparent;
+        font-size: 14px;
+        line-height: 1.7;
+        text-decoration: none;
+    }
+
+    nav.header-responsive .navbar-nav.default .sub-menu > ul li a:hover {
+        color: var(--fm-primary-700) !important;
+        background: var(--fm-primary-50);
+    }
+}
+
+/* -------------------------------------------------------------------------
+   Drawer سبد خرید
+   -------------------------------------------------------------------------
+   dropdown قدیمی داخل header قرار داشت؛ بنابراین به stacking context و
+   overflow همان header وابسته بود. پنل جدید هم‌سطح wrapper است و با لایهٔ
+   مشخص خود باز می‌شود، پس نه زیر هدر می‌ماند و نه محتوای بلندش بریده می‌شود. */
+.fm-cart-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: var(--fm-z-cart-backdrop);
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: rgba(15, 23, 32, .56);
+    transition: opacity .22s var(--fm-ease), visibility 0s linear .22s;
+}
+
+.fm-cart-drawer {
+    position: fixed;
+    inset: 0 0 0 auto;
+    z-index: var(--fm-z-cart-drawer);
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    width: min(420px, 100vw);
+    max-width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    visibility: hidden;
+    background: var(--fm-surface);
+    border-left: 1px solid var(--fm-border);
+    box-shadow: var(--fm-shadow-lg);
+    color: var(--fm-text);
+    text-align: right;
+    transform: translate3d(105%, 0, 0);
+    transition: transform .25s var(--fm-ease), visibility 0s linear .25s;
+}
+
+html.cart-drawer-open,
+html.cart-drawer-open body {
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+html.cart-drawer-open .fm-cart-drawer-backdrop {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transition-delay: 0s;
+}
+html.cart-drawer-open .fm-cart-drawer {
+    visibility: visible;
+    transform: translate3d(0, 0, 0);
+    transition-delay: 0s;
+}
+
+.fm-cart-drawer__header,
+.fm-cart-drawer__footer {
+    background: var(--fm-surface);
+    padding-right: max(16px, env(safe-area-inset-right));
+    padding-left: max(16px, env(safe-area-inset-left));
+}
+
+.fm-cart-drawer__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 68px;
+    padding-top: env(safe-area-inset-top);
+    border-bottom: 1px solid var(--fm-border);
+}
+
+.fm-cart-drawer__header h2 {
+    margin: 0;
+    color: var(--fm-text);
+    font-size: 18px;
+    font-weight: 800;
+}
+.fm-cart-drawer__header h2 i { color: var(--fm-primary-600); margin-left: 8px; }
+
+.fm-cart-drawer__close,
+.fm-cart-drawer__remove {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    padding: 0;
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-r-sm);
+    background: var(--fm-surface-alt);
+    color: var(--fm-text-soft);
+    cursor: pointer;
+}
+.fm-cart-drawer__close:hover,
+.fm-cart-drawer__close:focus-visible {
+    background: var(--fm-primary-50);
+    color: var(--fm-primary-700);
+}
+.fm-cart-drawer__remove { color: var(--fm-danger); }
+.fm-cart-drawer__remove:hover,
+.fm-cart-drawer__remove:focus-visible { background: var(--fm-danger-bg); }
+
+.fm-cart-drawer__body {
+    min-height: 0;
+    padding: 12px 16px 20px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.fm-cart-drawer__items {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.fm-cart-drawer__item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px;
+    align-items: start;
+    gap: 10px;
+    padding: 10px;
+    background: var(--fm-surface-alt);
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-r-md);
+}
+
+.fm-cart-drawer__product {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 10px;
+    min-width: 0;
+    color: var(--fm-text);
+    text-decoration: none;
+}
+.fm-cart-drawer__product:hover { color: var(--fm-primary-700); text-decoration: none; }
+.fm-cart-drawer__product img {
+    width: 72px;
+    height: 72px;
+    max-width: 72px;
+    object-fit: cover;
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-r-sm);
+}
+.fm-cart-drawer__product-info {
+    display: grid;
+    align-content: start;
+    gap: 4px;
+    min-width: 0;
+}
+.fm-cart-drawer__product-title {
+    overflow-wrap: anywhere;
+    font-size: 13px;
+    font-weight: 750;
+    line-height: 1.75;
+}
+.fm-cart-drawer__product-meta { color: var(--fm-text-soft); font-size: 12px; }
+.fm-cart-drawer__product-meta i { color: var(--fm-primary-600); margin-left: 4px; }
+.fm-cart-drawer__product-info strong { color: var(--fm-primary-700); font-size: 13px; }
+
+.fm-cart-drawer__footer {
+    padding-top: 14px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--fm-border);
+    box-shadow: 0 -8px 18px rgba(23, 42, 52, .06);
+}
+.fm-cart-drawer__total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    color: var(--fm-text-soft);
+    font-size: 14px;
+}
+.fm-cart-drawer__total strong { color: var(--fm-text); font-size: 16px; }
+.fm-cart-drawer__actions { display: grid; grid-template-columns: 1fr 1.25fr; gap: 8px; }
+.fm-cart-drawer__actions .fm-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+}
+.fm-cart-drawer__empty {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    min-height: 100%;
+    padding: 24px 8px;
+    color: var(--fm-text-soft);
+    text-align: center;
+}
+.fm-cart-drawer__empty > i { margin-bottom: 12px; color: var(--fm-primary-500); font-size: 36px; }
+.fm-cart-drawer__empty p { margin: 0 0 16px; }
+.fm-cart-drawer__empty .fm-btn { text-decoration: none; }
+
+/* هر دو trigger (هدر دسکتاپ و موبایل) هدف لمس مستقل و قابل پیش‌بینی دارند. */
+header.Masai-header .js-cart-drawer-toggle {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+}
+
+@media (max-width: 375px) {
+    .fm-cart-drawer__body { padding-right: 12px; padding-left: 12px; }
+    .fm-cart-drawer__footer { padding-right: 12px; padding-left: 12px; }
+    .fm-cart-drawer__actions { grid-template-columns: 1fr; }
+}
+
+/* -------------------------------------------------------------------------
+   داشبورد و تب‌ها در صفحه‌های باریک
+   ------------------------------------------------------------------------- */
+@media (max-width: 992px) {
+    .profile-page-aside {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    /* dropdown واکنش‌گرا جای منوی عمودی قدیمی را می‌گیرد؛ نمایش هر دو
+       باعث تکرار منو و طول غیرضروری صفحه می‌شد. */
+    .profile-page-aside .profile-menu { display: none; }
+
+    .profile-page-aside .responsive-profile-menu {
+        margin-top: 16px;
+        width: 100%;
+    }
+
+    .profile-page-aside .responsive-profile-menu .btn-group,
+    .profile-page-aside .responsive-profile-menu .dropdown-toggle {
+        width: 100%;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .box-tabs > ul.nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+        padding: 0;
+    }
+
+    .box-tabs-tab {
+        display: flex;
+        width: auto;
+        min-width: 0;
+        border-radius: var(--fm-r-sm);
+    }
+
+    .box-tabs-tab a,
+    .box-tabs-tab a.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 50px;
+        margin: 0;
+        padding: 7px 8px;
+        border-bottom-width: 0;
+        font-size: 13px;
+        line-height: 1.55;
+        text-align: center;
+    }
+}
+
 @media (max-width: 767.98px) {
     .contact_us_page { padding: 12px 0; }
     .fm-local-map img { max-height: 230px; }
     .nav_header .nav__ullist .list_style.is-open .submeno,
     .nav_header .nav__ullist .list_style:focus-within .submeno { width: min(260px, 85vw); }
+}
+
+/* -------------------------------------------------------------------------
+   بازبینی موبایل: ۳۲۰px تا تبلت، در هر دو حالت روشن/شب
+   ------------------------------------------------------------------------- */
+
+/* وضعیت فعال مرحلهٔ خرید نباید از رنگ کم‌کنتراست قدیمی استفاده کند. */
+.order-steps li a.active,
+.order-steps li > span.active { color: var(--fm-primary-700); }
+
+@media (max-width: 1077px) {
+    /* محتویات هدر تا y=94 ادامه دارد؛ ارتفاع 96px با margin بالای main
+       هم‌راستا است و جلوی پوشانده‌شدن ابتدای صفحه را می‌گیرد. */
+    nav.header-responsive { height: 96px; }
+
+    nav.header-responsive .search-nav form input {
+        /* در نمایشگر 320px پس از سه کنترل 44px، فضای متن جست‌وجو محدود است. */
+        padding: 10px 40px 9px 12px;
+    }
+
+    nav.header-responsive .search-nav ul li a,
+    nav.header-responsive .search-nav .theme-toggle {
+        /* primary-700 روی زمینهٔ روشن و تیره خوانا است؛ action-bg شب بیش از
+           حد تیره بود و آیکن‌ها را در پس‌زمینهٔ تیره محو می‌کرد. */
+        color: var(--fm-primary-700) !important;
+    }
+
+    [data-theme="dark"] nav.header-responsive .search-nav form input {
+        background: var(--fm-surface-alt) !important;
+        border-color: var(--fm-border) !important;
+        color: var(--fm-text) !important;
+    }
+}
+
+/* پروفایل از قالب قدیمی چند سطح سفید و متن تیرهٔ hard-code داشت. */
+[data-theme="dark"] .profile-card-1 .mid-section {
+    background: var(--fm-surface) !important;
+}
+
+[data-theme="dark"] .profile-card-1 .mid-section .name,
+[data-theme="dark"] .profile-card-1 .mid-section .stats .stat {
+    color: var(--fm-text) !important;
+}
+
+[data-theme="dark"] .profile-card-1 .mid-section .description,
+[data-theme="dark"] .profile-card-1 .mid-section .stats .stat .subtext {
+    color: var(--fm-text-soft) !important;
+}
+
+[data-theme="dark"] .profile-card-1 .view-more .fa-plus-circle {
+    background: var(--fm-surface);
+}
+
+/* گزینه‌های پرداخت و منوی واکنش‌گرای داشبورد در شب باید سطح تیره داشته
+   باشند، نه selected سفید و متن تیرهٔ legacy. */
+[data-theme="dark"] .plans .plan .plan-content {
+    background: var(--fm-surface-alt);
+    border-color: var(--fm-border);
+}
+
+[data-theme="dark"] .plans .plan .plan-details span { color: var(--fm-text); }
+[data-theme="dark"] .plans .plan .plan-details p { color: var(--fm-text-soft); }
+[data-theme="dark"] .plans .plan .plan-content:hover { box-shadow: var(--fm-shadow-sm); }
+
+[data-theme="dark"] .plans .plan input[type="radio"]:checked + .plan-content {
+    background: var(--fm-primary-50);
+    border-color: var(--fm-primary-500);
+}
+
+[data-theme="dark"] .plans .plan input[type="radio"]:checked + .plan-content::after {
+    background: var(--fm-primary-500);
+    border-color: var(--fm-surface);
+}
+
+[data-theme="dark"] .responsive-profile-menu .btn-second-masai {
+    background: var(--fm-primary-100) !important;
+    color: var(--fm-primary-700) !important;
+}
+
+[data-theme="dark"] .responsive-profile-menu .btn-second-masai:hover {
+    background: var(--fm-primary-200) !important;
+    color: var(--fm-primary-700) !important;
+}
+
+[data-theme="dark"] .responsive-profile-menu .dropdown-menu a.active-menu,
+[data-theme="dark"] .responsive-profile-menu .dropdown-menu a:active {
+    background: var(--fm-primary-50) !important;
+    color: var(--fm-primary-700) !important;
+}
+
+@media (max-width: 992px) {
+    /* location_me در قالب قدیمی absolute بود و dropdown روی کارت پروفایل
+       می‌افتاد. در گوشی و تبلت آن را به بخش مستقل زیر کارت تبدیل می‌کنیم. */
+    .profile-page-aside .responsive-profile-menu {
+        position: relative;
+        top: auto;
+        z-index: 30;
+    }
+
+    .profile-page-aside .responsive-profile-menu .dropdown-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 48px;
+        text-align: right;
+    }
+
+    .profile-page-aside .responsive-profile-menu .dropdown-toggle i {
+        float: none;
+        margin: 0 0 0 10px;
+    }
+
+    /* این فهرست طولانی روی موبایل نباید به‌صورت لایهٔ absolute پشت محتوای
+       داشبورد باز شود. با بازشدن، در جریان طبیعی صفحه زیر دکمه قرار می‌گیرد. */
+    .profile-page-aside .responsive-profile-menu .dropdown-menu {
+        position: static !important;
+        float: none;
+        width: 100%;
+        max-height: min(60dvh, 420px);
+        margin: 8px 0 0;
+        padding: 6px;
+        overflow-y: auto;
+        background: var(--fm-surface);
+        border: 1px solid var(--fm-border);
+        border-radius: var(--fm-r-md);
+        box-shadow: var(--fm-shadow-md);
+        transform: none !important;
+    }
+
+    .profile-page-aside .responsive-profile-menu .dropdown-item {
+        display: flex;
+        align-items: center;
+        min-height: 44px;
+        border-radius: var(--fm-r-sm);
+        color: var(--fm-text);
+        white-space: normal;
+    }
+}
+
+@media (max-width: 575.98px) {
+    /* فضای داخلی checkout برای نمایشگرهای 320 تا 575px؛ فرم کد تخفیف دیگر
+       از کنار دکمه بیرون نمی‌زند و بخش جمع سفارش در خط بعدی مرتب می‌ماند. */
+    .cart_details { padding: 20px 14px; }
+
+    .cart_details .coupon-form {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: stretch;
+    }
+
+    .cart_details .coupon-form .input_second.width-200 {
+        width: 100% !important;
+        min-width: 0;
+    }
+
+    .cart_details .coupon-form .btn-main-masai { min-height: 44px; white-space: nowrap; }
+    .cart_details .coupon-form .coupon-message { grid-column: 1 / -1; }
+
+    .cart_details .divider_details {
+        border-top: 1px solid var(--fm-border);
+        border-right: 0;
+        margin-top: 16px;
+        padding-top: 16px;
+    }
+
+    .digital-note { padding: 14px; }
+    .order-files .pull-left {
+        display: block;
+        float: none !important;
+        width: 100%;
+        margin-top: 4px;
+        text-align: left;
+    }
+
+    .plans {
+        margin-right: 0;
+        margin-left: 0;
+        padding: 14px;
+    }
+
+    .plans .plan .plan-content { padding: 16px; }
+
+    .fm-newsletter { padding: 16px 14px; }
+    .fm-newsletter h4 { font-size: 16px; }
+    .fm-newsletter button { padding-right: 12px; padding-left: 12px; }
+}
+
+@media (max-width: 360px) {
+    nav.header-responsive .search-nav { gap: 0; }
+    nav.header-responsive .search-nav ul { gap: 0; }
+    .fm-newsletter form { padding: 5px; }
+    .fm-newsletter input { padding-right: 8px; padding-left: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

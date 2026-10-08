@@ -1,0 +1,9 @@
+# Copy this file to: <MEDIA_ROOT>/digital-products/.htaccess
+# Apache 2.4+ / LiteSpeed: paid files must never be served by the public media URL.
+Options -Indexes
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Deny from all
+</IfModule>

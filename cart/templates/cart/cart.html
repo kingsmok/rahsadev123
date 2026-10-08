@@ -104,7 +104,7 @@
                 <div class="cart-page-content col-xl-12 col-lg-12 col-md-12">
                     <div class="row cart_details">
                         <div class="cart-page-content col-xl-8 col-lg-7 col-md-7 ">
-                            <form method="post" action="{% url 'cart:apply_coupon' %}">
+                            <form method="post" action="{% url 'cart:apply_coupon' %}" class="coupon-form">
                                 {% csrf_token %}
                                 <label class="fm-sr-only" for="coupon_code">کد تخفیف</label>
                                 <input type="text" name="coupon_code" id="coupon_code" placeholder="کد تخفیف"

@@ -7137,10 +7137,14 @@ color: #2ec4b1;
         display: none !important;
     }
 
+    /* هر آیتم باید داخل عرض واقعی دستگاه بماند؛ عرض ثابت ۴۹۰px در گوشی
+       باعث اسکرول افقی کل صفحه می‌شد. */
     .checkout-item {
-        width: 490px;
-        overflow-x: visible;
         display: block;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        box-sizing: border-box;
     }
 
     .box-tabs-tab {

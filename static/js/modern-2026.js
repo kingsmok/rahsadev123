@@ -13,10 +13,12 @@
         if (themeMeta) themeMeta.setAttribute('content', theme === 'dark' ? '#0f1720' : '#ffffff');
     }
 
-    // مقدار اولیه در <head> ست شده (ضد فلش)؛ اینجا فقط همگام‌سازی
+    // مقدار اولیه در <head> ست شده (ضد فلش)؛ حالت روشن پیش‌فرض محصول است.
+    // تنها ترجیحی که کاربر با دکمهٔ تغییر حالت ثبت کرده باشد اعمال می‌شود؛
+    // تم سیستم نباید ظاهر پیش‌فرض فروشگاه را ناخواسته تیره کند.
     var saved = null;
     try { saved = localStorage.getItem('fm-theme'); } catch (e) {}
-    applyTheme(saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+    applyTheme(saved === 'dark' ? 'dark' : 'light');
 
     document.addEventListener('click', function (e) {
         var btn = e.target.closest('.theme-toggle');
@@ -34,7 +36,9 @@
     }
 
     function initLiveSearch(form) {
-        var input = form.querySelector('input[type="text"]');
+        // هدرهای فروشگاه از type="search" استفاده می‌کنند؛ پذیرش هر دو نوع
+        // باعث می‌شود جست‌وجوی زنده در دسکتاپ و موبایل فعال شود.
+        var input = form.querySelector('input[type="search"], input[type="text"]');
         if (!input) return;
         var wrap = form.parentElement;
         if (!wrap.classList.contains('live-search-wrap')) {
@@ -216,4 +220,18 @@
             setTimeout(function () { el.remove(); }, 420);
         }, 6000);
     });
+
+    /* ---------- ۸) PWA آفلاین و نصب‌پذیر ----------
+       worker فقط shell عمومی را cache می‌کند. checkout، دانلود، پرداخت و
+       dashboard عمداً network-only می‌مانند تا دادهٔ حساس/کاربر دیگر cache نشود. */
+    function registerServiceWorker() {
+        if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
+        var workerUrl = window.FM_SERVICE_WORKER_URL || '/service-worker.js';
+        navigator.serviceWorker.register(workerUrl, {scope: '/'})
+            .catch(function () {
+                // نصب PWA یک enhancement است؛ سایت در مرورگرهای قدیمی کاملاً کار می‌کند.
+            });
+    }
+    if (document.readyState === 'complete') registerServiceWorker();
+    else window.addEventListener('load', registerServiceWorker, {once: true});
 })();

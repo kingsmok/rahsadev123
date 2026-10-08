@@ -2,8 +2,8 @@
 پرکردن فروشگاه با داده‌های نمونه:
     python manage.py seed_demo
 
-- کاربر مدیر: admin / admin1234
-- کاربر نمونه: demo / demo1234
+- در توسعه: کاربر مدیر admin / admin1234 و کاربر نمونه demo / demo1234
+- در محیط عملیاتی: رمزهای تصادفی از SEED_ADMIN_PASSWORD و SEED_DEMO_PASSWORD
 - دسته‌بندی‌ها، برندها، ۱۴ محصول دیجیتال (همراه با فایل قابل دانلود)، بنرها،
   پکیج‌های طراحی سایت، نمونه کارها، مقالات، صفحات ثابت و کد تخفیف
 """
@@ -11,10 +11,11 @@ import os
 import zipfile
 from io import BytesIO
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.core.files.images import ImageFile
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
 from blog.models import Article, Category as ArticleCategory, Tag
@@ -48,6 +49,18 @@ def make_zip(product_title, files):
     return ContentFile(buffer.read())
 
 
+def _seed_password(environment_name, development_default):
+    """Never create a publicly known account password in production."""
+    if settings.DEBUG:
+        return development_default
+    password = os.environ.get(environment_name, '')
+    if len(password) < 12:
+        raise CommandError(
+            f'برای ساخت دادهٔ نمونه در محیط عملیاتی، {environment_name} را با رمزی حداقل ۱۲ کاراکتری تنظیم کنید.'
+        )
+    return password
+
+
 class Command(BaseCommand):
     help = 'پرکردن فروشگاه با داده‌های نمونه (دسته‌ها، فایل‌ها، بنرها، خدمات و ...)'
 
@@ -60,18 +73,18 @@ class Command(BaseCommand):
             defaults={'is_staff': True, 'is_superuser': True, 'email': 'admin@filemarket.ir'},
         )
         if created:
-            admin.set_password('admin1234')
+            admin.set_password(_seed_password('SEED_ADMIN_PASSWORD', 'admin1234'))
             admin.save()
-            self.stdout.write(self.style.SUCCESS('کاربر مدیر ساخته شد: admin / admin1234'))
+            self.stdout.write(self.style.SUCCESS('کاربر مدیر نمونه ساخته شد. رمز فقط در محیط توسعه پیش‌فرض است.'))
 
         demo, created = User.objects.get_or_create(
             username='demo',
             defaults={'email': 'demo@filemarket.ir', 'first_name': 'کاربر', 'last_name': 'نمونه'},
         )
         if created:
-            demo.set_password('demo1234')
+            demo.set_password(_seed_password('SEED_DEMO_PASSWORD', 'demo1234'))
             demo.save()
-            self.stdout.write(self.style.SUCCESS('کاربر نمونه ساخته شد: demo / demo1234'))
+            self.stdout.write(self.style.SUCCESS('کاربر نمونه ساخته شد.'))
 
         # ------------------------------------------------------------------ تنظیمات سایت
         if not SiteSettings.objects.exists():

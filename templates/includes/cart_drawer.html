@@ -1,0 +1,60 @@
+{% load static %}
+{% load custom_filters %}
+{# This panel deliberately lives outside the header so it cannot be clipped by
+   a header/container overflow or compete with Bootstrap's dropdown stacking. #}
+<div class="fm-cart-drawer-backdrop" data-cart-drawer-close aria-hidden="true"></div>
+<aside class="fm-cart-drawer" id="fm-cart-drawer" role="dialog" aria-modal="true"
+       aria-labelledby="fm-cart-drawer-title" aria-hidden="true" dir="rtl">
+    <header class="fm-cart-drawer__header">
+        <h2 id="fm-cart-drawer-title"><i class="fa fa-cart-shopping" aria-hidden="true"></i> سبد خرید</h2>
+        <button type="button" class="fm-cart-drawer__close" data-cart-drawer-close aria-label="بستن پنل سبد خرید">
+            <i class="fa fa-times" aria-hidden="true"></i>
+        </button>
+    </header>
+
+    <div class="fm-cart-drawer__body" tabindex="-1">
+        {% if cart_items %}
+            <ul class="fm-cart-drawer__items" aria-label="محصولات سبد خرید">
+                {% for item in cart_items %}
+                    <li class="fm-cart-drawer__item">
+                        <a href="{% url 'product:product_detail' item.product.pid item.product.slug %}" class="fm-cart-drawer__product">
+                            {% if item.product.image %}
+                                <img src="{{ item.product.image.url }}" alt="{{ item.product.title|truncatewords:5 }}">
+                            {% else %}
+                                <img src="{% static 'img/product_image_not_found.jpg' %}" alt="{{ item.product.title|truncatewords:5 }}">
+                            {% endif %}
+                            <span class="fm-cart-drawer__product-info">
+                                <span class="fm-cart-drawer__product-title">{{ item.product.title|truncatewords:5 }}</span>
+                                <span class="fm-cart-drawer__product-meta"><i class="fa fa-download" aria-hidden="true"></i> دانلود آنی <b>· تعداد: {{ item.quantity }}</b></span>
+                                <strong>{{ item.total_price|format_price }} تومان</strong>
+                            </span>
+                        </a>
+                        <button type="button" class="remove-cart-item fm-cart-drawer__remove" data-item-id="{{ item.id }}"
+                                aria-label="حذف {{ item.product.title }} از سبد خرید">
+                            <i class="fa fa-trash-can" aria-hidden="true"></i>
+                        </button>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="fm-cart-drawer__empty">
+                <i class="fa fa-cart-shopping" aria-hidden="true"></i>
+                <p>سبد خرید شما خالی است.</p>
+                <a href="{% url 'product:product_list' %}" class="fm-btn fm-btn--primary">مشاهده فایل‌ها</a>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if cart_items %}
+        <footer class="fm-cart-drawer__footer">
+            <div class="fm-cart-drawer__total">
+                <span>جمع کل</span>
+                <strong>{{ cart_total|format_price }} تومان</strong>
+            </div>
+            <div class="fm-cart-drawer__actions">
+                <a href="{% url 'cart:cart' %}" class="fm-btn fm-btn--ghost">مشاهده سبد</a>
+                <a href="{% url 'cart:shopping_payment' %}" class="fm-btn fm-btn--primary">ادامه و پرداخت</a>
+            </div>
+        </footer>
+    {% endif %}
+</aside>

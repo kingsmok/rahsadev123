@@ -1,7 +1,22 @@
+import re
+
 from django import forms
-from django.core.validators import RegexValidator
 
 from .models import ServiceRequest
+
+
+_DIGIT_TRANSLATION = str.maketrans('۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩', '01234567890123456789')
+
+
+def _normalise_iran_phone(value):
+    phone = (value or '').strip().translate(_DIGIT_TRANSLATION).replace(' ', '').replace('-', '')
+    if phone.startswith('+98'):
+        phone = '0' + phone[3:]
+    elif phone.startswith('0098'):
+        phone = '0' + phone[4:]
+    elif len(phone) == 10 and phone.startswith('9'):
+        phone = '0' + phone
+    return phone
 
 
 class ServiceRequestForm(forms.ModelForm):
@@ -9,12 +24,6 @@ class ServiceRequestForm(forms.ModelForm):
 
     phone = forms.CharField(
         max_length=14,
-        validators=[
-            RegexValidator(
-                regex=r'^(?:\+98|0098|0)?9\d{9}$',
-                message='شماره تماس را به‌صورت یک شماره موبایل معتبر وارد کنید.',
-            )
-        ],
         widget=forms.TextInput(attrs={'type': 'tel', 'autocomplete': 'tel', 'inputmode': 'tel', 'dir': 'ltr'}),
     )
 
@@ -33,13 +42,9 @@ class ServiceRequestForm(forms.ModelForm):
         return value
 
     def clean_phone(self):
-        phone = (self.cleaned_data.get('phone') or '').strip().replace(' ', '').replace('-', '')
-        if phone.startswith('+98'):
-            phone = '0' + phone[3:]
-        elif phone.startswith('0098'):
-            phone = '0' + phone[4:]
-        elif len(phone) == 10 and phone.startswith('9'):
-            phone = '0' + phone
+        phone = _normalise_iran_phone(self.cleaned_data.get('phone'))
+        if not re.fullmatch(r'09\d{9}', phone):
+            raise forms.ValidationError('شماره تماس را به‌صورت یک شماره موبایل معتبر وارد کنید.')
         return phone
 
     def clean_message(self):

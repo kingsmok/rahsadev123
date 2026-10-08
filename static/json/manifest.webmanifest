@@ -1,16 +1,39 @@
 {
+  "id": "/",
   "name": "فایل‌مارکت | فروش فایل و محصولات مجازی",
   "short_name": "فایل‌مارکت",
   "description": "خرید و دانلود آنی فایل‌های نرم‌افزاری، قالب وب سایت، اسکریپت و محصولات مجازی با لایسنس رسمی",
   "lang": "fa-IR",
   "dir": "rtl",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "browser"],
+  "orientation": "any",
   "background_color": "#f6f8fa",
   "theme_color": "#46a9ae",
   "icons": [
-    { "src": "/static/img/favicon.png", "sizes": "32x32", "type": "image/png" },
-    { "src": "/static/img/favicon.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/static/img/favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/static/img/pwa/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/static/img/pwa/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "همه فایل‌ها",
+      "short_name": "فایل‌ها",
+      "url": "/products/?source=pwa-shortcut",
+      "icons": [{ "src": "/static/img/pwa/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "تخفیف‌های ویژه",
+      "short_name": "تخفیف‌ها",
+      "url": "/products/discount_product/?source=pwa-shortcut",
+      "icons": [{ "src": "/static/img/pwa/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "دانلودهای من",
+      "short_name": "دانلودها",
+      "url": "/dashboard/downloads/?source=pwa-shortcut",
+      "icons": [{ "src": "/static/img/pwa/icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }

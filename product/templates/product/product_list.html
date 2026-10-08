@@ -28,9 +28,9 @@
                                                     <img class="img-responsive imgpad" src="{{ category.image.url }}"
                                                          alt="{{ category.title }}"/>
                                                 {% elif category.icon %}
-                                                    <i class="fa {{ category.icon }} imgpad" style="font-size:42px;color:#46a9ae;"></i>
+                                                    <i class="fa {{ category.icon }} imgpad fm-category-icon"></i>
                                                 {% else %}
-                                                    <i class="fa fa-folder imgpad" style="font-size:42px;color:#46a9ae;"></i>
+                                                    <i class="fa fa-folder imgpad fm-category-icon"></i>
                                                 {% endif %}
                                                 <b class="title-3 light-black">{{ category.title }}</b>
                                             </a>
@@ -68,13 +68,14 @@
                             <header class="card-header">
                                 <h3 class="card-title"><span class="space-right-10">نوع محصول</span></h3>
                             </header>
-                            <div class="box-content">
+                            <div class="box-content filter-choice-list">
                                 {% for value, label in product_types %}
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" name="type" value="{{ value }}"
+                                    <label class="filter-choice" for="type_{{ value }}">
+                                        <input class="filter-choice__input" type="checkbox" name="type" value="{{ value }}"
                                                id="type_{{ value }}" {% if value in selected_types %}checked{% endif %}>
-                                        <label class="form-check-label" for="type_{{ value }}">{{ label }}</label>
-                                    </div>
+                                        <span class="filter-choice__box" aria-hidden="true"></span>
+                                        <span class="filter-choice__label">{{ label }}</span>
+                                    </label>
                                 {% endfor %}
                             </div>
                         </div>
@@ -84,22 +85,26 @@
                                 <header class="card-header">
                                     <h3 class="card-title"><span class="space-right-10">برند / سازنده</span></h3>
                                 </header>
-                                <div class="box-content">
+                                <div class="box-content filter-choice-list">
                                     {% for brand in brands %}
-                                        <div class="form-check">
-                                            <input type="checkbox" class="form-check-input" name="brand" value="{{ brand.id }}"
+                                        <label class="filter-choice" for="brand_{{ brand.id }}">
+                                            <input class="filter-choice__input" type="checkbox" name="brand" value="{{ brand.id }}"
                                                    id="brand_{{ brand.id }}" {% if brand.id in selected_brands %}checked{% endif %}>
-                                            <label class="form-check-label" for="brand_{{ brand.id }}">{{ brand.title }}</label>
-                                        </div>
+                                            <span class="filter-choice__box" aria-hidden="true"></span>
+                                            <span class="filter-choice__label">{{ brand.title }}</span>
+                                        </label>
                                     {% endfor %}
                                 </div>
                             </div>
                         {% endif %}
 
-                        <div class="box">
+                        <div class="box filter-switch-box">
                             <div class="box-content">
-                                <input type="checkbox" class="bootstrap-switch" name="instant" value="1" id="instant-only" {% if instant_only == '1' %}checked{% endif %}>
-                                <label for="instant-only">فقط دانلود آنی و نامحدود</label>
+                                <label class="filter-switch" for="instant-only">
+                                    <input class="filter-switch__input" type="checkbox" name="instant" value="1" id="instant-only" {% if instant_only == '1' %}checked{% endif %}>
+                                    <span class="filter-switch__track" aria-hidden="true"></span>
+                                    <span>فقط دانلود آنی و نامحدود</span>
+                                </label>
                             </div>
                         </div>
                         <button type="submit" class="view_more">اعمال فیلتر</button>

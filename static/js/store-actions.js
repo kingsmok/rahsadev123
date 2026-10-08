@@ -27,6 +27,87 @@
         return (template || '').replace('{id}', encodeURIComponent(id));
     }
 
+    /* ------------------------------------------------------------------
+       Cart drawer
+       ------------------------------------------------------------------
+       The old mini-cart was a Bootstrap dropdown inside the desktop header.
+       A header is a fragile containing/stacking context for a long cart, so
+       this controller opens the body-level drawer instead. */
+    var drawer = document.getElementById('fm-cart-drawer');
+    var lastCartTrigger = null;
+
+    function cartTriggers() {
+        return document.querySelectorAll('.js-cart-drawer-toggle');
+    }
+
+    function closeMobileNavigation() {
+        var navigation = document.getElementById('navigation');
+        document.documentElement.classList.remove('nav-open');
+        if (navigation && navigation.classList.contains('show') && window.jQuery && window.jQuery.fn.collapse) {
+            window.jQuery(navigation).collapse('hide');
+        }
+    }
+
+    function setCartDrawer(open, trigger) {
+        if (!drawer) return;
+        if (open) {
+            closeMobileNavigation();
+            document.querySelectorAll('.live-search-results').forEach(function (item) { item.classList.remove('open'); });
+            document.querySelectorAll('.nav-categories-toggle').forEach(function (item) {
+                var parent = item.closest('.list_style');
+                if (parent) parent.classList.remove('is-open');
+                item.setAttribute('aria-expanded', 'false');
+            });
+            lastCartTrigger = trigger || document.activeElement;
+            document.documentElement.classList.add('cart-drawer-open');
+            drawer.setAttribute('aria-hidden', 'false');
+            cartTriggers().forEach(function (item) { item.setAttribute('aria-expanded', 'true'); });
+            var closeButton = drawer.querySelector('[data-cart-drawer-close]');
+            window.setTimeout(function () { if (closeButton) closeButton.focus(); }, 20);
+        } else {
+            document.documentElement.classList.remove('cart-drawer-open');
+            drawer.setAttribute('aria-hidden', 'true');
+            cartTriggers().forEach(function (item) { item.setAttribute('aria-expanded', 'false'); });
+            if (lastCartTrigger && typeof lastCartTrigger.focus === 'function' && document.contains(lastCartTrigger)) {
+                lastCartTrigger.focus();
+            }
+        }
+    }
+
+    function cartDrawerIsOpen() {
+        return document.documentElement.classList.contains('cart-drawer-open');
+    }
+
+    function trapCartDrawerFocus(event) {
+        if (!cartDrawerIsOpen() || event.key !== 'Tab' || !drawer) return;
+        var focusable = Array.prototype.slice.call(drawer.querySelectorAll(
+            'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )).filter(function (item) { return item.getAttribute('aria-hidden') !== 'true'; });
+        if (!focusable.length) {
+            event.preventDefault();
+            return;
+        }
+        var first = focusable[0];
+        var last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
+    }
+
+    document.addEventListener('keydown', function (event) {
+        if (!cartDrawerIsOpen()) return;
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            setCartDrawer(false);
+            return;
+        }
+        trapCartDrawerFocus(event);
+    });
+
     window.addToCart = function addToCart(element) {
         if (!element) return;
         if (!config.isAuthenticated) {
@@ -78,6 +159,20 @@
     };
 
     document.addEventListener('click', function (event) {
+        var cartTrigger = event.target.closest('.js-cart-drawer-toggle');
+        if (cartTrigger) {
+            event.preventDefault();
+            setCartDrawer(!cartDrawerIsOpen(), cartTrigger);
+            return;
+        }
+
+        var drawerClose = event.target.closest('[data-cart-drawer-close]');
+        if (drawerClose && cartDrawerIsOpen()) {
+            event.preventDefault();
+            setCartDrawer(false);
+            return;
+        }
+
         var addButton = event.target.closest('.js-add-to-cart');
         if (addButton) {
             event.preventDefault();

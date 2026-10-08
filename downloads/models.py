@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.db.models import F, Q
 from django.utils import timezone
 from datetime import timedelta
 from shortuuid.django_fields import ShortUUIDField
@@ -57,6 +58,22 @@ class DownloadToken(models.Model):
         return self.is_active and not self.is_expired and self.download_count < self.max_downloads
 
     def register_download(self):
-        self.download_count = models.F('download_count') + 1
-        self.save(update_fields=['download_count'])
-        self.refresh_from_db(fields=['download_count'])
+        """Atomically consume one permitted download.
+
+        Checking ``is_valid`` and incrementing in separate queries allowed two
+        simultaneous requests to pass the final-download check.  Keep the
+        validity predicates in the update itself, so the download ceiling is
+        enforced by the database as well as the view.
+        """
+        now = timezone.now()
+        consumed = DownloadToken.objects.filter(
+            pk=self.pk,
+            is_active=True,
+            download_count__lt=F('max_downloads'),
+        ).filter(
+            Q(expires_at__isnull=True) | Q(expires_at__gte=now)
+        ).update(download_count=F('download_count') + 1)
+
+        if consumed:
+            self.refresh_from_db(fields=['download_count'])
+        return bool(consumed)

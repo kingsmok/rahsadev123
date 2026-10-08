@@ -87,6 +87,9 @@ class AccountDataRegressionTests(TestCase):
         profile.refresh_from_db()
         self.assertEqual(profile.phone, '09121234567')
         self.assertEqual(profile.card_number, '6037498514785236')
+        profile_page = self.client.get(reverse('dashboard:user_profile'))
+        self.assertContains(profile_page, '**** **** **** 5236')
+        self.assertNotContains(profile_page, '6037498514785236')
 
     def test_cancellation_request_is_digital_only_and_has_a_non_javascript_fallback(self):
         profile = self.user.profile

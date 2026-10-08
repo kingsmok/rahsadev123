@@ -4,6 +4,7 @@
 در صورت خالی بودن، از متغیرهای محیطی. برای زرین‌پال حالت تست (سندباکس) هم پشتیبانی می‌شود.
 """
 import json
+from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
 from django.conf import settings
@@ -23,6 +24,12 @@ ZARINPAL_SANDBOX = {
 
 
 def post_json(url, payload, headers=None):
+    """POST only to an explicitly allowed HTTPS payment API host."""
+    parsed = urlsplit(url)
+    allowed_hosts = set(getattr(settings, 'ZARINPAL_ALLOWED_HOSTS', ()))
+    if parsed.scheme != 'https' or not parsed.hostname or parsed.hostname not in allowed_hosts:
+        raise ValueError('آدرس API درگاه پرداخت مجاز نیست.')
+
     request = Request(url, data=json.dumps(payload).encode(), headers={'Content-Type': 'application/json', **(headers or {})})
     with urlopen(request, timeout=15) as response:
         return json.loads(response.read().decode())

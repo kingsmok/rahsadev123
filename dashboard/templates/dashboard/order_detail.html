@@ -144,7 +144,7 @@
                                             <span class="label">{{ token.product.title|truncatewords:7 }}</span>
                                             {% if token.is_valid %}
                                                 <span class="value">
-                                                    <a href="{% url 'downloads:download' token.token %}" class="btn btn-main-masai" style="padding: 4px 20px;font-size: 12px;">
+                                                    <a href="{% url 'downloads:download' token.token %}" class="btn btn-main-masai fm-compact-action">
                                                         دانلود ({{ token.remaining_downloads }} باقی‌مانده)
                                                     </a>
                                                 </span>

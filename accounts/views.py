@@ -6,6 +6,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from .forms import LoginForm, UserRegistrationForm
+from .security import clear_login_failures, login_is_throttled, record_failed_login
 
 
 def _safe_next(request):
@@ -42,11 +43,17 @@ def user_login(request):
 
     if request.method == 'POST':
         form = LoginForm(request.POST)
-        if form.is_valid():
+        username = form.data.get('username', '')
+        if login_is_throttled(request, username):
+            form.add_error(None, 'تعداد تلاش‌های ناموفق زیاد است. لطفاً چند دقیقه دیگر دوباره امتحان کنید.')
+        elif form.is_valid():
             user = User.objects.get(username=form.cleaned_data.get('username'))
+            clear_login_failures(request, username)
             login(request, user)
             messages.success(request, f'خوش آمدید {user.get_full_name() or user.username}!')
             return redirect(_safe_next(request) or 'core:home')
+        else:
+            record_failed_login(request, username)
     else:
         form = LoginForm()
 

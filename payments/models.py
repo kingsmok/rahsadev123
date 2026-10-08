@@ -20,6 +20,15 @@ class PaymentTransaction(models.Model):
         verbose_name = 'تراکنش پرداخت'
         verbose_name_plural = 'تراکنش‌های پرداخت'
         ordering = ['-created_at']
+        constraints = [
+            # Empty is the normal value before a gateway returns an authority;
+            # once present, a provider reference must identify one transaction.
+            models.UniqueConstraint(
+                fields=['authority'],
+                condition=models.Q(authority__gt=''),
+                name='payment_transaction_unique_authority',
+            ),
+        ]
 
     def __str__(self):
         return f'{self.order.order_number} - {self.get_gateway_display()}'
@@ -61,11 +70,12 @@ class GatewaySettings(models.Model):
 
     @property
     def is_configured(self):
-        """آیا اطلاعات اعتباری لازم این درگاه ثبت شده است؟"""
+        """Whether database *or environment* credentials are complete."""
+        credentials = self.effective_credentials()
         if self.key in ('zarinpal', 'torobpay'):
-            return bool(self.merchant_id)
+            return bool(credentials['merchant_id'])
         if self.key == 'snappay':
-            return bool(self.client_id and self.client_secret)
+            return bool(credentials['client_id'] and credentials['client_secret'])
         return False
 
     def effective_credentials(self):

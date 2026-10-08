@@ -7,6 +7,38 @@ from django.core.exceptions import ImproperlyConfigured
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def _load_dotenv(path):
+    """Load the simple KEY=value values used by the documented local .env file.
+
+    Deployment environments still take precedence and no third-party package is
+    required just to run the project locally.  Quotes around a value are
+    accepted; complex shell expansion deliberately is not.
+    """
+    try:
+        lines = path.read_text(encoding='utf-8').splitlines()
+    except OSError:
+        return
+    for raw_line in lines:
+        line = raw_line.strip()
+        if not line or line.startswith('#'):
+            continue
+        if line.startswith('export '):
+            line = line[7:].lstrip()
+        if '=' not in line:
+            continue
+        key, value = line.split('=', 1)
+        key = key.strip()
+        value = value.strip()
+        if not key or not key.replace('_', '').isalnum():
+            continue
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+            value = value[1:-1]
+        os.environ.setdefault(key, value)
+
+
+_load_dotenv(BASE_DIR / '.env')
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -47,6 +79,13 @@ TOROBPAY_MERCHANT_ID = os.environ.get('TOROBPAY_MERCHANT_ID', '')
 ZARINPAL_REQUEST_URL = os.environ.get('ZARINPAL_REQUEST_URL', 'https://api.zarinpal.com/pg/v4/payment/request.json')
 ZARINPAL_VERIFY_URL = os.environ.get('ZARINPAL_VERIFY_URL', 'https://api.zarinpal.com/pg/v4/payment/verify.json')
 ZARINPAL_START_URL = os.environ.get('ZARINPAL_START_URL', 'https://www.zarinpal.com/pg/StartPay/')
+# Prevent a compromised database/configuration from making payment requests to
+# arbitrary hosts. Add a verified provider host here only when needed.
+ZARINPAL_ALLOWED_HOSTS = tuple(
+    host.strip().lower()
+    for host in os.environ.get('ZARINPAL_ALLOWED_HOSTS', 'api.zarinpal.com,sandbox.zarinpal.com').split(',')
+    if host.strip()
+)
 
 
 # Application definition
@@ -58,10 +97,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'ckeditor_uploader',
+    'django_ckeditor_5',
     # installed apps
     'jalali_date',
-    'ckeditor',
     'django_cleanup.apps.CleanupConfig',
     # my apps
     'core',
@@ -78,6 +116,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'core.middleware.BrowserPolicyMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'core.middleware.RedirectMiddleware',
@@ -163,12 +202,51 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+# Paid digital assets are deliberately separate from public media. Do not map
+# this directory to a web-server URL; downloads are served after token checks.
+PRIVATE_MEDIA_ROOT = os.path.join(BASE_DIR, 'private_media')
+
+# Uploads are automatically converted to compact WebP files where safe. Values
+# can be tuned per deployment without a migration.
+IMAGE_OPTIMIZATION_ENABLED = os.environ.get('IMAGE_OPTIMIZATION_ENABLED', 'true').lower() in ('1', 'true', 'yes')
+try:
+    IMAGE_OPTIMIZATION_MAX_DIMENSION = max(1, int(os.environ.get('IMAGE_OPTIMIZATION_MAX_DIMENSION', '2000')))
+    IMAGE_OPTIMIZATION_WEBP_QUALITY = min(100, max(1, int(os.environ.get('IMAGE_OPTIMIZATION_WEBP_QUALITY', '82'))))
+except ValueError:
+    IMAGE_OPTIMIZATION_MAX_DIMENSION = 2000
+    IMAGE_OPTIMIZATION_WEBP_QUALITY = 82
+
+# CKEditor 5: uploads are staff-only and use the same safe WebP optimisation
+# pipeline as model ImageFields. The compact toolbar avoids source editing and
+# remote-media embedding in the CMS.
+CKEDITOR_5_FILE_UPLOAD_PERMISSION = 'staff'
+CKEDITOR_5_FILE_STORAGE = 'core.storage.CkeditorImageStorage'
+CKEDITOR_5_CONFIGS = {
+    'default': {
+        'toolbar': {
+            'items': [
+                'heading', '|', 'bold', 'italic', 'link',
+                'bulletedList', 'numberedList', 'blockQuote', 'imageUpload',
+                'insertTable', 'undo', 'redo',
+            ],
+        },
+        'language': 'fa',
+        'image': {'toolbar': ['imageTextAlternative', '|', 'imageStyle:alignLeft', 'imageStyle:alignCenter', 'imageStyle:alignRight']},
+        'table': {'contentToolbar': ['tableColumn', 'tableRow', 'mergeTableCells']},
+    },
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'account:login'
+
+# Cache-backed login throttling. Use a shared cache such as Redis in production
+# so the limit applies across all application workers.
+LOGIN_RATE_LIMIT_WINDOW_SECONDS = 15 * 60
+LOGIN_RATE_LIMIT_IDENTITY_ATTEMPTS = 5
+LOGIN_RATE_LIMIT_IP_ATTEMPTS = 20
 
 
 # JALALI DATE Settings (optional)

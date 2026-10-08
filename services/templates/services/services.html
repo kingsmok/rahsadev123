@@ -25,7 +25,7 @@
             </div>
 
             <!-- Packages -->
-            <h2 class="svc-section-title"><i class="fa fa-tags" aria-hidden="true"></i> تعرفه‌های طراحی سایت</h2>
+            <h2 class="svc-section-title" id="packages" tabindex="-1"><i class="fa fa-tags" aria-hidden="true"></i> تعرفه‌های طراحی سایت</h2>
             <div class="row">
                 {% for package in packages %}
                     <div class="col-12 col-md-4 space-bottom-30">
@@ -35,7 +35,7 @@
                             <div class="sub">{{ package.subtitle }}</div>
                             <div class="amount">
                                 {% if package.price %}
-                                    <b>{{ package.price|format_price }}</b> <span style="font-size:13px;">تومان</span>
+                                    <b>{{ package.price|format_price }}</b> <span class="fm-price-unit">تومان</span>
                                 {% else %}
                                     <b>استعلام قیمت</b>
                                 {% endif %}

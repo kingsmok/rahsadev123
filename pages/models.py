@@ -1,10 +1,10 @@
 from django.db import models
-from ckeditor_uploader.fields import RichTextUploadingField
+from django_ckeditor_5.fields import CKEditor5Field
 class StaticPage(models.Model):
     title=models.CharField(max_length=200, verbose_name='عنوان')
     slug=models.SlugField(max_length=220, unique=True, allow_unicode=True)
     summary=models.CharField(max_length=160, blank=True, verbose_name='توضیحات سئو')
-    content=RichTextUploadingField(verbose_name='محتوا')
+    content=CKEditor5Field(config_name='default', verbose_name='محتوا')
     is_published=models.BooleanField(default=True)
     updated_at=models.DateTimeField(auto_now=True)
 

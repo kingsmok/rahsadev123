@@ -1,8 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
-from ckeditor_uploader.fields import RichTextUploadingField
+from django_ckeditor_5.fields import CKEditor5Field
 from django.utils.html import format_html
 from shortuuid.django_fields import ShortUUIDField
+
+from .storage import PrivateDigitalStorage
 
 
 STATUS = (
@@ -64,8 +66,8 @@ class ProductCategory(models.Model):
 
     def category_image(self):
         if self.image:
-            return format_html(f'<img src="{self.image.url}" width="50px" height="50px">')
-        return format_html(f'<h3 style="color: red">تصویر ندارد</h3>')
+            return format_html('<img src="{}" width="50px" height="50px">', self.image.url)
+        return format_html('<h3 style="color: red">تصویر ندارد</h3>')
 
     def __str__(self):
         return self.title
@@ -106,8 +108,8 @@ class ProductBrand(models.Model):
 
     def brand_image(self):
         if self.image:
-            return format_html(f'<img src="{self.image.url}" width="50px" height="50px">')
-        return format_html(f'<h3 style="color: red">تصویر ندارد</h3>')
+            return format_html('<img src="{}" width="50px" height="50px">', self.image.url)
+        return format_html('<h3 style="color: red">تصویر ندارد</h3>')
 
     def __str__(self):
         return self.title
@@ -120,7 +122,7 @@ class Product(models.Model):
     title = models.CharField(max_length=300, unique=True, verbose_name='عنوان محصول')
     slug = models.SlugField(max_length=300, unique=True, allow_unicode=True, verbose_name='نامک')
     short_description = models.CharField(max_length=300, blank=True, verbose_name='توضیح کوتاه')
-    description = RichTextUploadingField(verbose_name='توضیحات تکمیلی')
+    description = CKEditor5Field(config_name='default', verbose_name='توضیحات تکمیلی')
     published_at = models.DateTimeField(null=True, blank=True, verbose_name='تاریخ انتشار')
     is_featured = models.BooleanField(default=False, verbose_name='ویژه')
     old_price = models.IntegerField(null=True, blank=True, verbose_name='قیمت قدیمی محصول')
@@ -178,6 +180,15 @@ class Product(models.Model):
         verbose_name = 'محصول'
         verbose_name_plural = 'محصولات'
         ordering = ['-created_at', '-id']
+        constraints = [
+            models.CheckConstraint(condition=models.Q(price__gte=0), name='product_price_nonnegative'),
+            models.CheckConstraint(
+                condition=models.Q(old_price__isnull=True) | models.Q(old_price__gte=0),
+                name='product_old_price_nonnegative',
+            ),
+            models.CheckConstraint(condition=models.Q(stock_count__gte=0), name='product_stock_nonnegative'),
+            models.CheckConstraint(condition=models.Q(sales_count__gte=0), name='product_sales_count_nonnegative'),
+        ]
 
     @property
     def is_available(self):
@@ -197,8 +208,8 @@ class Product(models.Model):
 
     def product_image(self):
         if self.image:
-            return format_html(f'<img src="{self.image.url}" width="50px" height="50px">')
-        return format_html(f'<h3 style="color: red">تصویر ندارد</h3>')
+            return format_html('<img src="{}" width="50px" height="50px">', self.image.url)
+        return format_html('<h3 style="color: red">تصویر ندارد</h3>')
 
     def __str__(self):
         return self.title
@@ -206,7 +217,11 @@ class Product(models.Model):
 
 class DigitalAsset(models.Model):
     product = models.OneToOneField(Product, related_name='digital_asset', on_delete=models.CASCADE, verbose_name='محصول')
-    file = models.FileField(upload_to='digital-products/', verbose_name='فایل محصول')
+    file = models.FileField(
+        upload_to='digital-products/',
+        storage=PrivateDigitalStorage(),
+        verbose_name='فایل محصول',
+    )
     preview_file = models.FileField(upload_to='digital-previews/', null=True, blank=True, verbose_name='فایل پیش‌نمایش')
     file_size = models.PositiveBigIntegerField(default=0, editable=False, verbose_name='حجم فایل')
     file_type = models.CharField(max_length=80, blank=True, verbose_name='فرمت فایل')

@@ -1,5 +1,5 @@
 from django.db import models
-from ckeditor_uploader.fields import RichTextUploadingField
+from django_ckeditor_5.fields import CKEditor5Field
 from django.utils.html import format_html
 
 
@@ -21,7 +21,7 @@ class SiteSettings(models.Model):
     site_slogan = models.CharField(max_length=200, blank=True, default='مارکت فایل، نرم‌افزار و محصولات مجازی', verbose_name='شعار سایت')
     logo = models.ImageField(upload_to='settings/', null=True, blank=True, verbose_name='لوگو (اختیاری)',
                              help_text='اگر خالی باشد لوگوی متنی نمایش داده می‌شود')
-    text_about_us = RichTextUploadingField(null=True, blank=True, verbose_name='متن درباره ما')
+    text_about_us = CKEditor5Field(config_name='default', null=True, blank=True, verbose_name='متن درباره ما')
     text_contact_us = models.TextField(null=True, blank=True, verbose_name='متن تماس با ما')
     footer_description = models.TextField(blank=True, verbose_name='متن معرفی فوتر',
                                           help_text='اگر خالی باشد متن پیش‌فرض نمایش داده می‌شود')
@@ -67,8 +67,8 @@ class Banner(models.Model):
 
     def banner_image(self):
         if self.image:
-            return format_html(f'<img src="{self.image.url}" width="100px" height="50px">')
-        return format_html(f'<h3 style="color: red">تصویر ندارد</h3>')
+            return format_html('<img src="{}" width="100px" height="50px">', self.image.url)
+        return format_html('<h3 style="color: red">تصویر ندارد</h3>')
 
     def __str__(self):
         return self.title
