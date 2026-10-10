@@ -113,7 +113,7 @@
 }
 
 /* ───────────────────────── ۲) حالت شب ───────────────────────── */
-[data-theme="dark"] {
+[data-theme="dark"], html.fm-auto-dark {
     --fm-primary-50:  #10292b;
     --fm-primary-100: #15393c;
     --fm-primary-200: #1d4e52;

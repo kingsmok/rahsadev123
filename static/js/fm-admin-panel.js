@@ -34,6 +34,11 @@
         } catch (error) {
             /* در حالت خصوصی مرورگر دسترسی به localStorage ممکن است نباشد */
         }
+        // رنگ نوار مرورگر موبایل با تم هماهنگ شود
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) {
+            meta.setAttribute('content', theme === 'dark' ? '#0b1720' : '#ffffff');
+        }
         syncButtons();
         // نمودارها رنگ‌هایشان را با تم عوض می‌کنند
         document.dispatchEvent(new CustomEvent('fm-theme-change', { detail: { theme: theme } }));

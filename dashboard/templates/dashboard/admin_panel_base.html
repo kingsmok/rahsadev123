@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <meta name="theme-color" content="#0b1720">
+    <meta name="theme-color" content="#ffffff">
     <title>{% block panel_title %}داشبورد مدیریت{% endblock %} | فایل‌مارکت</title>
     <link rel="icon" type="image/png" href="{% static 'img/favicon.png' %}">
     <link rel="stylesheet" href="{% static 'fonts/font-awesome/css/fontawesome.min.css' %}">
@@ -13,12 +13,13 @@
     <script>
         /* حالت شب/روز پنل — همان کلید فروشگاه تا انتخاب کاربر یکجا حفظ شود */
         (function () {
+            var dark = false;
             try {
-                var theme = localStorage.getItem('fm-theme');
-                document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
-            } catch (e) {
-                document.documentElement.setAttribute('data-theme', 'light');
-            }
+                dark = localStorage.getItem('fm-theme') === 'dark';
+            } catch (e) { /* حالت خصوصی */ }
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) { meta.setAttribute('content', dark ? '#0b1720' : '#ffffff'); }
         })();
     </script>
     {% block panel_head %}{% endblock %}
