@@ -42,6 +42,20 @@ def _chart_payload(revenue_series, status_breakdown, type_breakdown):
     }
 
 
+def _sidebar_context():
+    """کلیدهایی که سایدبار پنل (`admin_panel_base.html`) برای شمارنده‌ها لازم دارد.
+
+    همهٔ صفحه‌های پنل باید این کلیدها را به قالب بدهند تا نشانگرهای کنار منو
+    (در انتظار، کاتالوگ، ریدایرکت) خالی نمانند.
+    """
+    return {
+        'pending': analytics.pending_actions(),
+        'catalogue': analytics.catalogue_stats(),
+        'redirects_count': Redirect.objects.filter(is_active=True).count(),
+        'today_jalali': analytics.jalali_full(timezone.localtime(timezone.now())),
+    }
+
+
 @staff_member_required
 def admin_home(request):
     range_days = analytics.resolve_range_days(request.GET.get('range'))
@@ -61,8 +75,6 @@ def admin_home(request):
         'top_products': analytics.top_products(range_days),
         'low_stock_products': analytics.low_stock_products(),
         'products_without_asset': analytics.products_without_asset(),
-        'pending': analytics.pending_actions(),
-        'catalogue': analytics.catalogue_stats(),
         'chart_data': _chart_payload(revenue_series, status_breakdown, type_breakdown),
         'recent_orders': Order.objects.select_related('user').order_by('-created_at')[:10],
         'recent_payments': PaymentTransaction.objects.select_related('order').order_by('-created_at')[:8],
@@ -70,8 +82,7 @@ def admin_home(request):
         'recent_downloads': DownloadToken.objects.select_related('user', 'product').order_by('-created_at')[:6],
         'recent_articles': Article.objects.order_by('-created_at')[:5],
         'gateways': GatewaySettings.objects.all(),
-        'redirects_count': Redirect.objects.filter(is_active=True).count(),
-        'today_jalali': analytics.jalali_full(timezone.localtime(timezone.now())),
+        **_sidebar_context(),
         'window_from': analytics.jalali_full(analytics.window_start(range_days)),
         'window_to': analytics.jalali_full(timezone.localtime(timezone.now())),
         'week_ago_orders': Order.objects.filter(
@@ -143,6 +154,6 @@ def admin_health(request):
         ],
         'inactive_packages': ServicePackage.objects.filter(is_active=False),
         'inactive_portfolio': PortfolioItem.objects.filter(is_active=False),
-        'today_jalali': analytics.jalali_full(timezone.localtime(timezone.now())),
+        **_sidebar_context(),
     }
     return render(request, 'dashboard/admin_health.html', context)

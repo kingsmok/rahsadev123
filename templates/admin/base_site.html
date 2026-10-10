@@ -6,7 +6,68 @@
 {% block extrastyle %}{{ block.super }}
     <link rel="stylesheet" href="{% static 'fonts/font-awesome/css/fontawesome.min.css' %}">
     <link rel="stylesheet" href="{% static 'fonts/font-awesome/css/solid.css' %}">
+    {# توکن‌ها + استایل‌های مشترک داشبورد کاربر (بلوک‌ها، جدول‌ها، برچسب‌ها) تا همهٔ بخش‌های ادمین به زبان طراحی داشبورد درآیند #}
+    <link rel="stylesheet" href="{% static 'css/fm-design-system.css' %}">
+    <link rel="stylesheet" href="{% static 'css/fm-dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/fm-admin.css' %}">
+{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <script src="{% static 'js/fm-admin.js' %}" defer></script>
+{% endblock %}
+
+{# ── پل اتصال کلید تم: فروشگاه/پنل از `fm-theme` و ادمین جنگو از `theme` استفاده می‌کنند ── #}
+{% block dark-mode-vars %}
+    <link rel="stylesheet" href="{% static 'admin/css/dark_mode.css' %}">
+    <script>
+        /* پیش از theme.js: اگر کاربر در فروشگاه/پنل تم انتخاب کرده، همان را به ادمین بده */
+        (function () {
+            try {
+                var shared = localStorage.getItem('fm-theme');
+                if (shared === 'dark' || shared === 'light') {
+                    localStorage.setItem('theme', shared);
+                }
+            } catch (error) { /* localStorage در حالت خصوصی ممکن است بسته باشد */ }
+        })();
+    </script>
+    <script src="{% static 'admin/js/theme.js' %}"></script>
+    <script>
+        /* پس از theme.js: هر تغییرِ صریحِ تمِ ادمین به fm-theme بازتاب داده شود
+           تا فروشگاه و پنل هم از همان تم پیروی کنند (تم مشترک سراسری).
+           برای حالت auto هم کلاس `fm-auto-dark` روی <html> نگه داشته می‌شود تا
+           لایهٔ توکن‌ها (fm-design-system) بتواند در ترجیح تیرهٔ سیستم بچرخد. */
+        (function () {
+            var mq = window.matchMedia('(prefers-color-scheme: dark)');
+            function resolvedTheme() {
+                var attr = document.documentElement.getAttribute('data-theme');
+                if (attr === 'dark' || attr === 'light') { return attr; }
+                return mq.matches ? 'dark' : 'light';
+            }
+            function syncAutoClass() {
+                var attr = document.documentElement.getAttribute('data-theme');
+                document.documentElement.classList.toggle(
+                    'fm-auto-dark', attr === 'auto' && mq.matches
+                );
+            }
+            function mirror() {
+                try { localStorage.setItem('fm-theme', resolvedTheme()); } catch (error) {}
+            }
+            function sync() { syncAutoClass(); mirror(); }
+            if (window.MutationObserver) {
+                // theme.js هنگام بارگذاری مقدار اولیه را گذاشته؛ این observer فقط
+                // تغییرهای بعدی (کلیک کاربر روی دکمه تم) را می‌بیند.
+                new MutationObserver(sync).observe(document.documentElement, {
+                    attributes: true,
+                    attributeFilter: ['data-theme']
+                });
+            }
+            var onSystemChange = function () { syncAutoClass(); if (document.documentElement.getAttribute('data-theme') === 'auto') { mirror(); } };
+            if (mq.addEventListener) { mq.addEventListener('change', onSystemChange); }
+            else if (mq.addListener) { mq.addListener(onSystemChange); }
+            syncAutoClass();
+        })();
+    </script>
 {% endblock %}
 
 {% block branding %}
