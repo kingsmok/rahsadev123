@@ -24,7 +24,7 @@ from core.models import Banner, SiteSettings
 from pages.models import StaticPage
 from product.models import DigitalAsset, Product, ProductBrand, ProductCategory, ProductComment
 from services.models import PortfolioItem, ServicePackage
-from payments.models import GatewaySettings
+from payments.models import GatewaySettings, PaymentTransaction
 
 SEED_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'media', 'seed')
 PRODUCT_IMAGES = os.path.join(SEED_DIR, 'products')
@@ -797,10 +797,27 @@ class Command(BaseCommand):
                         unit_price=p.price, quantity=1, total_price=p.price,
                     )
                     DownloadToken.objects.create(user=demo, product=p, order=order)
+
                 self.stdout.write(
                     f'سفارش پرداخت‌شده نمونه ثبت شد: {order.order_number} '
                     f'({len(demo_products)} فایل قابل دانلود برای کاربر demo).'
                 )
+
+        # بدون تراکنش متناظر، KPI «درآمد موفق» عدد نشان می‌دهد اما جدول
+        # «آخرین تراکنش‌ها» و «عملکرد درگاه‌ها» در پنل خالی می‌مانند.
+        # این حلقه هم سفارش تازه را پوشش می‌دهد و هم پایگاه‌های قدیمی را ترمیم می‌کند.
+        for seed_order in Order.objects.filter(user=demo, status='paid'):
+            PaymentTransaction.objects.get_or_create(
+                order=seed_order,
+                defaults={
+                    'gateway': 'zarinpal',
+                    'authority': f'SEED-{seed_order.order_number}',
+                    'ref_id': f'SEED-{seed_order.order_number}',
+                    'amount': seed_order.final_price,
+                    'status': 'paid',
+                    'raw_response': {'seed': True},
+                },
+            )
 
         self.stdout.write(self.style.SUCCESS(
             'داده‌های نمونه با موفقیت ثبت شد!\n'

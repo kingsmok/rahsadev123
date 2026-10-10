@@ -1,5 +1,6 @@
 {% extends 'dashboard/admin_panel_base.html' %}
 {% load custom_filters %}
+{% load jalali_tags %}
 
 {% block panel_title %}سلامت فروشگاه{% endblock %}
 {% block panel_heading %}سلامت فروشگاه{% endblock %}
@@ -105,7 +106,7 @@
                             <td><a class="ap-num" href="{% url 'admin:cart_order_change' order.pk %}">{{ order.order_number }}</a></td>
                             <td>{{ order.user.get_username }}</td>
                             <td class="ap-num">{{ order.final_price|format_price|persian_digits }}</td>
-                            <td class="ap-muted-cell ap-num">{{ order.created_at|date:"Y/m/d H:i" }}</td>
+                            <td class="ap-muted-cell ap-num">{{ order.created_at|to_jalali:'%Y/%m/%d %H:%M'|persian_digits }}</td>
                         </tr>
                     {% empty %}
                         <tr><td colspan="4" class="ap-muted-cell">سفارش بلاتکلیفی وجود ندارد. ✔</td></tr>

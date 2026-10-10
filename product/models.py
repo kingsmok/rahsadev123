@@ -8,8 +8,8 @@ from .storage import PrivateDigitalStorage
 
 
 STATUS = (
-    ("draft", "پیش نویس شود"),
-    ("published", "منتشر شود")
+    ("draft", "پیش‌نویس"),
+    ("published", "منتشر شده")
 )
 
 PRODUCT_TYPES = (

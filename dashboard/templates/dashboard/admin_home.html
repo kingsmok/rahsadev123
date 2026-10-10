@@ -1,6 +1,7 @@
 {% extends 'dashboard/admin_panel_base.html' %}
 {% load static %}
 {% load custom_filters %}
+{% load jalali_tags %}
 
 {% block panel_title %}داشبورد مدیریت{% endblock %}
 
@@ -274,7 +275,7 @@
                             <td>{{ order.user.get_username }}</td>
                             <td class="ap-num"><b>{{ order.final_price|format_price|persian_digits }}</b></td>
                             <td><span class="ap-badge is-{{ order.status }}">{{ order.get_status_display }}</span></td>
-                            <td class="ap-muted-cell ap-num">{{ order.created_at|date:"Y/m/d H:i" }}</td>
+                            <td class="ap-muted-cell ap-num">{{ order.created_at|to_jalali:'%Y/%m/%d %H:%M'|persian_digits }}</td>
                         </tr>
                     {% empty %}
                         <tr><td colspan="5" class="ap-muted-cell">هنوز سفارشی ثبت نشده است.</td></tr>
