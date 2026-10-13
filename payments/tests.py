@@ -1,9 +1,11 @@
+from unittest import mock
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth.models import User
 from django.test import SimpleTestCase, TestCase, override_settings
 
 from cart.models import Cart, CartItem, Order
+from payments import views as payment_views
 from payments.gateways import post_json
 from payments.models import GatewaySettings, PaymentTransaction
 from product.models import Product
@@ -227,3 +229,64 @@ class LimitedStockFulfilmentTests(TestCase):
         # The unfulfilled buyer's transaction stays reconcilable, not "paid".
         tx_b.refresh_from_db()
         self.assertNotEqual(tx_b.status, 'paid')
+
+
+class GatewayErrorDisclosureTests(TestCase):
+    """A gateway failure must be logged, not echoed back to the customer."""
+
+    def setUp(self):
+        self.user = User.objects.create_user('payer', password='Safe-pass-123!')
+        vendor = User.objects.create_user('gw-vendor', password='Safe-pass-123!')
+        self.product = Product.objects.create(
+            vendor=vendor, title='فایل درگاه', slug='gateway-file', description='توضیح',
+            price=100000, stock_count=5,
+        )
+        self.cart = Cart.objects.create(user=self.user)
+        CartItem.objects.create(cart=self.cart, product=self.product)
+        GatewaySettings.objects.create(
+            key='zarinpal', title='زرین‌پال', is_enabled=True, merchant_id='MERCHANT-TEST',
+        )
+        self.client.force_login(self.user)
+
+    def test_gateway_exception_is_not_shown_to_the_customer(self):
+        class ExplodingGateway:
+            code = 'zarinpal'
+
+            def start(self, transaction, callback_url):
+                raise RuntimeError(
+                    'ConnectionError: HTTPSConnectionPool(host="api.zarinpal.internal") '
+                    'merchant_id=SECRET-MERCHANT-12345'
+                )
+
+            def verify(self, transaction, data):
+                return False, {}
+
+        with mock.patch.dict(payment_views.GATEWAYS, {'zarinpal': ExplodingGateway()}):
+            with self.assertLogs('payments.views', level='ERROR') as captured:
+                response = self.client.post('/payments/start/new/', {'gateway': 'zarinpal'}, follow=True)
+
+        body = response.content.decode()
+        self.assertNotIn('SECRET-MERCHANT-12345', body)
+        self.assertNotIn('api.zarinpal.internal', body)
+        # ... but support can still find it in the log and on the transaction.
+        self.assertIn('SECRET-MERCHANT-12345', '\n'.join(captured.output))
+        tx = PaymentTransaction.objects.get(order__user=self.user)
+        self.assertEqual(tx.status, 'failed')
+        self.assertIn('SECRET-MERCHANT-12345', str(tx.raw_response))
+
+    def test_customer_gets_a_reference_to_quote(self):
+        class ExplodingGateway:
+            code = 'zarinpal'
+
+            def start(self, transaction, callback_url):
+                raise RuntimeError('boom')
+
+            def verify(self, transaction, data):
+                return False, {}
+
+        with mock.patch.dict(payment_views.GATEWAYS, {'zarinpal': ExplodingGateway()}):
+            with self.assertLogs('payments.views', level='ERROR'):
+                response = self.client.post('/payments/start/new/', {'gateway': 'zarinpal'}, follow=True)
+
+        order = Order.objects.get(user=self.user, status='pending')
+        self.assertContains(response, order.order_number)

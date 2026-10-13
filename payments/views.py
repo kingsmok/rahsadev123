@@ -287,7 +287,15 @@ def start_payment(request, order_number):
     except Exception as exc:
         transaction.status, transaction.raw_response = 'failed', {'error': str(exc)}
         transaction.save(update_fields=['status', 'raw_response', 'updated_at'])
-        messages.error(request, f'اتصال به درگاه انجام نشد: {exc}')
+        # The exception text can carry internal hostnames, gateway response
+        # fragments or credential-shaped details.  Keep that in the log, and
+        # show the customer a message they can quote to support instead.
+        logger.exception('خطا در آغاز پرداخت سفارش %s از درگاه %s', order.order_number, gateway)
+        messages.error(
+            request,
+            'اتصال به درگاه پرداخت برقرار نشد. مبلغی از شما کسر نشده است؛ '
+            f'لطفاً دوباره تلاش کنید و در صورت تکرار، کد پیگیری «{order.order_number}» را به پشتیبانی اعلام کنید.',
+        )
         return redirect('cart:shopping_payment')
 
 
