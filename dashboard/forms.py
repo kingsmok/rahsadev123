@@ -1,15 +1,8 @@
 from django import forms
+from core.persian_digits import to_latin_digits
 from .models import Address
 from django.core.exceptions import ValidationError
 from accounts.models import Profile
-
-
-_DIGIT_TRANSLATION = str.maketrans('۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩', '01234567890123456789')
-
-
-def _normalize_digits(value):
-    """Store phone, postal, and card data consistently regardless of keyboard locale."""
-    return (value or '').strip().translate(_DIGIT_TRANSLATION)
 
 
 class AddressForm(forms.ModelForm):
@@ -61,7 +54,7 @@ class AddressForm(forms.ModelForm):
         return province
 
     def clean_postal_code(self):
-        postal_code = _normalize_digits(self.cleaned_data.get('postal_code'))
+        postal_code = to_latin_digits(self.cleaned_data.get('postal_code'))
         if len(postal_code) != 10:
             raise ValidationError("کد پستی باید 10 رقم باشد.")
         if not postal_code.isdigit():
@@ -69,7 +62,7 @@ class AddressForm(forms.ModelForm):
         return postal_code
 
     def clean_phone_number(self):
-        phone_number = _normalize_digits(self.cleaned_data.get('phone_number'))
+        phone_number = to_latin_digits(self.cleaned_data.get('phone_number'))
         if not phone_number.startswith('09'):
             raise ValidationError("شماره تلفن باید با 09 شروع شود.")
         if len(phone_number) != 11 or not phone_number.isdigit():
@@ -121,14 +114,14 @@ class ProfileEditForm(forms.ModelForm):
         return about_me
 
     def clean_phone(self):
-        phone = _normalize_digits(self.cleaned_data.get('phone'))
+        phone = to_latin_digits(self.cleaned_data.get('phone'))
         if phone:
             if not phone.isdigit() or not phone.startswith('09') or len(phone) != 11:
                 raise ValidationError("شماره تلفن باید با 09 شروع شده و 11 رقم باشد.")
         return phone
 
     def clean_card_number(self):
-        card_number = _normalize_digits(self.cleaned_data.get('card_number'))
+        card_number = to_latin_digits(self.cleaned_data.get('card_number'))
         if card_number:
             if len(card_number) != 16:
                 raise ValidationError("شماره کارت باید 16 رقم باشد.")

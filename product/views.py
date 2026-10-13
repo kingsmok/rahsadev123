@@ -139,9 +139,15 @@ def _has_purchased_product(user, product):
     # Orders created before OrderItem existed still have their immutable JSON
     # snapshot.  Keep those customers recognised without false positives from
     # similar product titles.
+    #
+    # Only orders *without* any OrderItem row need this scan: `payment._complete`
+    # writes one OrderItem per snapshot item, so any order that has OrderItem
+    # rows is already covered by the query above.  Restricting the scan keeps a
+    # long-time customer's product page from loading every snapshot they own.
     legacy_snapshots = Order.objects.filter(
         user=user,
         status__in=paid_statuses,
+        order_items__isnull=True,
     ).values_list('items_data', flat=True)
     return any(_snapshot_contains_product(snapshot, product.pk) for snapshot in legacy_snapshots)
 

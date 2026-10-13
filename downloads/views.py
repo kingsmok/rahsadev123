@@ -9,9 +9,22 @@ from django.shortcuts import get_object_or_404, redirect
 from .models import DownloadToken
 
 
+# Statuses meaning the money went back to the customer.  A token whose order is
+# in one of these must stop serving the file: otherwise buying a product,
+# downloading it, and asking for a refund within the return window keeps both
+# the file and the money.  This mirrors the entitlement check on the product
+# page (product.views._has_purchased_product), so the shop and the download
+# link never disagree about whether the customer still owns the file.
+REVOKED_ORDER_STATUSES = frozenset({'cancelled', 'refunded'})
+
+
 @login_required
 def download_file(request, token):
     download_token = get_object_or_404(DownloadToken, token=token, user=request.user)
+
+    if download_token.order.status in REVOKED_ORDER_STATUSES:
+        messages.error(request, 'این سفارش لغو یا مسترد شده و امکان دانلود فایل آن وجود ندارد.')
+        return redirect('dashboard:order_detail', order_number=download_token.order.order_number)
 
     if not download_token.is_valid:
         messages.error(request, 'این لینک دانلود منقضی شده یا به سقف تعداد دانلود رسیده است.')
