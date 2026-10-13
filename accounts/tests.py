@@ -64,3 +64,102 @@ class OrphanProfileTests(TestCase):
         user.save(update_fields=['first_name'])
         self.assertEqual(Profile.objects.filter(user=user).count(), 1)
         self.assertEqual(Profile.objects.get(user=user).pk, first_pk)
+
+
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+class PasswordResetFlowTests(TestCase):
+    """بازیابی رمز عبور: از درخواست تا ورود با رمز جدید، بدون افشای وجود حساب."""
+
+    def setUp(self):
+        cache.clear()
+        self.user = User.objects.create_user(
+            'reset-user', email='reset@example.com', password='Old-pass-123!',
+        )
+        self.url = reverse('account:password_reset')
+
+    def _request_link(self, email='reset@example.com'):
+        return self.client.post(self.url, {'email': email})
+
+    def _extract_reset_path(self, message):
+        import re
+
+        match = re.search(r'/account/password-reset/confirm/\S+', message.body)
+        self.assertIsNotNone(match, 'لینک بازیابی در متن ایمیل نیست')
+        return match.group(0)
+
+    def test_full_flow_changes_password_and_allows_login(self):
+        from django.core import mail
+
+        response = self._request_link()
+        self.assertRedirects(response, reverse('account:password_reset_done'))
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ['reset@example.com'])
+
+        confirm_path = self._extract_reset_path(mail.outbox[0])
+        # GET روی لینک، توکن را در سشن می‌گذارد و به فرم تنظیم رمز می‌رود.
+        confirm = self.client.get(confirm_path)
+        self.assertEqual(confirm.status_code, 302)
+        form_page = self.client.get(confirm.url)
+        self.assertContains(form_page, 'تنظیم رمز جدید')
+
+        done = self.client.post(confirm.url, {
+            'new_password1': 'New-pass-456!',
+            'new_password2': 'New-pass-456!',
+        })
+        self.assertRedirects(done, reverse('account:password_reset_complete'))
+
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('New-pass-456!'))
+        self.assertFalse(self.user.check_password('Old-pass-123!'))
+
+        login_response = self.client.post(reverse('account:login'), {
+            'username': 'reset-user', 'password': 'New-pass-456!',
+        })
+        self.assertRedirects(login_response, reverse('core:home'))
+
+    def test_unknown_email_sends_nothing_but_looks_identical(self):
+        from django.core import mail
+
+        response = self._request_link('nobody@example.com')
+        self.assertRedirects(response, reverse('account:password_reset_done'))
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_tampered_token_is_rejected(self):
+        from django.core import mail
+
+        self._request_link()
+        path = self._extract_reset_path(mail.outbox[0])
+        tampered = path.rsplit('-', 1)[0] + '-deadbeef/'
+        page = self.client.get(tampered)
+        self.assertContains(page, 'نامعتبر یا منقضی')
+
+    def test_pages_render(self):
+        for name in ('account:password_reset', 'account:password_reset_done',
+                     'account:password_reset_complete'):
+            with self.subTest(url=name):
+                self.assertEqual(self.client.get(reverse(name)).status_code, 200)
+
+
+@override_settings(
+    EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+    PASSWORD_RESET_RATE_LIMIT_WINDOW_SECONDS=3600,
+    PASSWORD_RESET_RATE_LIMIT_IDENTITY_ATTEMPTS=3,
+    PASSWORD_RESET_RATE_LIMIT_IP_ATTEMPTS=10,
+)
+class PasswordResetThrottleTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        User.objects.create_user('throttled', email='t@example.com', password='Pass-12345!')
+        self.url = reverse('account:password_reset')
+
+    def test_fourth_request_is_silently_dropped(self):
+        from django.core import mail
+
+        for _ in range(3):
+            self.client.post(self.url, {'email': 't@example.com'})
+        self.assertEqual(len(mail.outbox), 3)
+
+        response = self.client.post(self.url, {'email': 't@example.com'})
+        # همان پاسخ همیشگی، اما ایمیل دیگری ارسال نمی‌شود.
+        self.assertRedirects(response, reverse('account:password_reset_done'))
+        self.assertEqual(len(mail.outbox), 3)

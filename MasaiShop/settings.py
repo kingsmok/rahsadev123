@@ -253,6 +253,29 @@ CKEDITOR_5_CONFIGS = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'account:login'
 
+# ------------------------------------------------------------------ ایمیل
+# در توسعه، ایمیل‌ها در کنسول چاپ می‌شوند تا جریان بازیابی رمز بدون هیچ
+# سرویس خارجی قابل آزمایش باشد. در تولید، EMAIL_BACKEND=smtp و مقادیر
+# EMAIL_HOST/USER/PASSWORD (از محیط، هرگز در کد) تنظیم می‌شوند.
+EMAIL_BACKEND = os.environ.get(
+    'EMAIL_BACKEND',
+    'django.core.mail.backends.console.EmailBackend' if DEBUG
+    else 'django.core.mail.backends.smtp.EmailBackend',
+)
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', '1').lower() in ('1', 'true', 'yes')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'FileMarket <no-reply@localhost>')
+
+# لینک بازیابی رمز ۲۴ ساعت معتبر است و درخواست‌های آن محدودسازی می‌شوند
+# تا نه حساب‌ها شمرده شوند و نه صندوق ایمیل کسی بمباران شود.
+PASSWORD_RESET_TIMEOUT = 24 * 60 * 60
+PASSWORD_RESET_RATE_LIMIT_WINDOW_SECONDS = 60 * 60
+PASSWORD_RESET_RATE_LIMIT_IDENTITY_ATTEMPTS = 3
+PASSWORD_RESET_RATE_LIMIT_IP_ATTEMPTS = 10
+
 # ------------------------------------------------------------------ لاگ‌گیری
 # Django's stock configuration routes ``django.request`` errors only to
 # ``mail_admins``, and ``AdminEmailHandler`` returns silently when ADMINS is

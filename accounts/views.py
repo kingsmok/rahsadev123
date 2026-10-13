@@ -1,11 +1,18 @@
 from django.contrib import messages
 from django.contrib.auth import login, logout
+from django.contrib.auth import views as auth_views
 from django.shortcuts import redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from .forms import LoginForm, UserRegistrationForm
-from .security import clear_login_failures, login_is_throttled, record_failed_login
+from .security import (
+    clear_login_failures,
+    login_is_throttled,
+    password_reset_is_throttled,
+    record_failed_login,
+    record_password_reset_request,
+)
 
 
 def _safe_next(request):
@@ -64,3 +71,27 @@ def user_logout(request):
     logout(request)
     messages.info(request, 'از حساب کاربری خارج شدید.')
     return redirect('core:home')
+
+
+class ThrottledPasswordResetView(auth_views.PasswordResetView):
+    """بازیابی رمز عبور جنگو با محدودسازی نرخ درخواست.
+
+    رفتار ضد شمارشِ خودِ جنگو حفظ می‌شود: چه ایمیل وجود داشته باشد چه نه،
+    و چه درخواست محدود شده باشد چه نه، کاربر همیشه همان صفحهٔ «لینک ارسال
+    شد» را می‌بیند؛ وقتی محدودسازی فعال است فقط ایمیل واقعاً ارسال نمی‌شود.
+    """
+
+    def post(self, request, *args, **kwargs):
+        email = (request.POST.get('email') or '').strip()
+        if email and password_reset_is_throttled(request, email):
+            return redirect('account:password_reset_done')
+        if email:
+            record_password_reset_request(request, email)
+        # نام سایت در ایمیل از تنظیمات سایت می‌آید، نه از دامنهٔ درخواست.
+        from core.models import SiteSettings
+
+        site_settings = SiteSettings.objects.first()
+        self.extra_email_context = {
+            'site_name': site_settings.site_name if site_settings else 'فایل‌مارکت',
+        }
+        return super().post(request, *args, **kwargs)
