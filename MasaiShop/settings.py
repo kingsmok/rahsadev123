@@ -163,12 +163,50 @@ WSGI_APPLICATION = 'MasaiShop.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
+#
+# توسعهٔ محلی بدون هیچ تنظیمی با SQLite کار می‌کند. در تولید کافی است
+# DATABASE_URL ست شود (postgresql://user:pass@host:5432/dbname یا
+# sqlite:///path)؛ هیچ وابستگیِ اضافه‌ای برای پارس‌کردن آن لازم نیست و
+# درایور PostgreSQL (psycopg) در requirements هست.
 
+def _database_from_url(url):
+    from urllib.parse import unquote, urlparse
+
+    parsed = urlparse(url)
+    scheme = parsed.scheme.lower()
+    if scheme in ('postgres', 'postgresql'):
+        return {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': parsed.path.lstrip('/'),
+            'USER': unquote(parsed.username or ''),
+            'PASSWORD': unquote(parsed.password or ''),
+            'HOST': parsed.hostname or '',
+            'PORT': str(parsed.port or ''),
+        }
+    if scheme == 'sqlite':
+        name = parsed.path
+        if name.startswith('/'):
+            name = name[1:]
+        if not name or name == ':memory:':
+            resolved = ':memory:'
+        elif name.startswith('/'):
+            resolved = name  # sqlite:////absolute/path
+        else:
+            resolved = str(BASE_DIR / name)
+        return {'ENGINE': 'django.db.backends.sqlite3', 'NAME': resolved}
+    raise ImproperlyConfigured(f'Unsupported DATABASE_URL scheme: {scheme!r}')
+
+
+_database_url = os.environ.get('DATABASE_URL', '')
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': (
+        _database_from_url(_database_url)
+        if _database_url
+        else {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    )
 }
 
 

@@ -430,3 +430,34 @@ class CreateDefaultAdminTests(TestCase):
     def test_strong_password_is_allowed_in_production(self):
         self.run_command('--username', 'prodadmin', '--password', 'Str0ng-Pr0d-Pass-2026')
         self.assertTrue(User.objects.get(username='prodadmin').is_superuser)
+
+
+class DatabaseUrlParsingTests(SimpleTestCase):
+    """DATABASE_URL باید بدون وابستگی اضافه، موتور درست را انتخاب کند."""
+
+    def test_postgres_url(self):
+        from MasaiShop.settings import _database_from_url
+
+        cfg = _database_from_url('postgresql://user:p%40ss@db.example.com:5433/shop')
+        self.assertEqual(cfg['ENGINE'], 'django.db.backends.postgresql')
+        self.assertEqual(cfg['NAME'], 'shop')
+        self.assertEqual(cfg['USER'], 'user')
+        self.assertEqual(cfg['PASSWORD'], 'p@ss')
+        self.assertEqual(cfg['HOST'], 'db.example.com')
+        self.assertEqual(cfg['PORT'], '5433')
+
+    def test_sqlite_relative_and_memory(self):
+        from MasaiShop.settings import _database_from_url
+
+        rel = _database_from_url('sqlite:///local.sqlite3')
+        self.assertEqual(rel['ENGINE'], 'django.db.backends.sqlite3')
+        self.assertTrue(rel['NAME'].endswith('local.sqlite3'))
+        self.assertEqual(_database_from_url('sqlite:///:memory:')['NAME'], ':memory:')
+
+    def test_unknown_scheme_fails_closed(self):
+        from django.core.exceptions import ImproperlyConfigured
+
+        from MasaiShop.settings import _database_from_url
+
+        with self.assertRaises(ImproperlyConfigured):
+            _database_from_url('mysql://user@host/db')
