@@ -112,16 +112,18 @@ def _complete(tx, ref_id='', response=None):
             return order
 
         if order.status != 'pending':
-            # Do not silently turn a cancelled/processing order into a paid
-            # fulfilment.  Staff can reconcile this exceptional gateway result
-            # from the transaction record.
-            transaction.status = 'failed'
-            transaction.raw_response = {
-                **(response or {}),
-                'error': f'order is {order.status}, not pending',
-            }
-            transaction.save(update_fields=['status', 'raw_response', 'updated_at'])
-            return order
+            # The gateway has confirmed and charged this payment, but the order
+            # is no longer payable (the customer asked to cancel it, or staff
+            # cancelled it) while they were away on the provider's page.
+            #
+            # Recording this as a plain "failed" transaction would be wrong: the
+            # money *was* taken, so staff reconciling failures would refund a
+            # payment that actually succeeded.  Let the callback persist it as
+            # verified-but-unfulfilled and tell the customer what happened.
+            raise FulfilmentError(
+                f'سفارش در وضعیت «{order.get_status_display()}» است و پرداخت آن '
+                f'نمی‌تواند به‌طور خودکار تحویل داده شود.'
+            )
 
         snapshot = _normalised_order_items(order)
         if not snapshot:
@@ -139,6 +141,23 @@ def _complete(tx, ref_id='', response=None):
         missing_products = set(product_ids) - set(products)
         if missing_products:
             raise FulfilmentError('یکی از محصولات این سفارش دیگر در دسترس نیست.')
+
+        # Stock is only checked at checkout start, so two customers can both be
+        # on the gateway while a single licence is left.  These rows are locked,
+        # so re-checking here (before any download token is issued) is the last
+        # point at which overselling a limited licence can still be prevented.
+        insufficient = [
+            product.title
+            for product in products.values()
+            if not product.is_unlimited and product.stock_count < sum(
+                item['quantity'] for item in snapshot
+                if item['product_id'] == product.pk
+            )
+        ]
+        if insufficient:
+            raise FulfilmentError(
+                'موجودی «%s» کافی نیست و پرداخت قابل تحویل نیست.' % '، '.join(insufficient)
+            )
 
         transaction.status = 'paid'
         transaction.ref_id = str(ref_id)

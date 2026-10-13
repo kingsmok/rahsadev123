@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.contrib import messages
+from django.db.models import F
 from django.utils import timezone
 from .models import Cart, CartItem, Coupon, Order
 from product.models import Product
@@ -34,6 +35,26 @@ def _discount_amount(coupon, total_price):
     return max(0, min(discount, total_price))
 
 
+def _release_coupon_reservation(coupon):
+    """Give back the global use reserved for a coupon that is being detached.
+
+    ``apply_coupon`` reserves one of the coupon's global uses so that two carts
+    cannot both claim the last one.  If that reservation is dropped without a
+    payment (cart emptied, coupon removed, or it stopped qualifying), the use
+    must be returned — otherwise anyone could burn a campaign's whole budget by
+    repeatedly applying and dropping the same code.
+
+    ``is_active`` is intentionally left alone: a coupon deactivated by staff must
+    stay deactivated, and one that hit ``max_usage`` is safely re-enabled by
+    staff rather than silently resurrected here.
+    """
+    if coupon is None:
+        return
+    Coupon.objects.filter(pk=coupon.pk, usage_count__gt=0).update(
+        usage_count=F('usage_count') - 1
+    )
+
+
 def _revalidate_coupon(cart, items):
     """Recompute the applied coupon against the cart's *current* contents.
 
@@ -42,10 +63,6 @@ def _revalidate_coupon(cart, items):
     amount must not survive: left untouched, a 500,000 discount on a 100,000
     cart makes the order payable for zero.  Re-run the same rules here and drop
     the coupon when it no longer qualifies.
-
-    The coupon's global ``usage_count`` is deliberately left as it was:
-    ``apply_coupon`` reserves one use per application, so a reserved use stays
-    reserved even if the cart changes afterwards.
     """
     if cart is None or cart.coupon is None:
         return
@@ -71,6 +88,10 @@ def _revalidate_coupon(cart, items):
     if cart.coupon_id == (new_coupon.pk if new_coupon else None) \
             and cart.coupon_discount == new_discount:
         return
+
+    if new_coupon is None:
+        # The reservation is dropped without a payment, so return the use.
+        _release_coupon_reservation(coupon)
 
     cart.coupon = new_coupon
     cart.coupon_discount = new_discount
@@ -222,3 +243,25 @@ def shopping_payment(request):
 def successful_payment(request):
     messages.info(request, 'برای ثبت سفارش، ابتدا از یکی از درگاه‌های پرداخت استفاده کنید.')
     return redirect('cart:shopping_payment')
+
+
+@login_required
+@require_POST
+def remove_coupon(request):
+    """Detach the applied coupon so the customer can switch codes or pay full price.
+
+    Without this, a cart that once had a coupon could never use a different one:
+    ``apply_coupon`` refuses while a coupon is attached, and the only escape was
+    emptying the whole cart.
+    """
+    cart = Cart.objects.filter(user=request.user).first()
+    if cart is None or cart.coupon is None:
+        messages.info(request, 'هیچ کد تخفیفی روی سبد شما اعمال نشده است.')
+        return redirect('cart:cart')
+
+    _release_coupon_reservation(cart.coupon)
+    cart.coupon = None
+    cart.coupon_discount = 0
+    cart.save(update_fields=['coupon', 'coupon_discount', 'updated_at'])
+    messages.success(request, 'کد تخفیف از سبد خرید حذف شد.')
+    return redirect('cart:cart')

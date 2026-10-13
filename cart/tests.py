@@ -231,3 +231,66 @@ class CouponRecalculationTests(TestCase):
 
         self.assertLessEqual(self.cart.coupon_discount, self.cart.total_price)
         self.assertEqual(self.cart.coupon_discount, 100000)
+
+
+class CouponReservationTests(TestCase):
+    """A reserved coupon use must be returned when no payment follows."""
+
+    def setUp(self):
+        self.user = User.objects.create_user('coupon-reserve', password='Safe-pass-123!')
+        self.product = Product.objects.create(
+            vendor=self.user, title='فایل رزرو', slug='reserve-file',
+            description='توضیح', price=300000,
+        )
+        self.coupon = Coupon.objects.create(
+            code='RESERVE10', discount_type='fixed', discount_value=50000,
+            valid_from=timezone.now(), valid_to=timezone.now() + timedelta(days=1),
+            max_usage=5,
+        )
+        self.cart = Cart.objects.create(user=self.user)
+        CartItem.objects.create(cart=self.cart, product=self.product)
+        self.client.force_login(self.user)
+
+    def test_removing_a_coupon_returns_its_reserved_use(self):
+        self.client.post('/cart/apply_coupon/', {'coupon_code': 'RESERVE10'})
+        self.coupon.refresh_from_db()
+        self.assertEqual(self.coupon.usage_count, 1)
+
+        response = self.client.post('/cart/remove_coupon/')
+        self.assertEqual(response.status_code, 302)
+
+        self.cart.refresh_from_db()
+        self.coupon.refresh_from_db()
+        self.assertIsNone(self.cart.coupon)
+        self.assertEqual(self.cart.coupon_discount, 0)
+        self.assertEqual(self.coupon.usage_count, 0,
+                         'بدون پرداخت نباید از ظرفیت کوپن کم شود')
+
+    def test_a_released_coupon_can_be_applied_to_another_code(self):
+        other = Coupon.objects.create(
+            code='OTHER20', discount_type='fixed', discount_value=20000,
+            valid_from=timezone.now(), valid_to=timezone.now() + timedelta(days=1),
+        )
+        self.client.post('/cart/apply_coupon/', {'coupon_code': 'RESERVE10'})
+        # Before this existed, a second code was refused until the cart was emptied.
+        response = self.client.post('/cart/apply_coupon/', {'coupon_code': 'OTHER20'})
+        self.cart.refresh_from_db()
+        self.assertEqual(self.cart.coupon, self.coupon)
+
+        self.client.post('/cart/remove_coupon/')
+        self.client.post('/cart/apply_coupon/', {'coupon_code': 'OTHER20'})
+        self.cart.refresh_from_db()
+        self.assertEqual(self.cart.coupon, other)
+
+    def test_repeated_apply_and_drop_cannot_exhaust_the_coupon_budget(self):
+        """Abuse check: burning a campaign's budget without ever paying."""
+        for _ in range(5):
+            self.client.post('/cart/apply_coupon/', {'coupon_code': 'RESERVE10'})
+            self.client.post('/cart/remove_coupon/')
+
+        self.coupon.refresh_from_db()
+        self.assertEqual(self.coupon.usage_count, 0)
+        self.assertTrue(self.coupon.is_active)
+
+    def test_remove_coupon_requires_post(self):
+        self.assertEqual(self.client.get('/cart/remove_coupon/').status_code, 405)
