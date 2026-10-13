@@ -11,6 +11,7 @@ from django.urls import reverse
 from cart.models import Order, OrderItem
 from dashboard import analytics
 from dashboard.models import Address, Wishlist
+from payments.models import PaymentTransaction
 from product.models import Product
 
 
@@ -305,3 +306,56 @@ class ProfileImageSizeLimitTests(TestCase):
 
         errors = response.context['form'].errors if response.context else {}
         self.assertIn('مگابایت', str(errors.get('image', '')))
+
+
+class AdminReconciliationQueueTests(TestCase):
+    """Verified-but-undelivered payments must stand apart from real declines."""
+
+    def setUp(self):
+        self.staff = User.objects.create_user(
+            'recon-staff', password='Staff-pass-123!', is_staff=True,
+        )
+        self.client.force_login(self.staff)
+        self.count = 0
+
+    def _transaction(self, raw_response, status='failed'):
+        """Build a transaction on its own fresh order, product, buyer and vendor."""
+        self.count += 1
+        buyer = User.objects.create_user(f'recon-buyer-{self.count}', password='Safe-pass-123!')
+        vendor = User.objects.create_user(f'recon-vendor-{self.count}', password='Safe-pass-123!')
+        product = Product.objects.create(
+            vendor=vendor, title=f'فایل {self.count}', slug=f'recon-f-{self.count}',
+            description='توضیح', price=50000,
+        )
+        order = Order.objects.create(
+            user=buyer, total_price=50000, coupon_discount=0, shipping_cost=0,
+            final_price=50000, status='processing',
+            items_data={'items': [{'product_id': product.pk, 'title': product.title,
+                                   'quantity': 1, 'price': 50000}], 'coupon': None},
+        )
+        return PaymentTransaction.objects.create(
+            order=order, gateway='zarinpal', amount=50000, authority=f'AUTH-{self.count}',
+            status=status, raw_response=raw_response,
+        )
+
+    def test_undelivered_payment_is_listed_separately_from_a_decline(self):
+        undelivered = self._transaction({
+            'ref_id': 'REF-123', 'error': 'سفارش در وضعیت «در حال پردازش» است', 'unfulfilled': True,
+        })
+        declined = self._transaction({'error': 'کاربر از پرداخت انصراف داد'})
+
+        response = self.client.get('/admin-panel/health/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'نیازمند رفع اختلاف مالی')
+        # The reconciliation card carries the money-taken payment and its ref id.
+        self.assertEqual([t.pk for t in response.context['unfulfilled_payments']], [undelivered.pk])
+        self.assertContains(response, 'REF-123')
+        # The plain decline appears only in the ordinary failed list.
+        self.assertIn(declined.pk, [t.pk for t in response.context['failed_payments']])
+        self.assertNotIn(declined.pk, [t.pk for t in response.context['unfulfilled_payments']])
+
+    def test_empty_reconciliation_queue_says_so(self):
+        response = self.client.get('/admin-panel/health/')
+        self.assertEqual(len(response.context['unfulfilled_payments']), 0)
+        self.assertContains(response, 'تأییدشده و تحویل‌نشده‌ای وجود ندارد')

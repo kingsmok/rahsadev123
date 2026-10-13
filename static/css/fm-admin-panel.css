@@ -383,6 +383,15 @@ a { color: inherit; text-decoration: none; }
 }
 .ap-card__action:hover { text-decoration: underline; }
 
+/* کارتِ هشدار: پول گرفته شده ولی تحویل نشده — باید از تراکنش‌های ناموفق متمایز باشد */
+.ap-card--alert {
+    border-color: color-mix(in srgb, var(--ap-danger) 45%, var(--ap-border));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ap-danger) 9%, transparent);
+}
+.ap-card--alert .ap-card__title { border-bottom-color: var(--ap-danger); }
+.ap-card--alert .ap-card__title i { color: var(--ap-danger); }
+.ap-card--alert .ap-card__hint { max-width: 78ch; line-height: 1.9; }
+
 .ap-kpis {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
