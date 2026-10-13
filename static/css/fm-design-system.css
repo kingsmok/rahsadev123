@@ -778,6 +778,12 @@ main h4 { font-size: 16px; font-weight: 700; line-height: 1.8; }
 
 .fm-pass-toggle:hover { color: var(--fm-primary-600); background: var(--fm-primary-50); }
 
+/* روی نمایشگر لمسی، ناحیهٔ لمسِ دکمهٔ نمایش رمز به ۴۴px می‌رسد.
+   پس‌زمینه شفاف است و padding-left ورودی همین فضا را رزرو کرده؛ ظاهر عوض نمی‌شود. */
+@media (pointer: coarse) {
+    .fm-pass-toggle { width: 44px; height: 44px; }
+}
+
 /* چک‌باکس */
 .fm-check {
     display: flex;

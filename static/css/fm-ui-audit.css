@@ -1204,6 +1204,10 @@ header.Masai-header .main-menu .list .list-item.mega-menu > .sub-menu {
         place-items: center;
         padding: 0;
         background: transparent;
+        /* آیکنِ ۳۱px در کارتِ فشرده می‌ماند، اما ناحیهٔ لمسِ دکمهٔ شفاف
+           به حداقلِ راهنمای ۴۴px می‌رسد؛ ظاهر کارت تغییر نمی‌کند. */
+        min-width: 44px;
+        min-height: 44px;
     }
     .widget-product .product-carousel .search_prod_btn .search_icon_cart {
         width: 31px;
