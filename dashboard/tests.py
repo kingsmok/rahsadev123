@@ -1,4 +1,10 @@
+import io
+
+from PIL import Image
+
+from core import validators as validate
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
@@ -251,3 +257,51 @@ class AdminIndexBrandingTests(TestCase):
         response = self.client.get(reverse('admin:login'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'fm-admin.css')
+
+
+class ProfileImageSizeLimitTests(TestCase):
+    """A customer's avatar upload must be bounded in size."""
+
+    def setUp(self):
+        self.user = User.objects.create_user('avatar-user', password='Safe-pass-123!')
+        self.client.force_login(self.user)
+        self.url = f'/dashboard/profile/{self.user.username}/'
+
+    @staticmethod
+    def _png(width=8, height=8):
+        buffer = io.BytesIO()
+        Image.new('RGB', (width, height), 'red').save(buffer, format='PNG')
+        return buffer.getvalue()
+
+    def test_normal_avatar_is_accepted(self):
+        upload = SimpleUploadedFile('ok.png', self._png(), content_type='image/png')
+        response = self.client.post(self.url, {'image': upload})
+
+        self.user.profile.refresh_from_db()
+        self.assertTrue(self.user.profile.image)
+        self.assertNotIn('image', (response.context['form'].errors if response.context else {}))
+
+    def test_oversized_avatar_is_rejected(self):
+        payload = self._png()
+        # Pad past the limit without breaking the PNG: trailing bytes after the
+        # IEND chunk are ignored by decoders, so the file is still a valid image.
+        oversized = SimpleUploadedFile(
+            'huge.png', payload + b'\x00' * validate.MAX_IMAGE_UPLOAD_BYTES,
+            content_type='image/png',
+        )
+        response = self.client.post(self.url, {'image': oversized})
+
+        self.user.profile.refresh_from_db()
+        self.assertFalse(self.user.profile.image)
+        errors = response.context['form'].errors if response.context else {}
+        self.assertIn('image', errors)
+
+    def test_limit_message_names_the_allowed_size(self):
+        oversized = SimpleUploadedFile(
+            'huge2.png', self._png() + b'\x00' * validate.MAX_IMAGE_UPLOAD_BYTES,
+            content_type='image/png',
+        )
+        response = self.client.post(self.url, {'image': oversized})
+
+        errors = response.context['form'].errors if response.context else {}
+        self.assertIn('مگابایت', str(errors.get('image', '')))

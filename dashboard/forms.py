@@ -1,5 +1,6 @@
 from django import forms
 from core.persian_digits import to_latin_digits
+from core.validators import validate_image_size
 from .models import Address
 from django.core.exceptions import ValidationError
 from accounts.models import Profile
@@ -89,6 +90,16 @@ class ProfileEditForm(forms.ModelForm):
             'card_number': forms.TextInput(attrs={'inputmode': 'numeric', 'autocomplete': 'off', 'dir': 'ltr'}),
             'image': forms.ClearableFileInput(attrs={'accept': 'image/*'}),
         }
+
+    def clean_image(self):
+        # ImageField already proves the file is a real image; this bounds how
+        # large a real image a customer may push onto the server's disk.
+        # An absent value simply means "no new upload" or "clear the current
+        # one", neither of which needs a size check.
+        image = self.cleaned_data.get('image')
+        if image:
+            validate_image_size(image)
+        return image
 
     def clean_first_name(self):
         first_name = (self.cleaned_data.get('first_name') or '').strip()
