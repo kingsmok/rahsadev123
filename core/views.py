@@ -7,6 +7,7 @@ from django.db import models
 from .models import Banner
 from blog.models import Article
 from services.models import ServicePackage
+from core.throttling import get_throttle
 
 
 def _storefront_products(queryset):
@@ -86,7 +87,17 @@ def service_worker(request):
 def contact(request):
     if request.method == 'POST':
         form = ContactUsForm(request.POST)
+        # The contact form is public and unauthenticated: without a limit a
+        # script can fill the staff inbox and the database with junk messages.
+        throttle = get_throttle('contact')
+        identity = form.data.get('email', '')
+        if throttle.is_throttled(request, identity):
+            throttle.record(request, identity)
+            messages.error(request, 'تعداد پیام‌های ارسالی شما زیاد است. لطفاً کمی بعد دوباره تلاش کنید.')
+            return render(request, 'core/contact.html', {'form': form}, status=429)
+
         if form.is_valid():
+            throttle.record(request, identity)
             form.save()
             messages.success(request, 'پیام شما با موفقیت ثبت شد. تیم پشتیبانی در اولین فرصت با شما تماس می‌گیرد.')
             return redirect('core:contact')
@@ -178,6 +189,14 @@ def newsletter_subscribe(request):
             EmailValidator()(email)
         except ValidationError:
             return JsonResponse({'ok': False, 'message': 'ایمیل واردشده معتبر نیست.'})
+        throttle = get_throttle('newsletter')
+        if throttle.is_throttled(request, email):
+            throttle.record(request, email)
+            return JsonResponse(
+                {'ok': False, 'message': 'تعداد درخواست‌های شما زیاد است. کمی بعد دوباره تلاش کنید.'},
+                status=429,
+            )
+        throttle.record(request, email)
         _, created = NewsletterSubscriber.objects.get_or_create(email=email, defaults={'is_active': True})
         if created:
             return JsonResponse({'ok': True, 'message': 'عضویت شما در خبرنامه با موفقیت ثبت شد؛ تخفیف‌ها و فایل‌های جدید را زودتر از همه دریافت می‌کنید.'})

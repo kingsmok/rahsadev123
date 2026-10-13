@@ -151,3 +151,83 @@ class CheckoutSnapshotTests(TestCase):
         self.assertContains(response, 'سقف استفاده شما از این کد تخفیف تکمیل شده است')
         cart.refresh_from_db()
         self.assertIsNone(cart.coupon)
+
+
+class CouponRecalculationTests(TestCase):
+    """A coupon must stay consistent with the cart it is applied to."""
+
+    def setUp(self):
+        self.user = User.objects.create_user('coupon-audit', password='Safe-pass-123!')
+        self.expensive = Product.objects.create(
+            vendor=self.user, title='فایل گران', slug='expensive-file',
+            description='توضیح', price=600000,
+        )
+        self.cheap = Product.objects.create(
+            vendor=self.user, title='فایل ارزان', slug='cheap-file',
+            description='توضیح', price=100000,
+        )
+        self.coupon = Coupon.objects.create(
+            code='AUDIT500', discount_type='fixed', discount_value=500000,
+            valid_from=timezone.now(), valid_to=timezone.now() + timedelta(days=1),
+            maximum_discount=500000,
+        )
+        self.cart = Cart.objects.create(user=self.user)
+
+    def _apply(self):
+        return self.client.post('/cart/apply_coupon/', {'coupon_code': 'AUDIT500'})
+
+    def test_discount_is_capped_at_the_cart_total_after_an_item_is_removed(self):
+        self.client.force_login(self.user)
+        CartItem.objects.create(cart=self.cart, product=self.expensive)
+        CartItem.objects.create(cart=self.cart, product=self.cheap)
+
+        self._apply()
+        self.cart.refresh_from_db()
+        self.assertEqual(self.cart.coupon_discount, 500000)
+        self.assertEqual(self.cart.final_price, 200000)
+
+        # Removing the item that justified the discount must not leave a
+        # 500,000 discount on a 100,000 cart: the order would be free.
+        item = CartItem.objects.get(cart=self.cart, product=self.expensive)
+        self.client.post(f'/cart/remove/{item.pk}/')
+        self.cart.refresh_from_db()
+
+        self.assertLessEqual(self.cart.coupon_discount, self.cart.total_price)
+        self.assertEqual(self.cart.final_price, 0)
+
+    def test_coupon_below_minimum_order_amount_is_dropped_when_cart_shrinks(self):
+        self.client.force_login(self.user)
+        coupon = Coupon.objects.create(
+            code='MIN400', discount_type='fixed', discount_value=50000,
+            valid_from=timezone.now(), valid_to=timezone.now() + timedelta(days=1),
+            minimum_order_amount=400000,
+        )
+        CartItem.objects.create(cart=self.cart, product=self.expensive)
+        CartItem.objects.create(cart=self.cart, product=self.cheap)
+
+        self.client.post('/cart/apply_coupon/', {'coupon_code': 'MIN400'})
+        self.cart.refresh_from_db()
+        self.assertEqual(self.cart.coupon, coupon)
+
+        item = CartItem.objects.get(cart=self.cart, product=self.expensive)
+        self.client.post(f'/cart/remove/{item.pk}/')
+        self.cart.refresh_from_db()
+
+        # 100,000 no longer reaches the 400,000 minimum, so the coupon is gone.
+        self.assertIsNone(self.cart.coupon)
+        self.assertEqual(self.cart.coupon_discount, 0)
+        self.assertEqual(self.cart.final_price, 100000)
+
+    def test_cart_view_revalidates_a_stale_discount(self):
+        """A discount recorded in another tab is corrected when the cart opens."""
+        self.client.force_login(self.user)
+        CartItem.objects.create(cart=self.cart, product=self.cheap)
+        Cart.objects.filter(pk=self.cart.pk).update(
+            coupon=self.coupon, coupon_discount=500000,
+        )
+
+        self.client.get('/cart/')
+        self.cart.refresh_from_db()
+
+        self.assertLessEqual(self.cart.coupon_discount, self.cart.total_price)
+        self.assertEqual(self.cart.coupon_discount, 100000)

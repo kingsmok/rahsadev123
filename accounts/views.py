@@ -1,6 +1,5 @@
 from django.contrib import messages
 from django.contrib.auth import login, logout
-from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
@@ -47,7 +46,7 @@ def user_login(request):
         if login_is_throttled(request, username):
             form.add_error(None, 'تعداد تلاش‌های ناموفق زیاد است. لطفاً چند دقیقه دیگر دوباره امتحان کنید.')
         elif form.is_valid():
-            user = User.objects.get(username=form.cleaned_data.get('username'))
+            user = form.get_user()
             clear_login_failures(request, username)
             login(request, user)
             messages.success(request, f'خوش آمدید {user.get_full_name() or user.username}!')

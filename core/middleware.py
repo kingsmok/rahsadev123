@@ -4,6 +4,7 @@
 قبل از پردازش درخواست، مسیر در جدول ریدایرکت‌ها جست‌وجو می‌شود؛
 در صورت وجود، با کد ۳۰۱ (دائمی) یا ۳۰۲ (موقت) هدایت انجام می‌شود.
 """
+from django.db import OperationalError, ProgrammingError
 from django.db.models import F
 from django.http import HttpResponseRedirect, HttpResponsePermanentRedirect
 
@@ -66,6 +67,8 @@ class RedirectMiddleware:
                 .exclude(new_path__in=candidates)  # جلوگیری از حلقه ریدایرکت
                 .first()
             )
-        except Exception:
-            # اگر جدول هنوز ساخته نشده بود (اولین راه‌اندازی) مزاحم نیستیم
+        except (OperationalError, ProgrammingError):
+            # Only a missing/outdated table is tolerated (first boot, before
+            # migrations).  Any other error must surface instead of silently
+            # disabling every redirect.
             return None

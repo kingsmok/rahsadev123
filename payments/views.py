@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction as db_transaction
@@ -11,6 +13,17 @@ from dashboard.models import Notification
 from product.models import Product
 from .services import GATEWAYS
 from .models import GatewaySettings, PaymentTransaction
+
+logger = logging.getLogger(__name__)
+
+
+class FulfilmentError(RuntimeError):
+    """The gateway confirmed a payment that the order cannot be fulfilled for.
+
+    Raised inside the atomic block of :func:`_complete`, so the caller is
+    responsible for recording the failure: the money has already been taken and
+    must stay reconcilable from the transaction record.
+    """
 
 
 def _normalised_order_items(order):
@@ -112,7 +125,7 @@ def _complete(tx, ref_id='', response=None):
 
         snapshot = _normalised_order_items(order)
         if not snapshot:
-            raise ValueError('سفارش پرداختی فاقد اطلاعات معتبر محصول است.')
+            raise FulfilmentError('سفارش پرداختی فاقد اطلاعات معتبر محصول است.')
 
         product_ids = [item['product_id'] for item in snapshot]
         products = {
@@ -125,7 +138,7 @@ def _complete(tx, ref_id='', response=None):
         }
         missing_products = set(product_ids) - set(products)
         if missing_products:
-            raise ValueError('یکی از محصولات این سفارش دیگر در دسترس نیست.')
+            raise FulfilmentError('یکی از محصولات این سفارش دیگر در دسترس نیست.')
 
         transaction.status = 'paid'
         transaction.ref_id = str(ref_id)
@@ -215,7 +228,20 @@ def start_payment(request, order_number):
                 status='pending',
             )
     else:
+        # A payment may only be started for an order that is still awaiting one.
+        # Without this check a customer could open ``/payments/start/<number>/``
+        # for an order that is already paid (or cancelled) and be charged twice
+        # for the same download.
         order = get_object_or_404(Order, order_number=order_number, user=request.user)
+        if order.status != 'pending':
+            if order.status == 'paid':
+                messages.info(request, 'این سفارش قبلاً پرداخت شده است و فایل‌های آن آماده دانلود است.')
+                return redirect('payments:successful_done', order_number=order.order_number)
+            if order.status == 'cancelled':
+                messages.error(request, 'این سفارش لغو شده است و امکان پرداخت آن وجود ندارد.')
+                return redirect('dashboard:order_detail', order_number=order.order_number)
+            messages.info(request, f'وضعیت این سفارش «{order.get_status_display()}» است و در حال حاضر قابل پرداخت نیست.')
+            return redirect('dashboard:order_detail', order_number=order.order_number)
 
     gateway = request.POST.get('gateway', 'zarinpal')
     if gateway not in dict(PaymentTransaction.GATEWAYS):
@@ -264,7 +290,27 @@ def callback(request):
         transaction.status, transaction.raw_response = 'failed', data
         transaction.save(update_fields=['status', 'raw_response', 'updated_at'])
         return HttpResponse('تأیید پرداخت ناموفق بود.', status=400)
-    order = _complete(transaction, data.get('ref_id', ''), data)
+
+    try:
+        order = _complete(transaction, data.get('ref_id', ''), data)
+    except FulfilmentError as exc:
+        # ``_complete`` rolls its transaction back, so the failure must be
+        # recorded in a separate statement.  The gateway has already charged
+        # the customer: without this row the payment would exist only at the
+        # provider and could never be reconciled or refunded.
+        logger.error(
+            'Payment %s for order %s was verified but could not be fulfilled: %s',
+            transaction.pk, transaction.order_id, exc, exc_info=True,
+        )
+        PaymentTransaction.objects.filter(pk=transaction.pk).update(
+            status='failed',
+            raw_response={**(data or {}), 'error': str(exc), 'unfulfilled': True},
+        )
+        return render(
+            request, 'payments/payment_unfulfilled.html',
+            {'transaction': transaction}, status=409,
+        )
+
     return redirect('payments:successful_done', order_number=order.order_number)
 
 

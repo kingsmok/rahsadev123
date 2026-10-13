@@ -44,15 +44,17 @@ _load_dotenv(BASE_DIR / '.env')
 
 # Security defaults: development remains easy to run, while a production
 # process refuses to start without an explicit, non-placeholder secret.
-DEBUG = os.environ.get('DEBUG', 'True').lower() in ('1', 'true', 'yes')
+# Fails closed: without an explicit DEBUG=1/true the project runs as it would in
+# production.  A forgotten environment variable must never leave a public
+# deployment serving tracebacks with ALLOWED_HOSTS='*'.  ``run.sh``/``run.bat``
+# and ``cp .env.example .env`` all set DEBUG=True explicitly for local work.
+DEBUG = os.environ.get('DEBUG', 'False').lower() in ('1', 'true', 'yes')
 SECRET_KEY = os.environ.get('SECRET_KEY', '')
 if not SECRET_KEY:
-    if DEBUG:
-        # Never used in production: developers should still override this via
-        # SECRET_KEY even locally when they need persistent signed data.
-        SECRET_KEY = 'development-only-change-this-secret-key-before-production'
-    else:
-        raise ImproperlyConfigured('SECRET_KEY must be set when DEBUG=False.')
+    raise ImproperlyConfigured(
+        'SECRET_KEY is not set. Copy .env.example to .env (or export SECRET_KEY); '
+        'run.sh / run.bat generate a random one for local development.'
+    )
 if not DEBUG and (len(SECRET_KEY) < 50 or SECRET_KEY.startswith('django-insecure-')):
     raise ImproperlyConfigured('SECRET_KEY must be a strong, random value of at least 50 characters in production.')
 
@@ -61,6 +63,15 @@ if DEBUG and os.environ.get('ALLOW_ALL_HOSTS', '1').lower() in ('1', 'true', 'ye
     # در حالت توسعه همه هاست‌ها پذیرفته می‌شود تا پیش‌نمایش آنلاین و دامنه‌های تست کار کنند.
     ALLOWED_HOSTS += ['*']
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
+
+# Only trust a forwarded protocol when the deployment really sits behind a
+# TLS-terminating proxy that you control.  Leaving it off while
+# SECURE_SSL_REDIRECT is on makes Django see plain HTTP forever and answer every
+# request with a redirect — an infinite loop on shared hosting.  Enabling it
+# without a proxy would let a client spoof the header and bypass HTTPS.
+if os.environ.get('BEHIND_HTTPS_PROXY', '0').lower() in ('1', 'true', 'yes'):
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
@@ -242,11 +253,104 @@ CKEDITOR_5_CONFIGS = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'account:login'
 
-# Cache-backed login throttling. Use a shared cache such as Redis in production
-# so the limit applies across all application workers.
+# ------------------------------------------------------------------ لاگ‌گیری
+# Django's stock configuration routes ``django.request`` errors only to
+# ``mail_admins``, and ``AdminEmailHandler`` returns silently when ADMINS is
+# empty.  On a WSGI server that means a 500 is recorded nowhere at all, so a
+# failed payment callback leaves no trace.  These handlers always emit to
+# stderr (captured by gunicorn/systemd/cPanel) and optionally to a file.
+LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO').upper()
+LOG_FILE = os.environ.get('LOG_FILE', '')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_false': {'()': 'django.utils.log.RequireDebugFalse'},
+    },
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} {name}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        # Request logging for ``runserver``, kept so local output is unchanged.
+        'django.server': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        # Still honour e-mail alerting when an operator configures ADMINS.
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'mail_admins'],
+            'level': LOG_LEVEL,
+            'propagate': False,
+        },
+        # HTTP 4xx/5xx summaries (``django.request``) are logged separately so
+        # they are never swallowed by an empty ADMINS setting.
+        'django.request': {
+            'handlers': ['console', 'mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.server': {
+            'handlers': ['django.server'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        # SQL logging stays off unless explicitly requested: ``django`` at DEBUG
+        # would otherwise echo every query.
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': os.environ.get('LOG_SQL_LEVEL', 'WARNING').upper(),
+            'propagate': False,
+        },
+        # Application loggers used by the payments and cart flows.
+        'payments': {'handlers': ['console'], 'level': LOG_LEVEL, 'propagate': False},
+        'cart': {'handlers': ['console'], 'level': LOG_LEVEL, 'propagate': False},
+        'downloads': {'handlers': ['console'], 'level': LOG_LEVEL, 'propagate': False},
+    },
+}
+
+if LOG_FILE:
+    LOGGING['handlers']['file'] = {
+        'class': 'logging.handlers.RotatingFileHandler',
+        'filename': LOG_FILE,
+        'maxBytes': int(os.environ.get('LOG_FILE_MAX_BYTES', 5 * 1024 * 1024)),
+        'backupCount': int(os.environ.get('LOG_FILE_BACKUP_COUNT', 3)),
+        'formatter': 'verbose',
+    }
+    for _logger in ('django', 'django.request', 'payments', 'cart', 'downloads'):
+        LOGGING['loggers'][_logger]['handlers'].append('file')
+
+# Cache-backed throttling. Use a shared cache such as Redis in production so the
+# limits apply across all application workers.
 LOGIN_RATE_LIMIT_WINDOW_SECONDS = 15 * 60
 LOGIN_RATE_LIMIT_IDENTITY_ATTEMPTS = 5
 LOGIN_RATE_LIMIT_IP_ATTEMPTS = 20
+
+# Public write endpoints (comments, contact, service requests, newsletter) are
+# anonymously reachable and would otherwise accept unlimited automated posts.
+PUBLIC_WRITE_RATE_LIMIT_WINDOW_SECONDS = 15 * 60
+PUBLIC_WRITE_RATE_LIMITS = {
+    # namespace: (attempts per address+identity, attempts per address)
+    'comment': (10, 40),
+    'contact': (5, 20),
+    'service_request': (5, 20),
+    'newsletter': (10, 40),
+}
 
 
 # JALALI DATE Settings (optional)

@@ -31,20 +31,28 @@ class Profile(models.Model):
         return f"پروفایل {self.user.username}"
 
 
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(
-            user=instance,
-            first_name=instance.first_name,
-            last_name=instance.last_name,
-            email=instance.email
-        )
+def ensure_user_profile(sender, instance, **kwargs):
+    """Guarantee exactly one ``Profile`` row per user.
+
+    The previous implementation created the profile only on insert and then
+    unconditionally called ``instance.profile.save()`` on *every* subsequent
+    save.  A user created outside this signal (``bulk_create``, a data
+    migration, an imported database) has no profile, so that attribute access
+    raised ``RelatedObjectDoesNotExist`` — and because Django updates
+    ``last_login`` during authentication, such a user could not even log in.
+
+    ``get_or_create`` repairs those rows on first access instead of crashing,
+    and it also removes a redundant UPDATE-query on every user save.
+    """
+    Profile.objects.get_or_create(
+        user=instance,
+        defaults={
+            'first_name': instance.first_name,
+            'last_name': instance.last_name,
+            'email': instance.email,
+        },
+    )
 
 
-def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
-
-
-post_save.connect(create_user_profile, sender=User)
-post_save.connect(save_user_profile, sender=User)
+post_save.connect(ensure_user_profile, sender=User)
 

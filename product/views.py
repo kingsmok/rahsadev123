@@ -15,6 +15,12 @@ from downloads.models import DownloadToken
 from dashboard.models import Wishlist
 from cart.models import Order, OrderItem
 from core.models import SiteSettings
+from core.throttling import get_throttle
+
+
+#: How many "already counted" ids a session remembers before the oldest are
+#: dropped.  Keeps ``viewed_products`` from growing for the life of the session.
+_MAX_VIEWED_IDS = 100
 
 
 def _products_per_page():
@@ -322,6 +328,19 @@ def product_detail(request, pid, slug):
             return JsonResponse({'status': 'fail', 'message': 'متن دیدگاه را وارد کنید.'}, status=400)
         if len(body) > 2000:
             return JsonResponse({'status': 'fail', 'message': 'متن دیدگاه بیش از حد طولانی است.'}, status=400)
+
+        # Anonymous page, authenticated author: throttle per account and per
+        # address so a script cannot flood a product page with comments.
+        throttle = get_throttle('comment')
+        identity = request.user.get_username()
+        if throttle.is_throttled(request, identity):
+            throttle.record(request, identity)
+            return JsonResponse(
+                {'status': 'fail', 'message': 'تعداد دیدگاه‌های شما زیاد است. کمی بعد دوباره تلاش کنید.'},
+                status=429,
+            )
+        throttle.record(request, identity)
+
         comment = ProductComment.objects.create(body=body, product=products, author=request.user)
         return JsonResponse({'status': 'success', 'comment_id': comment.id})
 
@@ -331,9 +350,12 @@ def product_detail(request, pid, slug):
 
     viewed_products = request.session.get('viewed_products', [])
     if products.id not in viewed_products:
-        products.views += 1
-        products.save(update_fields=['views'])
-        viewed_products.append(products.id)
+        # Increment in the database instead of writing back a value read earlier:
+        # concurrent visitors otherwise overwrite each other and views are lost.
+        Product.objects.filter(pk=products.pk).update(views=models.F('views') + 1)
+        products.views = (products.views or 0) + 1
+        # Bound the session list; a long-lived session used to grow without limit.
+        viewed_products = (viewed_products + [products.id])[-_MAX_VIEWED_IDS:]
         request.session['viewed_products'] = viewed_products
 
     is_in_wishlist = False
