@@ -450,6 +450,8 @@
                                             {% if request.user.is_authenticated %}
                                                 <form id="comment-form" class="comment">
                                                     {% csrf_token %}
+                                                    {# برچسبِ واقعی: placeholder با شروع تایپ ناپدید می‌شود و برای صفحه‌خوان کافی نیست. #}
+                                                    <label class="fm-sr-only" for="body">متن دیدگاه شما</label>
                                                     <textarea class="form-control" placeholder="متن دیدگاه" name="body"
                                                               id="body" rows="4" required></textarea>
                                                     <button class="btn btn-main-masai" type="submit">ثبت دیدگاه</button>

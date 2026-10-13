@@ -156,6 +156,26 @@ input[type=range]::-moz-range-thumb {
     transition: background 0.3s ease;
 }
 
+/* روی دستگاه‌های لمسی، دستگیرهٔ ۱۸px با انگشت به‌سختی گرفته می‌شود.
+   فقط نشانگرِ درشت را هدف می‌گیریم تا ظاهرِ دسکتاپ دقیقاً همان که بود بماند. */
+@media (pointer: coarse) {
+    .slider-track-container { height: 48px; }
+
+    input[type=range] { height: 48px; }
+
+    input[type=range]::-webkit-slider-thumb {
+        height: 28px;
+        width: 28px;
+        box-shadow: 0 0 6px rgba(0, 0, 0, .28);
+    }
+
+    input[type=range]::-moz-range-thumb {
+        height: 28px;
+        width: 28px;
+        box-shadow: 0 0 6px rgba(0, 0, 0, .28);
+    }
+}
+
 
 
 .header{

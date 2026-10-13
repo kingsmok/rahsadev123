@@ -510,7 +510,10 @@ header.Masai-header .main-menu .list .list-item-has-children .sub-menu a {
     font-weight: 300;
 }
 
-header.Masai-header .main-menu .list .list-item-has-children:hover>.sub-menu {
+/* :focus-within لازم است: بدون آن، پیوندهای زیرمنو به‌خاطر visibility:hidden
+   حتی قابل focus نیستند و با کیبورد یا لمس هرگز باز نمی‌شوند (WCAG 2.1.1). */
+header.Masai-header .main-menu .list .list-item-has-children:hover>.sub-menu,
+header.Masai-header .main-menu .list .list-item-has-children:focus-within>.sub-menu {
     visibility: visible;
     opacity: 1;
 }
@@ -627,7 +630,8 @@ header.Masai-header .main-menu .list .list-item-has-children .sub-menu .list-ite
     background: #f7fafc;
 }
 
-header.Masai-header .main-menu .list .list-item.mega-menu:hover .sub-menu {
+header.Masai-header .main-menu .list .list-item.mega-menu:hover .sub-menu,
+header.Masai-header .main-menu .list .list-item.mega-menu:focus-within .sub-menu {
     visibility: visible;
     opacity: 1;
 }

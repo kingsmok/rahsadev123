@@ -14,6 +14,10 @@
 
 {% block extrahead %}
     {{ block.super }}
+    {# صفحهٔ ورودِ ادمین از admin/base.html جنگو ارث می‌برد و viewport آن
+       viewport-fit=cover ندارد؛ در نتیجه env(safe-area-inset-*) در این صفحه
+       صفر می‌ماند. در HTML آخرین viewport برنده است، پس اینجا بازنویسی می‌شود. #}
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <script src="{% static 'js/fm-admin.js' %}" defer></script>
 {% endblock %}
 
@@ -72,10 +76,13 @@
 
 {% block branding %}
     <span class="fm-mark" aria-hidden="true"><i class="fa-solid fa-bolt"></i></span>
-    <span>
+    {# h1 نگه داشته می‌شود: جایگزینی آن با span باعث می‌شد صفحاتی مثل ورودِ ادمین
+       هیچ تیتری نداشته باشند. استایل‌های fm-admin.css هم دقیقاً همین
+       #branding #site-name را هدف گرفته‌اند. #}
+    <h1 id="site-name">
         <a href="{% url 'admin:index' %}">{{ site_header|default:"مدیریت فایل‌مارکت" }}</a>
         <small class="fm-sub">فروشگاه فایل، قالب و محصولات دیجیتال</small>
-    </span>
+    </h1>
     {% if user.is_anonymous %}
         {% include "admin/color_theme_toggle.html" %}
     {% endif %}

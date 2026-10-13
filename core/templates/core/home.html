@@ -438,11 +438,14 @@
                             <div class="owl-carousel">
                                 {% for brand in popular_brands %}
                                     <div class="item borderitem">
-                                        <a href="{% url 'product:brand_product_list' brand.slug %}">
+                                        {# نامِ قابل‌دسترس روی خودِ لینک: وقتی برند تصویر ندارد فقط یک آیکون #}
+                                        {# تزئینی می‌ماند و صفحه‌خوان چیزی برای گفتن نمی‌یابد. #}
+                                        <a href="{% url 'product:brand_product_list' brand.slug %}"
+                                           aria-label="{{ brand.title }}">
                                             {% if brand.image %}
                                                 <img loading="lazy" decoding="async" src="{{ brand.image.url }}" alt="{{ brand.title }}">
                                             {% else %}
-                                                <i class="fa fa-cube fm-brand-fallback-icon"></i>
+                                                <i class="fa fa-cube fm-brand-fallback-icon" aria-hidden="true"></i>
                                             {% endif %}
                                         </a>
                                     </div>

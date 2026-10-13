@@ -59,7 +59,9 @@
     {% block extra_schema %}{% endblock %}
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
     {# maximum-scale و user-scalable=0 زوم با دو انگشت را غیرفعال می‌کردند (نقض WCAG 1.4.4) #}
-    <meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no'
+    {# viewport-fit=cover لازم است تا env(safe-area-inset-*) که کشوی سبد و فوتر موبایل #}
+    {# استفاده می‌کنند روی گوشی‌های دارای بریدگی/نوار خانه مقدار واقعی بگیرند، نه صفر. #}
+    <meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no, viewport-fit=cover'
           name='viewport'/>
 
     <!-- CSS Files -->
@@ -447,7 +449,11 @@
                 </div>
                 <form id="fmNewsletterForm" novalidate>
                     {% csrf_token %}
-                    <input type="email" name="email" placeholder="ایمیل شما؛ مثلاً name@gmail.com" autocomplete="email" required>
+                    {# برچسبِ واقعی (نه فقط placeholder): صفحه‌خوان‌ها هنگام تایپ هم نام فیلد را می‌خوانند. #}
+                    <label class="fm-sr-only" for="fmNewsletterEmail">ایمیل برای عضویت در خبرنامه</label>
+                    <input type="email" id="fmNewsletterEmail" name="email"
+                           placeholder="ایمیل شما؛ مثلاً name@gmail.com" autocomplete="email"
+                           inputmode="email" required>
                     <button type="submit">عضویت در خبرنامه</button>
                 </form>
                 <p class="fm-nl-status" id="fmNlStatus" role="status" aria-live="polite"></p>

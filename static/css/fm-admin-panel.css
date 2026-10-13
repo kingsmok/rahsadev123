@@ -161,6 +161,10 @@ a { color: inherit; text-decoration: none; }
     position: sticky;
     top: 0;
     height: 100vh;
+    /* dvh دقیقاً فضای دیدِ لحظه‌ای است: در موبایل نوار آدرس باز می‌شود و 100vh
+       بلندتر از صفحه است، در نتیجه پایین نوار (خروج/امضا) زیر آن پنهان می‌ماند.
+       مرورگرهای قدیمی‌تر خط بالا را می‌خوانند و این خط را نادیده می‌گیرند. */
+    height: 100dvh;
     overflow-y: auto;
     overscroll-behavior: contain;
     border-left: 1px solid var(--ap-sidebar-border);

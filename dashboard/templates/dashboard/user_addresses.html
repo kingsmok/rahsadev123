@@ -80,7 +80,7 @@
                                 {% if addresses.has_other_pages %}
                                     <div class="pagination">
                                         {% if addresses.has_previous %}
-                                            <a href="?page={{ addresses.previous_page_number }}" class="page-arrow prev"><i class="fa fa-angle-right"></i></a>
+                                            <a href="?page={{ addresses.previous_page_number }}" class="page-arrow prev" aria-label="صفحهٔ قبلی"><i class="fa fa-angle-right" aria-hidden="true"></i></a>
                                         {% endif %}
                                         {% for page in pages_to_show %}
                                             {% if page == '...' %}
@@ -92,7 +92,7 @@
                                             {% endif %}
                                         {% endfor %}
                                         {% if addresses.has_next %}
-                                            <a href="?page={{ addresses.next_page_number }}" class="page-arrow next"><i class="fa fa-angle-left"></i></a>
+                                            <a href="?page={{ addresses.next_page_number }}" class="page-arrow next" aria-label="صفحهٔ بعدی"><i class="fa fa-angle-left" aria-hidden="true"></i></a>
                                         {% endif %}
                                     </div>
                                 {% endif %}
