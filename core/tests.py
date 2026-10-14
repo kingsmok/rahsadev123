@@ -25,7 +25,7 @@ import manage
 
 from core.models import ContactUs
 from product.models import Product, ProductCategory
-from services.models import ServiceRequest
+from services.models import ServicePackage, ServiceRequest
 
 
 class PublicFormAndSafetyTests(TestCase):
@@ -192,6 +192,26 @@ class ImageAndSeoAutomationTests(TestCase):
         with Image.open(product.image.path) as image:
             self.assertEqual(image.format, 'WEBP')
             self.assertLessEqual(max(image.size), 100)
+
+    def test_seed_image_helper_also_produces_webp(self):
+        """رگرسیون ممیزی عمیق: تصاویر seed با field.save() ذخیره می‌شوند و سیگنال
+        بهینه‌سازی آپلود را نمی‌بینند؛ helper سید باید خودش WebP بسازد وگرنه
+        صفحهٔ خانه با PNGهای چندمگابایتی ~۲۰MB می‌شود."""
+        from core.management.commands.seed_demo import _save_optimised_image
+
+        product = Product.objects.create(
+            vendor=self.user,
+            title='محصول تصویر سید',
+            slug='seed-image-product',
+            description='توضیح محصول برای تست تصویر سید.',
+            price=15000,
+        )
+        upload = self._image_upload('seed-photo.png', (320, 160))
+        _save_optimised_image(product.image, upload, 'seed-photo.png')
+        product.refresh_from_db()
+        self.assertTrue(product.image.name.endswith('.webp'))
+        with Image.open(product.image.path) as image:
+            self.assertEqual(image.format, 'WEBP')
 
     @override_settings(IMAGE_OPTIMIZATION_MAX_DIMENSION=100, IMAGE_OPTIMIZATION_WEBP_QUALITY=80)
     def test_ckeditor_upload_storage_uses_the_same_webp_pipeline(self):
@@ -430,3 +450,224 @@ class CreateDefaultAdminTests(TestCase):
     def test_strong_password_is_allowed_in_production(self):
         self.run_command('--username', 'prodadmin', '--password', 'Str0ng-Pr0d-Pass-2026')
         self.assertTrue(User.objects.get(username='prodadmin').is_superuser)
+
+
+class DatabaseUrlParsingTests(SimpleTestCase):
+    """DATABASE_URL باید بدون وابستگی اضافه، موتور درست را انتخاب کند."""
+
+    def test_postgres_url(self):
+        from MasaiShop.settings import _database_from_url
+
+        cfg = _database_from_url('postgresql://user:p%40ss@db.example.com:5433/shop')
+        self.assertEqual(cfg['ENGINE'], 'django.db.backends.postgresql')
+        self.assertEqual(cfg['NAME'], 'shop')
+        self.assertEqual(cfg['USER'], 'user')
+        self.assertEqual(cfg['PASSWORD'], 'p@ss')
+        self.assertEqual(cfg['HOST'], 'db.example.com')
+        self.assertEqual(cfg['PORT'], '5433')
+
+    def test_sqlite_relative_and_memory(self):
+        from MasaiShop.settings import _database_from_url
+
+        rel = _database_from_url('sqlite:///local.sqlite3')
+        self.assertEqual(rel['ENGINE'], 'django.db.backends.sqlite3')
+        self.assertTrue(rel['NAME'].endswith('local.sqlite3'))
+        self.assertEqual(_database_from_url('sqlite:///:memory:')['NAME'], ':memory:')
+
+    def test_unknown_scheme_fails_closed(self):
+        from django.core.exceptions import ImproperlyConfigured
+
+        from MasaiShop.settings import _database_from_url
+
+        with self.assertRaises(ImproperlyConfigured):
+            _database_from_url('mysql://user@host/db')
+
+
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+class NewsletterSendCommandTests(TestCase):
+    def _subscriber_model(self):
+        from core.models import NewsletterSubscriber
+
+        return NewsletterSubscriber
+
+    """دستور send_newsletter باید واقعاً و فقط به مشترکان فعال ارسال کند."""
+
+    def test_sends_only_to_active_subscribers(self):
+        from django.core import mail
+
+        self._subscriber_model().objects.create(email='active@example.com', is_active=True)
+        self._subscriber_model().objects.create(email='gone@example.com', is_active=False)
+
+        out = StringIO()
+        call_command('send_newsletter', '--subject', 'خبرنامه تست',
+                     '--text', 'متن خبرنامه', stdout=out)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ['active@example.com'])
+        self.assertIn('1 موفق', out.getvalue())
+
+    def test_dry_run_sends_nothing(self):
+        from django.core import mail
+
+        self._subscriber_model().objects.create(email='a@example.com', is_active=True)
+        out = StringIO()
+        call_command('send_newsletter', '--subject', 'x', '--text', 'y',
+                     '--dry-run', stdout=out)
+        self.assertEqual(len(mail.outbox), 0)
+        self.assertIn('dry-run', out.getvalue())
+
+    def test_empty_body_is_rejected(self):
+        from django.core.management.base import CommandError
+
+        with self.assertRaises(CommandError):
+            call_command('send_newsletter', '--subject', 'x', '--text', '  ')
+
+
+class SecurityHardeningTests(SimpleTestCase):
+    """رگرسیون‌های ممیزی امنیتی: CSP سراسری و خنثی‌سازی فرمول CSV."""
+
+    def test_csp_header_is_set_and_restrictive(self):
+        from django.test import RequestFactory
+
+        from core.middleware import BrowserPolicyMiddleware
+
+        response = BrowserPolicyMiddleware(lambda request: __import__('django.http', fromlist=['HttpResponse']).HttpResponse('ok'))(RequestFactory().get('/'))
+        csp = response['Content-Security-Policy']
+        self.assertIn("default-src 'self'", csp)
+        self.assertIn("object-src 'none'", csp)
+        self.assertIn("frame-ancestors 'none'", csp)
+        self.assertIn("form-action 'self'", csp)
+        # هیچ منبع اسکریپت خارجی مجاز نیست
+        self.assertNotIn('script-src https:', csp.replace("img-src 'self' data: blob: https:", ''))
+
+    def test_csv_safe_neutralises_formula_cells(self):
+        from core.csv_safety import csv_safe
+
+        self.assertEqual(csv_safe('=SUM(A1:A2)'), "'=SUM(A1:A2)")
+        self.assertEqual(csv_safe('+cmd'), "'+cmd")
+        self.assertEqual(csv_safe('  -2+2'), "'  -2+2")
+        self.assertEqual(csv_safe('@SUM(1)'), "'@SUM(1)")
+        self.assertEqual(csv_safe('\t=1'), "'\t=1")
+        # مقادیر عادی دست نمی‌خورند
+        self.assertEqual(csv_safe('کاربر نمونه'), 'کاربر نمونه')
+        self.assertEqual(csv_safe('demo@filemarket.ir'), 'demo@filemarket.ir')
+        self.assertEqual(csv_safe(1250000), 1250000)
+        self.assertEqual(csv_safe(''), '')
+
+
+class PersianJalaliFilterTests(SimpleTestCase):
+    """نام ماه در تاریخ‌های شمسی باید فارسی باشد، نه «Meh»/«Mehr» لاتین."""
+
+    def test_month_name_and_digits_are_persian(self):
+        from datetime import datetime, timezone
+
+        from core.templatetags.custom_filters import to_jalali_fa
+
+        # ۱۴ اکتبر ۲۰۲۶ = ۲۲ مهر ۱۴۰۵
+        rendered = to_jalali_fa(datetime(2026, 10, 14, tzinfo=timezone.utc))
+        self.assertEqual(rendered, '۲۲ مهر ۱۴۰۵')
+        self.assertNotIn('Meh', rendered)
+
+    def test_none_is_dash(self):
+        from core.templatetags.custom_filters import to_jalali_fa
+
+        self.assertEqual(to_jalali_fa(None), '-')
+
+    def test_prices_render_with_persian_digits(self):
+        """تصمیم محصولی ممیزی طراحی: همهٔ اعداد نمایشی، از جمله قیمت، فارسی‌اند."""
+        from core.templatetags.custom_filters import format_price
+
+        self.assertEqual(format_price(1250000), '۱٬۲۵۰٬۰۰۰')
+        self.assertEqual(format_price(0), '۰')
+        # مقدار متنی/خالی همان‌طور که هست برمی‌گردد (رفتار قبلی حفظ شود)
+        self.assertEqual(format_price('توافقی'), 'توافقی')
+        self.assertIsNone(format_price(None))
+
+
+class LlmsTxtTests(TestCase):
+    """فایل llms.txt — راهنمای محتوای سایت برای دستیارهای هوش مصنوعی.
+
+    رگرسیون: لینک‌ها باید مطلق باشند تا خزنده بدون دانستن دامنه از آن‌ها
+    استفاده کند؛ بستهٔ بدون قیمت نباید «None تومان» چاپ کند؛ و دسته‌های
+    خالی نباید در فهرست بیایند.
+    """
+
+    def setUp(self):
+        vendor = User.objects.create_user(username='llms-vendor', password='x')
+        category = ProductCategory.objects.create(title='قالب تست', slug='test-themes')
+        product = Product.objects.create(
+            vendor=vendor, title='فایل تست llms', slug='llms-test-file',
+            description='توضیح', price=1250000, stock_count=5, status='published',
+        )
+        product.category.add(category)
+        ServicePackage.objects.create(title='بسته توافقی', features='امکان', price=None)
+
+    def test_llms_txt_absolute_links_and_no_none_price(self):
+        response = self.client.get('/llms.txt')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        # لینک محصول و دسته‌بندی مطلق‌اند (با دامنهٔ درخواست)
+        self.assertIn('http://testserver/products/', content)
+        self.assertIn('/products/category/test-themes/', content)
+        # قیمت قالب‌بندی‌شده و نبود «None» برای بستهٔ توافقی
+        self.assertIn('۱٬۲۵۰٬۰۰۰ تومان', content)
+        self.assertIn('توافقی', content)
+        self.assertNotIn('None', content)
+        # هیچ لینک نسبی مارک‌داونی باقی نمانده است
+        self.assertNotIn('](/', content)
+
+
+class NewsletterSubscribeReactivationTests(TestCase):
+    """رگرسیون: مشترک غیرفعال‌شده با عضویت دوباره باید واقعاً فعال شود.
+
+    قبلاً پیام «قبلاً ثبت شده‌اید» برمی‌گشت ولی is_active همان False
+    می‌ماند و send_newsletter هیچ‌وقت به او ایمیل نمی‌زد.
+    """
+
+    def _subscribe(self, email):
+        return self.client.post(
+            '/newsletter/subscribe/',
+            data=json.dumps({'email': email}),
+            content_type='application/json',
+        )
+
+    def test_inactive_subscriber_is_reactivated_on_resubscribe(self):
+        from core.models import NewsletterSubscriber
+
+        subscriber = NewsletterSubscriber.objects.create(
+            email='back@example.com', is_active=False)
+        response = self._subscribe('back@example.com')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['ok'])
+        self.assertIn('دوباره فعال شد', response.json()['message'])
+        subscriber.refresh_from_db()
+        self.assertTrue(subscriber.is_active)
+
+    def test_active_subscriber_stays_single_record(self):
+        from core.models import NewsletterSubscriber
+
+        self._subscribe('once@example.com')
+        response = self._subscribe('once@example.com')
+        self.assertIn('قبلاً', response.json()['message'])
+        self.assertEqual(
+            NewsletterSubscriber.objects.filter(email='once@example.com').count(), 1)
+
+
+class BareCategoryRedirectTests(TestCase):
+    """رگرسیون تعارض URL: مسیرهای دستهٔ بدون نامک فقط یک مالک داشته باشند.
+
+    قبلاً /blog/category/ هم در blog.urls (301 به فهرست مقالات) تعریف شده
+    بود هم در urls ریشه (غیرقابل‌دسترسی) و نام redirect_to_home سه بار
+    تکرار می‌شد. رفتار قابل مشاهده نباید عوض شود.
+    """
+
+    def test_blog_category_redirects_to_article_list(self):
+        response = self.client.get('/blog/category/')
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response['Location'], '/blog/')
+
+    def test_products_category_and_brand_redirect_to_shop(self):
+        for path in ('/products/category/', '/products/brand/'):
+            response = self.client.get(path)
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(response['Location'], '/products/')

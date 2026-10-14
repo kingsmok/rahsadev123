@@ -24,9 +24,29 @@ from core.models import Banner, SiteSettings
 from pages.models import StaticPage
 from product.models import DigitalAsset, Product, ProductBrand, ProductCategory, ProductComment
 from services.models import PortfolioItem, ServicePackage
-from payments.models import GatewaySettings
+from payments.models import GatewaySettings, PaymentTransaction
 
 SEED_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'media', 'seed')
+
+def _save_optimised_image(field_file, file_obj, filename):
+    """ذخیرهٔ تصویر seed از همان خط لولهٔ بهینه‌سازی آپلودهای واقعی.
+
+    ذخیرهٔ مستقیم با ``field.save()`` بعد از commit شدن فایل اتفاق می‌افتد و
+    سیگنال pre_save بهینه‌سازی (که برای آپلودهای فرم است) آن را نمی‌بیند؛
+    بدون این مرحله، تصاویر نمونه PNGهای چندمگابایتی می‌ماندند درحالی‌که
+    آپلود واقعی مدیر WebP سبک می‌شود. اگر بهینه‌سازی ممکن نبود، اصل فایل
+    ذخیره می‌شود تا seed هیچ‌وقت به‌خاطر تصویر متوقف نشود.
+    """
+    from core.image_optimization import optimise_uploaded_image
+
+    optimised = optimise_uploaded_image(ImageFile(file_obj, name=filename))
+    if optimised is not None:
+        field_file.save(optimised.name, optimised, save=True)
+    else:
+        file_obj.seek(0)
+        field_file.save(filename, ImageFile(file_obj, name=filename), save=True)
+
+
 PRODUCT_IMAGES = os.path.join(SEED_DIR, 'products')
 BANNER_IMAGES = os.path.join(SEED_DIR, 'banners')
 PORTFOLIO_IMAGES = os.path.join(SEED_DIR, 'portfolio')
@@ -530,7 +550,7 @@ class Command(BaseCommand):
             image_path = os.path.join(PRODUCT_IMAGES, data['image'])
             if os.path.exists(image_path):
                 with open(image_path, 'rb') as f:
-                    product.image.save(data['image'], ImageFile(f), save=True)
+                    _save_optimised_image(product.image, f, data['image'])
 
             # فایل دیجیتال قابل دانلود
             zip_name = f"{data['file_prefix']}-v{data['version'] or '1.0'}.zip" if data['file_type'] == 'ZIP' else f"{data['file_prefix']}.txt"
@@ -572,7 +592,7 @@ class Command(BaseCommand):
             image_path = os.path.join(BANNER_IMAGES, image)
             if os.path.exists(image_path):
                 with open(image_path, 'rb') as f:
-                    banner.image.save(image, ImageFile(f), save=True)
+                    _save_optimised_image(banner.image, f, image)
                     self.stdout.write(f'بنر ثبت شد: {title}')
 
         # ------------------------------------------------------------------ پکیج‌های طراحی سایت
@@ -613,7 +633,7 @@ class Command(BaseCommand):
             image_path = os.path.join(PORTFOLIO_IMAGES, image)
             if os.path.exists(image_path):
                 with open(image_path, 'rb') as f:
-                    item.image.save(image, ImageFile(f), save=True)
+                    _save_optimised_image(item.image, f, image)
                     self.stdout.write(f'نمونه کار ثبت شد: {title}')
 
         # ------------------------------------------------------------------ مقالات وبلاگ
@@ -669,7 +689,7 @@ class Command(BaseCommand):
             image_path = os.path.join(PRODUCT_IMAGES, data['image'])
             if os.path.exists(image_path):
                 with open(image_path, 'rb') as f:
-                    article.image.save(data['image'], ImageFile(f), save=True)
+                    _save_optimised_image(article.image, f, data['image'])
             article.category.add(article_cat)
             article.tags.add(seo_tag)
             self.stdout.write(f'مقاله ثبت شد: {data["title"]}')
@@ -710,6 +730,29 @@ class Command(BaseCommand):
                     '<p>از طریق صفحه تماس با ما درخواست تمدید بدهید؛ برای مشکلات فنی تمدد رایگان انجام می‌شود.</p>'
                     '<h3>فایل‌ها لایسنس دارند؟</h3>'
                     '<p>بله؛ نوع لایسنس هر فایل در صفحه محصول درج شده و در فایل خریداری‌شده نیز گواهی لایسنس قرار دارد.</p>'
+                ),
+            },
+            {
+                'slug': 'حریم-خصوصی',
+                'title': 'حریم خصوصی',
+                'summary': 'چه داده‌ای در فایل‌مارکت ذخیره می‌شود و چرا',
+                'content': (
+                    '<p>این صفحه توضیح می‌دهد چه داده‌ای هنگام استفاده از فایل‌مارکت ذخیره می‌شود. '
+                    'متن نهایی حقوقی را می‌توانید از پنل مدیریت ← صفحات ثابت ویرایش کنید.</p>'
+                    '<h3>دادهٔ حساب و سفارش</h3>'
+                    '<p>برای ساخت حساب و تحویل فایل، نام کاربری، ایمیل، نام و سفارش‌های شما ذخیره می‌شود. '
+                    'این داده فقط برای ارائهٔ سرویس (ورود، نمایش سفارش‌ها و دانلودهای خریداری‌شده) استفاده می‌شود.</p>'
+                    '<h3>دانلودها</h3>'
+                    '<p>برای هر فایل خریداری‌شده یک توکن دانلود با سقف تعداد و تاریخ انقضا ساخته می‌شود و '
+                    'تعداد دانلودهای انجام‌شده ثبت می‌شود تا سقف لایسنس رعایت شود.</p>'
+                    '<h3>پرداخت</h3>'
+                    '<p>پرداخت روی درگاه بانکی انجام می‌شود و اطلاعات کامل کارت شما نزد ما ذخیره نمی‌شود؛ '
+                    'فقط شناسهٔ تراکنش و وضعیت پرداخت برای پیگیری سفارش نگه داشته می‌شود.</p>'
+                    '<h3>خبرنامه و پیام‌ها</h3>'
+                    '<p>اگر در خبرنامه عضو شوید، ایمیل شما فقط برای ارسال خبرنامه ذخیره می‌شود. '
+                    'پیام‌های فرم تماس و درخواست خدمات برای پاسخ‌گویی نگهداری می‌شوند.</p>'
+                    '<h3>حذف حساب</h3>'
+                    '<p>برای حذف حساب و داده‌های مرتبط، از صفحهٔ تماس با ما درخواست بدهید تا بررسی و انجام شود.</p>'
                 ),
             },
             {
@@ -797,10 +840,27 @@ class Command(BaseCommand):
                         unit_price=p.price, quantity=1, total_price=p.price,
                     )
                     DownloadToken.objects.create(user=demo, product=p, order=order)
+
                 self.stdout.write(
                     f'سفارش پرداخت‌شده نمونه ثبت شد: {order.order_number} '
                     f'({len(demo_products)} فایل قابل دانلود برای کاربر demo).'
                 )
+
+        # بدون تراکنش متناظر، KPI «درآمد موفق» عدد نشان می‌دهد اما جدول
+        # «آخرین تراکنش‌ها» و «عملکرد درگاه‌ها» در پنل خالی می‌مانند.
+        # این حلقه هم سفارش تازه را پوشش می‌دهد و هم پایگاه‌های قدیمی را ترمیم می‌کند.
+        for seed_order in Order.objects.filter(user=demo, status='paid'):
+            PaymentTransaction.objects.get_or_create(
+                order=seed_order,
+                defaults={
+                    'gateway': 'zarinpal',
+                    'authority': f'SEED-{seed_order.order_number}',
+                    'ref_id': f'SEED-{seed_order.order_number}',
+                    'amount': seed_order.final_price,
+                    'status': 'paid',
+                    'raw_response': {'seed': True},
+                },
+            )
 
         self.stdout.write(self.style.SUCCESS(
             'داده‌های نمونه با موفقیت ثبت شد!\n'

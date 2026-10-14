@@ -5,11 +5,17 @@ register = template.Library()
 
 @register.filter
 def format_price(value):
-    """قالب‌بندی قیمت با جداکننده هزارگان؛ در برابر مقدار خالی یا متنی مقاوم است."""
+    """قالب‌بندی قیمت: ارقام فارسی با جداکنندهٔ هزارگان فارسی (٬).
+
+    تصمیم محصولی (ممیزی طراحی): همهٔ اعداد نمایشی سایت فارسی باشند،
+    پس قیمت‌ها هم مثل تاریخ‌ها با ارقام فارسی رندر می‌شوند. در برابر
+    مقدار خالی یا متنی مقاوم است و همان را برمی‌گرداند.
+    """
     try:
-        return f"{int(value):,}"
+        formatted = f"{int(value):,}"
     except (TypeError, ValueError):
         return value
+    return persian_digits(formatted).replace(',', '٬')
 
 
 @register.filter
@@ -32,3 +38,33 @@ def persian_digits(value):
     if not isinstance(value, str):
         value = str(value)
     return value.translate(str.maketrans('0123456789', '۰۱۲۳۴۵۶۷۸۹'))
+
+
+from core.admin_utils import PERSIAN_MONTHS  # فهرست مرکزی نام ماه‌ها
+
+
+@register.filter
+def to_jalali_fa(value, fmt='%d %B %Y'):
+    """تاریخ شمسی با نام فارسی ماه و ارقام فارسی.
+
+    فیلتر `to_jalali` کتابخانهٔ jalali-date برای %b/%B نام لاتین ماه
+    («Meh»/«Mehr») برمی‌گرداند که در رابط فارسی بیگانه است. این فیلتر همان
+    تبدیل تاریخ را انجام می‌دهد ولی نام ماه و ارقام را فارسی برمی‌گرداند.
+    """
+    if value is None:
+        return '-'
+    from datetime import date, datetime
+
+    from jalali_date import date2jalali, datetime2jalali
+
+    if isinstance(value, datetime):
+        jalali = datetime2jalali(value)
+    elif isinstance(value, date):
+        jalali = date2jalali(value)
+    else:
+        return '-'
+
+    month_name = PERSIAN_MONTHS[jalali.month - 1]
+    safe_fmt = fmt.replace('%B', '\x00').replace('%b', '\x00')
+    rendered = jalali.strftime(safe_fmt).replace('\x00', month_name)
+    return persian_digits(rendered)

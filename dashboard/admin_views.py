@@ -14,6 +14,7 @@ from django.utils import timezone
 
 from blog.models import Article
 from cart.models import Order
+from core.csv_safety import csv_safe
 from core.models import Redirect
 from downloads.models import DownloadToken
 from payments.models import GatewaySettings, PaymentTransaction
@@ -117,8 +118,8 @@ def admin_export_orders(request):
         payment = order.payments.filter(status='paid').order_by('-created_at').first()
         writer.writerow([
             order.order_number,
-            order.user.get_username(),
-            order.user.email or '',
+            csv_safe(order.user.get_username()),
+            csv_safe(order.user.email or ''),
             analytics.jalali_full(order.created_at),
             order.total_price,
             order.coupon_discount,
@@ -148,6 +149,14 @@ def admin_health(request):
         'low_stock': analytics.low_stock_products(limit=20),
         'pending_orders': Order.objects.filter(status='pending').order_by('-created_at'),
         'failed_payments': PaymentTransaction.objects.filter(status='failed').order_by('-created_at')[:30],
+        # Money that the gateway confirmed but that could not be delivered to
+        # the order (the customer had just cancelled it, or the last licence
+        # sold out).  These look like failed payments in the database, but the
+        # customer HAS been charged, so they must not be read as declines.
+        # Showing them separately is what makes the refund queue actionable.
+        'unfulfilled_payments': PaymentTransaction.objects.filter(
+            status='failed', raw_response__unfulfilled=True,
+        ).order_by('-created_at')[:30],
         'unconfigured_gateways': [
             gateway for gateway in GatewaySettings.objects.all()
             if gateway.is_enabled and not gateway.is_configured

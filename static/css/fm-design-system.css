@@ -45,7 +45,9 @@
     --fm-neutral-900: #22333f;
 
     /* وضعیت‌ها */
-    --fm-success:     #1f9d63;
+    /* #1f9d63 روی success-bg فقط ۳٫۱ می‌داد (برچسب «پرداخت شده»)؛
+       #177a4c همان سبز است با ۴٫۷۸ روی bg و ۵٫۳۱ روی سفید. */
+    --fm-success:     #177a4c;
     --fm-success-bg:  #e7f6ee;
     --fm-warning:     #c98a04;
     --fm-warning-bg:  #fdf4e0;
@@ -70,7 +72,10 @@
     --fm-surface-alt: var(--fm-neutral-25);
     --fm-text:        var(--fm-neutral-900);
     --fm-text-soft:   var(--fm-neutral-600);
-    --fm-text-faint:  var(--fm-neutral-500);
+    /* neutral-500 روی سفید فقط ۳٫۵ کنتراست داشت و متن‌های ریز (متا، تاریخ،
+       کد محصول) از AA می‌افتادند؛ faint متنی = neutral-600 (۴٫۹۹). در تم تیره
+       neutral-600 خودش روشن است و خوانا می‌ماند. */
+    --fm-text-faint:  var(--fm-neutral-600);
     --fm-border:      var(--fm-neutral-200);
     --fm-border-soft: var(--fm-neutral-100);
 
@@ -136,6 +141,7 @@
     --fm-neutral-800: #dbe5ed;
     --fm-neutral-900: #e8eef4;
 
+    --fm-success:     #35c48d;  /* روی زمینهٔ تیره روشن می‌ماند (AA) */
     --fm-success-bg:  rgba(31, 157, 99, .16);
     --fm-warning-bg:  rgba(201, 138, 4, .16);
     --fm-danger-bg:   rgba(217, 72, 72, .16);
@@ -231,6 +237,9 @@ main h4 { font-size: 16px; font-weight: 700; line-height: 1.8; }
     color: var(--fm-text-soft);
     text-decoration: none;
     transition: color .2s var(--fm-ease);
+    /* لینک‌های بردکرامب ۱۹px ارتفاع لمسی داشتند (حداقل AA برابر ۲۴px است)؛
+       پدینگ عمودی ناحیهٔ لمس را بدون تغییر ظاهر متن بزرگ می‌کند. */
+    padding-block: 5px;
 }
 
 .fm-crumbs a:hover { color: var(--fm-primary-500); }
@@ -778,6 +787,12 @@ main h4 { font-size: 16px; font-weight: 700; line-height: 1.8; }
 
 .fm-pass-toggle:hover { color: var(--fm-primary-600); background: var(--fm-primary-50); }
 
+/* روی نمایشگر لمسی، ناحیهٔ لمسِ دکمهٔ نمایش رمز به ۴۴px می‌رسد.
+   پس‌زمینه شفاف است و padding-left ورودی همین فضا را رزرو کرده؛ ظاهر عوض نمی‌شود. */
+@media (pointer: coarse) {
+    .fm-pass-toggle { width: 44px; height: 44px; }
+}
+
 /* چک‌باکس */
 .fm-check {
     display: flex;
@@ -863,7 +878,7 @@ main h4 { font-size: 16px; font-weight: 700; line-height: 1.8; }
     color: var(--fm-text-soft);
 }
 
-.fm-auth__alt a { color: var(--fm-primary-600); font-weight: 700; }
+.fm-auth__alt a { color: var(--fm-primary-700); font-weight: 700; }
 
 .fm-auth__perks {
     list-style: none;

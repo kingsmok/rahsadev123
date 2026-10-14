@@ -16,6 +16,7 @@
     {% article_breadcrumb article %}
 {% endblock %}
 {% load jalali_tags %}
+{% load custom_filters %}
 
 {% block content %}
     <main class="blog-detail default">
@@ -28,7 +29,7 @@
                         <h1 class="fm-article__title">{{ article.title }}</h1>
 
                         <div class="fm-article__meta">
-                            <span><i class="fa fa-clock" aria-hidden="true"></i> {{ article.created_at|to_jalali:'%d %b %Y' }}</span>
+                            <span><i class="fa fa-clock" aria-hidden="true"></i> {{ article.created_at|to_jalali_fa:'%d %B %Y' }}</span>
                             <span><i class="fa fa-user" aria-hidden="true"></i>
                                 {% if article.author.profile.first_name and article.author.profile.last_name %}
                                     {{ article.author.profile.first_name }} {{ article.author.profile.last_name }}

@@ -37,7 +37,7 @@
                     </header>
                     <div class="table-responsive default">
                         <table class="table">
-                            <thead>
+                            {% if cart_items %}<thead>
                             <tr>
                                 <th scope="col">فایل</th>
                                 <th scope="col">عنوان</th>
@@ -45,7 +45,7 @@
                                 <th scope="col">قیمت</th>
                                 <th scope="col">قیمت نهایی</th>
                             </tr>
-                            </thead>
+                            </thead>{% endif %}
                             <tbody>
                             {% for item in cart_items %}
                                 <tr class="cart_item">
@@ -124,6 +124,16 @@
                                     </div>
                                 {% endif %}
                             </form>
+                            {% if cart and cart.coupon %}
+                                {# فرم جداگانه: حذف کد باید درخواست POST مستقل باشد، نه دکمه‌ای داخل فرمِ اعمال کد #}
+                                <form method="post" action="{% url 'cart:remove_coupon' %}" class="coupon-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-main-masai fm-remove-coupon">
+                                        <i class="fa fa-xmark" aria-hidden="true"></i>
+                                        حذف کد تخفیف و پرداخت بدون تخفیف
+                                    </button>
+                                </form>
+                            {% endif %}
                             <div class="text_details">
                                 <p>
                                     <i class="fa fa-cloud-arrow-down colormain" aria-hidden="true"></i>

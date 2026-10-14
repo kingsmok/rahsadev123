@@ -137,10 +137,10 @@
                                                     <a class="product-box-img"
                                                        href="{% url 'product:product_detail' product.pid product.slug %}">
                                                         {% if product.image %}
-                                                            <img src="{{ product.image.url }}"
+                                                            <img loading="lazy" decoding="async" src="{{ product.image.url }}"
                                                                  alt="{{ product.title|truncatewords:10 }}">
                                                         {% else %}
-                                                            <img src="{% static 'img/product_image_not_found.jpg' %}"
+                                                            <img loading="lazy" decoding="async" src="{% static 'img/product_image_not_found.jpg' %}"
                                                                  alt="{{ product.title|truncatewords:10 }}">
                                                         {% endif %}
                                                         {% if not product.is_available %}
@@ -180,7 +180,7 @@
                                 {% if products.has_other_pages %}
                                     <div class="pagination">
                                         {% if products.has_previous %}
-                                            <a href="?page={{ products.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}" class="page-arrow prev"><i class="fa fa-angle-right"></i></a>
+                                            <a href="?page={{ products.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}" class="page-arrow prev" aria-label="صفحهٔ قبلی"><i class="fa fa-angle-right" aria-hidden="true"></i></a>
                                         {% endif %}
                                         {% for page in pages_to_show %}
                                             {% if page == '...' %}
@@ -192,7 +192,7 @@
                                             {% endif %}
                                         {% endfor %}
                                         {% if products.has_next %}
-                                            <a href="?page={{ products.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}" class="page-arrow next"><i class="fa fa-angle-left"></i></a>
+                                            <a href="?page={{ products.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}" class="page-arrow next" aria-label="صفحهٔ بعدی"><i class="fa fa-angle-left" aria-hidden="true"></i></a>
                                         {% endif %}
                                     </div>
                                 {% endif %}

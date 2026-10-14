@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction as db_transaction
@@ -11,6 +13,17 @@ from dashboard.models import Notification
 from product.models import Product
 from .services import GATEWAYS
 from .models import GatewaySettings, PaymentTransaction
+
+logger = logging.getLogger(__name__)
+
+
+class FulfilmentError(RuntimeError):
+    """The gateway confirmed a payment that the order cannot be fulfilled for.
+
+    Raised inside the atomic block of :func:`_complete`, so the caller is
+    responsible for recording the failure: the money has already been taken and
+    must stay reconcilable from the transaction record.
+    """
 
 
 def _normalised_order_items(order):
@@ -99,20 +112,22 @@ def _complete(tx, ref_id='', response=None):
             return order
 
         if order.status != 'pending':
-            # Do not silently turn a cancelled/processing order into a paid
-            # fulfilment.  Staff can reconcile this exceptional gateway result
-            # from the transaction record.
-            transaction.status = 'failed'
-            transaction.raw_response = {
-                **(response or {}),
-                'error': f'order is {order.status}, not pending',
-            }
-            transaction.save(update_fields=['status', 'raw_response', 'updated_at'])
-            return order
+            # The gateway has confirmed and charged this payment, but the order
+            # is no longer payable (the customer asked to cancel it, or staff
+            # cancelled it) while they were away on the provider's page.
+            #
+            # Recording this as a plain "failed" transaction would be wrong: the
+            # money *was* taken, so staff reconciling failures would refund a
+            # payment that actually succeeded.  Let the callback persist it as
+            # verified-but-unfulfilled and tell the customer what happened.
+            raise FulfilmentError(
+                f'سفارش در وضعیت «{order.get_status_display()}» است و پرداخت آن '
+                f'نمی‌تواند به‌طور خودکار تحویل داده شود.'
+            )
 
         snapshot = _normalised_order_items(order)
         if not snapshot:
-            raise ValueError('سفارش پرداختی فاقد اطلاعات معتبر محصول است.')
+            raise FulfilmentError('سفارش پرداختی فاقد اطلاعات معتبر محصول است.')
 
         product_ids = [item['product_id'] for item in snapshot]
         products = {
@@ -125,7 +140,24 @@ def _complete(tx, ref_id='', response=None):
         }
         missing_products = set(product_ids) - set(products)
         if missing_products:
-            raise ValueError('یکی از محصولات این سفارش دیگر در دسترس نیست.')
+            raise FulfilmentError('یکی از محصولات این سفارش دیگر در دسترس نیست.')
+
+        # Stock is only checked at checkout start, so two customers can both be
+        # on the gateway while a single licence is left.  These rows are locked,
+        # so re-checking here (before any download token is issued) is the last
+        # point at which overselling a limited licence can still be prevented.
+        insufficient = [
+            product.title
+            for product in products.values()
+            if not product.is_unlimited and product.stock_count < sum(
+                item['quantity'] for item in snapshot
+                if item['product_id'] == product.pk
+            )
+        ]
+        if insufficient:
+            raise FulfilmentError(
+                'موجودی «%s» کافی نیست و پرداخت قابل تحویل نیست.' % '، '.join(insufficient)
+            )
 
         transaction.status = 'paid'
         transaction.ref_id = str(ref_id)
@@ -215,7 +247,20 @@ def start_payment(request, order_number):
                 status='pending',
             )
     else:
+        # A payment may only be started for an order that is still awaiting one.
+        # Without this check a customer could open ``/payments/start/<number>/``
+        # for an order that is already paid (or cancelled) and be charged twice
+        # for the same download.
         order = get_object_or_404(Order, order_number=order_number, user=request.user)
+        if order.status != 'pending':
+            if order.status == 'paid':
+                messages.info(request, 'این سفارش قبلاً پرداخت شده است و فایل‌های آن آماده دانلود است.')
+                return redirect('payments:successful_done', order_number=order.order_number)
+            if order.status == 'cancelled':
+                messages.error(request, 'این سفارش لغو شده است و امکان پرداخت آن وجود ندارد.')
+                return redirect('dashboard:order_detail', order_number=order.order_number)
+            messages.info(request, f'وضعیت این سفارش «{order.get_status_display()}» است و در حال حاضر قابل پرداخت نیست.')
+            return redirect('dashboard:order_detail', order_number=order.order_number)
 
     gateway = request.POST.get('gateway', 'zarinpal')
     if gateway not in dict(PaymentTransaction.GATEWAYS):
@@ -227,6 +272,9 @@ def start_payment(request, order_number):
     if not gateway_settings or not gateway_settings.is_enabled:
         gateway_title = gateway_settings.title if gateway_settings else 'انتخاب‌شده'
         messages.error(request, f'درگاه «{gateway_title}» در حال حاضر غیرفعال است.')
+        return redirect('cart:shopping_payment')
+    if not gateway_settings.is_implemented:
+        messages.error(request, f'درگاه «{gateway_settings.title}» هنوز فعال نشده است؛ لطفاً درگاه دیگری را انتخاب کنید.')
         return redirect('cart:shopping_payment')
     if not gateway_settings.is_configured:
         messages.error(request, f'اطلاعات اتصال درگاه «{gateway_settings.title}» کامل نشده است.')
@@ -242,7 +290,15 @@ def start_payment(request, order_number):
     except Exception as exc:
         transaction.status, transaction.raw_response = 'failed', {'error': str(exc)}
         transaction.save(update_fields=['status', 'raw_response', 'updated_at'])
-        messages.error(request, f'اتصال به درگاه انجام نشد: {exc}')
+        # The exception text can carry internal hostnames, gateway response
+        # fragments or credential-shaped details.  Keep that in the log, and
+        # show the customer a message they can quote to support instead.
+        logger.exception('خطا در آغاز پرداخت سفارش %s از درگاه %s', order.order_number, gateway)
+        messages.error(
+            request,
+            'اتصال به درگاه پرداخت برقرار نشد. مبلغی از شما کسر نشده است؛ '
+            f'لطفاً دوباره تلاش کنید و در صورت تکرار، کد پیگیری «{order.order_number}» را به پشتیبانی اعلام کنید.',
+        )
         return redirect('cart:shopping_payment')
 
 
@@ -264,7 +320,27 @@ def callback(request):
         transaction.status, transaction.raw_response = 'failed', data
         transaction.save(update_fields=['status', 'raw_response', 'updated_at'])
         return HttpResponse('تأیید پرداخت ناموفق بود.', status=400)
-    order = _complete(transaction, data.get('ref_id', ''), data)
+
+    try:
+        order = _complete(transaction, data.get('ref_id', ''), data)
+    except FulfilmentError as exc:
+        # ``_complete`` rolls its transaction back, so the failure must be
+        # recorded in a separate statement.  The gateway has already charged
+        # the customer: without this row the payment would exist only at the
+        # provider and could never be reconciled or refunded.
+        logger.error(
+            'Payment %s for order %s was verified but could not be fulfilled: %s',
+            transaction.pk, transaction.order_id, exc, exc_info=True,
+        )
+        PaymentTransaction.objects.filter(pk=transaction.pk).update(
+            status='failed',
+            raw_response={**(data or {}), 'error': str(exc), 'unfulfilled': True},
+        )
+        return render(
+            request, 'payments/payment_unfulfilled.html',
+            {'transaction': transaction}, status=409,
+        )
+
     return redirect('payments:successful_done', order_number=order.order_number)
 
 

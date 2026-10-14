@@ -1,15 +1,9 @@
 from django import forms
+from core.persian_digits import to_latin_digits
+from core.validators import validate_image_size
 from .models import Address
 from django.core.exceptions import ValidationError
 from accounts.models import Profile
-
-
-_DIGIT_TRANSLATION = str.maketrans('۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩', '01234567890123456789')
-
-
-def _normalize_digits(value):
-    """Store phone, postal, and card data consistently regardless of keyboard locale."""
-    return (value or '').strip().translate(_DIGIT_TRANSLATION)
 
 
 class AddressForm(forms.ModelForm):
@@ -61,7 +55,7 @@ class AddressForm(forms.ModelForm):
         return province
 
     def clean_postal_code(self):
-        postal_code = _normalize_digits(self.cleaned_data.get('postal_code'))
+        postal_code = to_latin_digits(self.cleaned_data.get('postal_code'))
         if len(postal_code) != 10:
             raise ValidationError("کد پستی باید 10 رقم باشد.")
         if not postal_code.isdigit():
@@ -69,7 +63,7 @@ class AddressForm(forms.ModelForm):
         return postal_code
 
     def clean_phone_number(self):
-        phone_number = _normalize_digits(self.cleaned_data.get('phone_number'))
+        phone_number = to_latin_digits(self.cleaned_data.get('phone_number'))
         if not phone_number.startswith('09'):
             raise ValidationError("شماره تلفن باید با 09 شروع شود.")
         if len(phone_number) != 11 or not phone_number.isdigit():
@@ -84,6 +78,13 @@ class AddressForm(forms.ModelForm):
 
 
 class ProfileEditForm(forms.ModelForm):
+    # کاربر شمارهٔ کامل را وارد می‌کند اما فقط ۴ رقم آخرش ذخیره می‌شود؛
+    # فیلد فرم عمداً ۱۶ رقمی می‌ماند و در clean_ به ۴ رقم تبدیل می‌شود.
+    card_number = forms.CharField(
+        max_length=16, required=False,
+        widget=forms.TextInput(attrs={'inputmode': 'numeric', 'autocomplete': 'off', 'dir': 'ltr'}),
+    )
+
     class Meta:
         model = Profile
         fields = ['first_name', 'last_name', 'email', 'about_me', 'phone', 'card_number', 'image']
@@ -96,6 +97,16 @@ class ProfileEditForm(forms.ModelForm):
             'card_number': forms.TextInput(attrs={'inputmode': 'numeric', 'autocomplete': 'off', 'dir': 'ltr'}),
             'image': forms.ClearableFileInput(attrs={'accept': 'image/*'}),
         }
+
+    def clean_image(self):
+        # ImageField already proves the file is a real image; this bounds how
+        # large a real image a customer may push onto the server's disk.
+        # An absent value simply means "no new upload" or "clear the current
+        # one", neither of which needs a size check.
+        image = self.cleaned_data.get('image')
+        if image:
+            validate_image_size(image)
+        return image
 
     def clean_first_name(self):
         first_name = (self.cleaned_data.get('first_name') or '').strip()
@@ -121,17 +132,23 @@ class ProfileEditForm(forms.ModelForm):
         return about_me
 
     def clean_phone(self):
-        phone = _normalize_digits(self.cleaned_data.get('phone'))
+        phone = to_latin_digits(self.cleaned_data.get('phone'))
         if phone:
             if not phone.isdigit() or not phone.startswith('09') or len(phone) != 11:
                 raise ValidationError("شماره تلفن باید با 09 شروع شده و 11 رقم باشد.")
         return phone
 
     def clean_card_number(self):
-        card_number = _normalize_digits(self.cleaned_data.get('card_number'))
-        if card_number:
-            if len(card_number) != 16:
-                raise ValidationError("شماره کارت باید 16 رقم باشد.")
-            if not card_number.isdigit():
-                raise ValidationError("شماره کارت باید فقط شامل اعداد باشد.")
-        return card_number
+        card_number = to_latin_digits(self.cleaned_data.get('card_number'))
+        if not card_number:
+            return ''
+        if not card_number.isdigit():
+            raise ValidationError("شماره کارت باید فقط شامل اعداد باشد.")
+        stored = (self.instance.card_number or '')[-4:] if self.instance else ''
+        if len(card_number) == 4 and card_number == stored:
+            # مقدارِ ازپیش‌پرشده (۴ رقم آخرِ ذخیره‌شده) بدون تغییر مانده است.
+            return stored
+        if len(card_number) != 16:
+            raise ValidationError("شماره کارت باید 16 رقم باشد.")
+        # فقط ۴ رقم آخر نگه داشته می‌شود؛ شمارهٔ کامل هرگز در دیتابیس نمی‌نشیند.
+        return card_number[-4:]

@@ -1,5 +1,6 @@
 {% extends 'dashboard/admin_panel_base.html' %}
 {% load custom_filters %}
+{% load jalali_tags %}
 
 {% block panel_title %}سلامت فروشگاه{% endblock %}
 {% block panel_heading %}سلامت فروشگاه{% endblock %}
@@ -105,10 +106,40 @@
                             <td><a class="ap-num" href="{% url 'admin:cart_order_change' order.pk %}">{{ order.order_number }}</a></td>
                             <td>{{ order.user.get_username }}</td>
                             <td class="ap-num">{{ order.final_price|format_price|persian_digits }}</td>
-                            <td class="ap-muted-cell ap-num">{{ order.created_at|date:"Y/m/d H:i" }}</td>
+                            <td class="ap-muted-cell ap-num">{{ order.created_at|to_jalali:'%Y/%m/%d %H:%M'|persian_digits }}</td>
                         </tr>
                     {% empty %}
                         <tr><td colspan="4" class="ap-muted-cell">سفارش بلاتکلیفی وجود ندارد. ✔</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </article>
+
+        <article class="ap-card ap-card--alert">
+            <div class="ap-card__head">
+                <h2 class="ap-card__title"><i class="fa-solid fa-hand-holding-dollar" aria-hidden="true"></i> نیازمند رفع اختلاف مالی</h2>
+                <a class="ap-card__action" href="{% url 'admin:payments_paymenttransaction_changelist' %}?status__exact=failed">بررسی همه</a>
+            </div>
+            <p class="ap-card__hint">
+                درگاه این پرداخت‌ها را <strong>تأیید کرده</strong>، اما سفارش قابل تحویل نبود
+                (موجودی تمام شده یا مشتری درخواست لغو داده است).
+                پول از مشتری گرفته شده و در انتظار استرداد یا پیگیری است — با تراکنش‌های ناموفق اشتباه گرفته نشوند.
+            </p>
+            <div class="ap-table-wrap">
+                <table class="ap-table">
+                    <thead><tr><th>سفارش</th><th>درگاه</th><th>مبلغ</th><th>کد پیگیری</th><th>علت</th></tr></thead>
+                    <tbody>
+                    {% for payment in unfulfilled_payments %}
+                        <tr>
+                            <td><a class="ap-num" href="{% url 'admin:cart_order_change' payment.order_id %}">{{ payment.order.order_number }}</a></td>
+                            <td>{{ payment.get_gateway_display }}</td>
+                            <td class="ap-num">{{ payment.amount|format_price|persian_digits }}</td>
+                            <td class="ap-muted-cell ap-num">{{ payment.raw_response.ref_id|default:"—" }}</td>
+                            <td class="ap-muted-cell">{{ payment.raw_response.error|truncatechars:60|default:"—" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="ap-muted-cell">پرداختِ تأییدشده و تحویل‌نشده‌ای وجود ندارد. ✔</td></tr>
                     {% endfor %}
                     </tbody>
                 </table>

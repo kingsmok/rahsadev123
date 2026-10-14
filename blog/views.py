@@ -1,6 +1,11 @@
+from django.db.models import F
 from django.shortcuts import render, get_object_or_404
 from .models import Article, Category
 from django.core.paginator import Paginator
+
+#: Session list of already-counted article ids; bounded so it cannot grow
+#: without limit for the life of a session.
+_MAX_VIEWED_IDS = 100
 
 
 def _published_articles():
@@ -73,9 +78,10 @@ def article_detail(request, slug):
 
     viewed_article = request.session.get('viewed_article', [])
     if article.id not in viewed_article:
-        article.views += 1
-        article.save(update_fields=['views'])
-        viewed_article.append(article.id)
+        # Atomic increment: a read-modify-write loses counts under concurrency.
+        Article.objects.filter(pk=article.pk).update(views=F('views') + 1)
+        article.views = (article.views or 0) + 1
+        viewed_article = (viewed_article + [article.id])[-_MAX_VIEWED_IDS:]
         request.session['viewed_article'] = viewed_article
 
     context = {

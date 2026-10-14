@@ -61,7 +61,7 @@
                 </div>
                 <div class="col-6 col-sm-4 col-md-2 contact-miniicon text-center">
                     <div class="space-5">
-                        <span class="promise-icon promise-icon--support" aria-hidden="true">؟</span>
+                        <span class="promise-icon promise-icon--support" aria-hidden="true"><i class="fa-solid fa-headset"></i></span>
                         <b class="title-3 light-black">پشتیبانی فنی</b>
                     </div>
                 </div>
@@ -410,7 +410,7 @@
                         <div class="svc-cta space-bottom-30">
                             <h3><i class="fa fa-code" aria-hidden="true"></i> نیاز به وب سایت اختصاصی دارید؟</h3>
                             <p>تیم طراحی {{ site_name }} وب سایت شرکتی، فروشگاهی و شخصی شما را با استانداردهای روز، سئوی قوی و پنل مدیریت آسان می‌سازد.</p>
-                            <a href="{% url 'services:services' %}" class="btn">مشاهده تعرفه‌ها و نمونه کارها</a>
+                            <a href="{% url 'services:services' %}" class="btn btn-light">مشاهده تعرفه‌ها و نمونه کارها</a>
                         </div>
                         <div class="row">
                             {% for package in service_packages %}
@@ -438,11 +438,14 @@
                             <div class="owl-carousel">
                                 {% for brand in popular_brands %}
                                     <div class="item borderitem">
-                                        <a href="{% url 'product:brand_product_list' brand.slug %}">
+                                        {# نامِ قابل‌دسترس روی خودِ لینک: وقتی برند تصویر ندارد فقط یک آیکون #}
+                                        {# تزئینی می‌ماند و صفحه‌خوان چیزی برای گفتن نمی‌یابد. #}
+                                        <a href="{% url 'product:brand_product_list' brand.slug %}"
+                                           aria-label="{{ brand.title }}">
                                             {% if brand.image %}
                                                 <img loading="lazy" decoding="async" src="{{ brand.image.url }}" alt="{{ brand.title }}">
                                             {% else %}
-                                                <i class="fa fa-cube fm-brand-fallback-icon"></i>
+                                                <i class="fa fa-cube fm-brand-fallback-icon" aria-hidden="true"></i>
                                             {% endif %}
                                         </a>
                                     </div>
@@ -491,7 +494,7 @@
                                         </span>
                                             <span class="Blog_Date">
                                             <i class="fa fa-calendar "></i>
-                                            {{ article.created_at|to_jalali:'%d %b %Y' }}
+                                            {{ article.created_at|to_jalali_fa:'%d %B %Y' }}
                                         </span>
                                         </div>
                                     </div>

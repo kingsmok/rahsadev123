@@ -11,8 +11,8 @@ BANNER_TYPES = (
 )
 
 STATUS = (
-    ("draft", "پیش نویس شود"),
-    ("published", "منتشر شود"),
+    ("draft", "پیش‌نویس"),
+    ("published", "منتشر شده"),
 )
 
 

@@ -510,7 +510,10 @@ header.Masai-header .main-menu .list .list-item-has-children .sub-menu a {
     font-weight: 300;
 }
 
-header.Masai-header .main-menu .list .list-item-has-children:hover>.sub-menu {
+/* :focus-within لازم است: بدون آن، پیوندهای زیرمنو به‌خاطر visibility:hidden
+   حتی قابل focus نیستند و با کیبورد یا لمس هرگز باز نمی‌شوند (WCAG 2.1.1). */
+header.Masai-header .main-menu .list .list-item-has-children:hover>.sub-menu,
+header.Masai-header .main-menu .list .list-item-has-children:focus-within>.sub-menu {
     visibility: visible;
     opacity: 1;
 }
@@ -627,7 +630,8 @@ header.Masai-header .main-menu .list .list-item-has-children .sub-menu .list-ite
     background: #f7fafc;
 }
 
-header.Masai-header .main-menu .list .list-item.mega-menu:hover .sub-menu {
+header.Masai-header .main-menu .list .list-item.mega-menu:hover .sub-menu,
+header.Masai-header .main-menu .list .list-item.mega-menu:focus-within .sub-menu {
     visibility: visible;
     opacity: 1;
 }
@@ -882,7 +886,7 @@ main.main {
 }
 
 #bid-s .item .price del {
-    color: #979898;
+    color: var(--fm-neutral-600, #5d7285);
     font-size: 13px;
 }
 
@@ -921,7 +925,9 @@ main.main {
 
  
  .view_more{
-    background-color: #5bbabe;
+    /* #5bbabe با متن سفید فقط ۲٫۲۸ کنتراست داشت؛ primary-700 همان خانوادهٔ
+       فیروزه‌ایِ برند است و ۵٫۳ می‌دهد. */
+    background-color: var(--fm-primary-700, #2d6e74);
         width: 250px;
     text-align: center;
     line-height: 48px;
@@ -1035,7 +1041,7 @@ main.main {
 
 .widget-product .product-carousel .item .price del,
 .brand-slider .product-carousel .item .price del {
-    color: #979898;
+    color: var(--fm-neutral-600, #5d7285);
     font-size: 12px;
     display: initial;
     width: 100%;
@@ -1047,7 +1053,7 @@ main.main {
 
 .widget-product .product-carousel .item ins,
 .brand-slider .product-carousel .item ins {
-    color: #61bec3;
+    color: var(--fm-primary-700, #2d6e74);
     font-size: 15px;
     height: 64px;
     text-decoration: none !important;
@@ -1300,12 +1306,13 @@ main.main {
    display: inline-block;
   margin-left: 8px;
     font-size: 14px;
-    color: #c36661;
+    /* #c36661 فقط ۳٫۸۹ داشت؛ یک پله تیره‌تر از همان قرمز: ۵٫۰۶ */
+    color: #b0524c;
 
 }
 
 .product_main_details .price ins {
-    color: #61bec3;
+    color: var(--fm-primary-700, #2d6e74);
     font-size: 18px;
     font-weight: 500;
     text-decoration: none;
@@ -1320,12 +1327,12 @@ main.main {
    display: inline-block;
   margin-left: 15px;
     font-size: 14px;
-    color: #c3c3c3;
+    color: var(--fm-neutral-600, #5d7285);
 
 }
 
 #offercarousel .carousel-inner .carousel-item .row .left-col .price ins {
-    color: #61bec3;
+    color: var(--fm-primary-700, #2d6e74);
     font-size: 20px;
     font-weight: 500;
     text-decoration: none;
@@ -3340,10 +3347,10 @@ background-color: #EFF8F9;
     display: inline-block;
     margin-left: 13px;
     font-size: 14px;
-    color: #c3c3c3;
+    color: var(--fm-neutral-600, #5d7285);
 }
 .cart_price ins {
-  color: #61bec3;
+  color: var(--fm-primary-700, #2d6e74);
     font-size: 15px;
     font-weight: 500;
     text-decoration: none;
@@ -3641,7 +3648,8 @@ display: inline-block;
     font-weight: bold;
 }
 .profile-card-1 .mid-section .stats .stat .subtext{
-    color: gray;
+    /* gray (#808080) روی سفید ۳٫۹۵ بود؛ neutral-600 = ۴٫۹۹ */
+    color: var(--fm-neutral-600, #5d7285);
     font-size: 0.6em;
     font-weight: normal;
 }
@@ -4843,7 +4851,8 @@ ul.profile-avatars li {
 
 .profile-menu-items li a.active,
 .profile-menu-items li a:hover {
-    color: #3A9599;
+    /* #3A9599 روی سفید ۲٫۸۹ بود؛ primary-700 همان فیروزه‌ای یک پله عمیق‌تر (۵٫۳) */
+    color: var(--fm-primary-700, #2d6e74);
 }
 
 .order-delivered h1.title-tab-content {
@@ -4899,7 +4908,7 @@ ul.profile-avatars li {
 }
 .order-delivered .profile-recent-fav-row ul li{
      display:inline-block;
-     margin-left: 15px;color: #7A8B8C;
+     margin-left: 15px;color: var(--fm-neutral-600, #5d7285);
 }
 
 .order-delivered .profile-recent-fav-col {
@@ -5062,7 +5071,8 @@ responsive-profile-menu .dropdown-toggle::after {
 .responsive-profile-menu .dropdown-menu a.active-menu,
 .responsive-profile-menu .dropdown-menu a:active {
     background-color: #fff;
-    color: #61bec3;
+    /* #61bec3 روی سفید ۲٫۱۷ بود؛ primary-700 هم‌خانوادهٔ برند ۵٫۳ می‌دهد */
+    color: var(--fm-primary-700, #2d6e74);
 }
 
 .responsive-profile-menu .dropdown-menu a i {
@@ -7469,7 +7479,9 @@ color: #2ec4b1;
     background-color: #759698;
 }
 .big_btn{
-    width:200px!important
+    width:200px!important;
+    /* دکمهٔ اصلی فرم‌ها (ارسال پیام و…) روی لمسی حداقل ۴۴px ارتفاع داشته باشد. */
+    min-height:44px
 }
 .btn-main-masai{
     background-color:#46a9ae!important;
@@ -8030,7 +8042,7 @@ color: #2ec4b1;
 
  
 .product_price_search .price del {
-    color: #979898;
+    color: var(--fm-neutral-600, #5d7285);
     font-size: 12px;
     display: initial;
     width: 100%;

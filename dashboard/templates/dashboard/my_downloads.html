@@ -63,13 +63,13 @@
                                                 {{ token.order.order_number }}
                                             </a>
                                         </td>
-                                        <td>{{ token.created_at|to_jalali:'%d %B %Y' }}</td>
+                                        <td>{{ token.created_at|to_jalali_fa:'%d %B %Y' }}</td>
                                         <td>
                                             {% if token.is_valid %}
                                                 <span class="item_property fm-ico-ok">
                                                     {{ token.remaining_downloads }} دانلود باقی‌مانده
                                                 </span>
-                                                <div><small class="text-muted">انقضا: {{ token.expires_at|to_jalali:'%d %B %Y' }}</small></div>
+                                                <div><small class="text-muted">انقضا: {{ token.expires_at|to_jalali_fa:'%d %B %Y' }}</small></div>
                                             {% else %}
                                                 <span class="fm-ico-bad">لینک منقضی شده</span>
                                             {% endif %}
@@ -96,7 +96,7 @@
                         {% if tokens.has_other_pages %}
                             <div class="pagination">
                                 {% if tokens.has_previous %}
-                                    <a href="?page={{ tokens.previous_page_number }}" class="page-arrow prev"><i class="fa fa-angle-right"></i></a>
+                                    <a href="?page={{ tokens.previous_page_number }}" class="page-arrow prev" aria-label="صفحهٔ قبلی"><i class="fa fa-angle-right" aria-hidden="true"></i></a>
                                 {% endif %}
                                 {% for page in pages_to_show %}
                                     {% if page == '...' %}
@@ -108,7 +108,7 @@
                                     {% endif %}
                                 {% endfor %}
                                 {% if tokens.has_next %}
-                                    <a href="?page={{ tokens.next_page_number }}" class="page-arrow next"><i class="fa fa-angle-left"></i></a>
+                                    <a href="?page={{ tokens.next_page_number }}" class="page-arrow next" aria-label="صفحهٔ بعدی"><i class="fa fa-angle-left" aria-hidden="true"></i></a>
                                 {% endif %}
                             </div>
                         {% endif %}

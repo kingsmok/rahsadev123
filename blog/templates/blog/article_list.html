@@ -7,6 +7,7 @@
 {% block extra_schema %}{% blog_breadcrumb %}{% article_list_schema articles %}{% endblock %}
 {% load static %}
 {% load jalali_tags %}
+{% load custom_filters %}
 
 {% block content %}
     <main class="category-blog default space-top-30">
@@ -42,7 +43,7 @@
                                             </span>
                                             <span class="Blog_Date">
                                                 <i class="fa fa-calendar "></i>
-                                                {{ article.created_at|to_jalali:'%d %b %Y' }}
+                                                {{ article.created_at|to_jalali_fa:'%d %B %Y' }}
                                             </span>
                                         </div>
                                     </div>
@@ -56,7 +57,7 @@
                     {% if articles.has_other_pages %}
                         <div class="pagination">
                             {% if articles.has_previous %}
-                                <a href="?page={{ articles.previous_page_number }}" class="page-arrow prev"><i class="fa fa-angle-right"></i></a>
+                                <a href="?page={{ articles.previous_page_number }}" class="page-arrow prev" aria-label="صفحهٔ قبلی"><i class="fa fa-angle-right" aria-hidden="true"></i></a>
                             {% endif %}
                             {% for page in pages_to_show %}
                                 {% if page == '...' %}
@@ -68,7 +69,7 @@
                                 {% endif %}
                             {% endfor %}
                             {% if articles.has_next %}
-                                <a href="?page={{ articles.next_page_number }}" class="page-arrow next"><i class="fa fa-angle-left"></i></a>
+                                <a href="?page={{ articles.next_page_number }}" class="page-arrow next" aria-label="صفحهٔ بعدی"><i class="fa fa-angle-left" aria-hidden="true"></i></a>
                             {% endif %}
                         </div>
                     {% endif %}

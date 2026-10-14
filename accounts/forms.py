@@ -74,6 +74,18 @@ class LoginForm(forms.Form):
         widget=forms.PasswordInput(attrs={'class': 'input_second input_all', 'placeholder': 'رمز عبور'}),
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user_cache = None
+
+    def get_user(self):
+        """The account authenticated by :meth:`clean`, or ``None``.
+
+        Lets the view log in without re-querying by username, which would raise
+        ``DoesNotExist`` if a future backend ever authenticated by another field.
+        """
+        return self.user_cache
+
     def clean(self):
         cleaned_data = super().clean()
         username = cleaned_data.get('username')

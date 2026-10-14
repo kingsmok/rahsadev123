@@ -67,6 +67,7 @@
                                             <div class="form-account-row">
                                                 <input class="input_second input_all" type="text" placeholder="مثال: 6037498514785236" maxlength="16" inputmode="numeric" dir="ltr"
                                                        id="card_number" name="card_number" value="{{ form.card_number.value|default_if_none:"" }}">
+                                                <small class="text-muted">برای امنیت شما فقط ۴ رقم آخر کارت ذخیره می‌شود.</small>
                                                 {% if form.card_number.errors %}
                                                     <div class="text-danger">{{ form.card_number.errors }}</div>
                                                 {% endif %}

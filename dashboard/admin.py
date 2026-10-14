@@ -1,6 +1,7 @@
 from django.contrib import admin
 from . import models
-from jalali_date import datetime2jalali
+
+from core.admin_utils import to_jalali
 from jalali_date.admin import ModelAdminJalaliMixin
 
 
@@ -18,11 +19,11 @@ class AddressAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
 
     @admin.display(description='تاریخ ایجاد', ordering='created_at')
     def get_created_at_jalali(self, obj):
-        return datetime2jalali(obj.created_at).strftime('%a, %d %b %Y')
+        return to_jalali(obj.created_at, '%a, %d %b %Y')
 
     @admin.display(description='تاریخ به‌روزرسانی', ordering='updated_at')
     def get_updated_at_jalali(self, obj):
-        return datetime2jalali(obj.updated_at).strftime('%a, %d %b %Y')
+        return to_jalali(obj.updated_at, '%a, %d %b %Y')
 
 
 @admin.register(models.Wishlist)
@@ -37,7 +38,7 @@ class WishlistAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
 
     @admin.display(description='تاریخ ایجاد', ordering='created_at')
     def get_created_at_jalali(self, obj):
-        return datetime2jalali(obj.created_at).strftime('%a, %d %b %Y')
+        return to_jalali(obj.created_at, '%a, %d %b %Y')
 
 
 @admin.register(models.Notification)
@@ -54,10 +55,10 @@ class NotificationAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
 
     @admin.display(description='تاریخ ایجاد', ordering='created_at')
     def get_created_at_jalali(self, obj):
-        return datetime2jalali(obj.created_at).strftime('%a, %d %b %Y')
+        return to_jalali(obj.created_at, '%a, %d %b %Y')
 
     @admin.display(description='تاریخ انقضا', ordering='expiration_date')
     def get_expiration_date_jalali(self, obj):
         if obj.expiration_date:
-            return datetime2jalali(obj.expiration_date).strftime('%a, %d %b %Y')
+            return to_jalali(obj.expiration_date, '%a, %d %b %Y')
         return '-'

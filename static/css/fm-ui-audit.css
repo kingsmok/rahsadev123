@@ -643,7 +643,10 @@ header.Masai-header .main-menu .list .list-item.mega-menu > .sub-menu {
         transform-origin: center;
     }
     header.Masai-header .nav__ullist .list__link:hover,
-    header.Masai-header .nav__ullist .list__link.is-active { color: #fff; text-decoration: none; }
+    /* !important لازم است چون fm-accessibility برای .is-active مقدار
+       primary-600 را با !important گذاشته و روی هدرِ تیره کنتراست ۳٫۸۷ می‌داد؛
+       قصد طراحی در همین فایل از اول سفید بوده است. */
+    header.Masai-header .nav__ullist .list__link.is-active { color: #fff !important; text-decoration: none; }
     header.Masai-header .nav__ullist .list__link:hover::after,
     header.Masai-header .nav__ullist .list__link.is-active::after { width: auto; transform: scaleX(1); }
     /* منوی RTL از راست با دسته‌بندی، خانه و سپس پیوندهای فروشگاه ادامه پیدا می‌کند. */
@@ -986,8 +989,9 @@ header.Masai-header .main-menu .list .list-item.mega-menu > .sub-menu {
     }
     nav.header-responsive .search-nav form button {
         right: 4px;
-        width: 36px;
-        height: 36px;
+        /* ۳۶px برای لمس تنگ بود؛ داخل ورودی ۴۲px، دکمهٔ ۴۰px جا می‌شود. */
+        width: 40px;
+        height: 40px;
     }
     nav.header-responsive .search-nav .search-submit-symbol { font-size: 22px; }
     nav.header-responsive .live-search-results {
@@ -1204,6 +1208,10 @@ header.Masai-header .main-menu .list .list-item.mega-menu > .sub-menu {
         place-items: center;
         padding: 0;
         background: transparent;
+        /* آیکنِ ۳۱px در کارتِ فشرده می‌ماند، اما ناحیهٔ لمسِ دکمهٔ شفاف
+           به حداقلِ راهنمای ۴۴px می‌رسد؛ ظاهر کارت تغییر نمی‌کند. */
+        min-width: 44px;
+        min-height: 44px;
     }
     .widget-product .product-carousel .search_prod_btn .search_icon_cart {
         width: 31px;
@@ -1453,3 +1461,41 @@ header.Masai-header .main-menu .list .list-item.mega-menu > .sub-menu {
     .slider_main__description { display: none; }
     .slider_main__cta { margin-top: 7px; }
 }
+
+/* ── کنتراست متن قیمت (WCAG AA) ──────────────────────────────
+   قیمت‌ها با #61bec3 روی سفید فقط ۲٫۱۷ کنتراست داشتند. متن قیمت
+   به primary-700 همان خانوادهٔ فیروزه‌ای می‌رود (۵٫۳)؛ رنگ روشنِ
+   برند برای عناصر گرافیکی/حاشیه‌ها بدون تغییر می‌ماند. */
+.widget-product .product-carousel .item .price,
+.brand-slider .product-carousel .item .price,
+.product_main_details .price,
+.price ins,
+.price .amount { color: var(--fm-primary-700); }
+
+/* قیمت قبلی (del) با #979898 فقط ۲٫۸۹ داشت؛ توکن muted متنی ۴٫۹۹ می‌دهد
+   و همچنان از قیمت فعلی کم‌رنگ‌تر می‌ماند. */
+.price del { color: var(--fm-text-soft); }
+
+/* آیتم فعال منوی پروفایل داشبورد */
+.responsive-profile-menu .dropdown-menu a.active,
+.dropdown-menu .dropdown-item.active { color: var(--fm-primary-700); }
+
+/* آیکن‌های برند با کلاس قدیمی «fa» نوشته می‌شوند (دسته‌بندی‌ها از دیتابیس،
+   شبکه‌های اجتماعی فوتر) ولی گلیفشان فقط در فونت Brands هست؛ بدون این پل،
+   مربع خالی (tofu) رندر می‌شد. فونت Brands در base لود می‌شود. */
+.fa.fa-wordpress, .fa.fa-instagram, .fa.fa-telegram, .fa.fa-whatsapp,
+.fa.fa-youtube, .fa.fa-linkedin, .fa.fa-github, .fa.fa-android,
+.fa.fa-apple, .fa.fa-chrome, .fa.fa-firefox, .fa.fa-google {
+    font-family: "Font Awesome 6 Brands";
+    font-weight: 400;
+}
+
+/* آیکن‌های آمار داشبورد قبلاً هرکدام رنگ نامرتبطی از theme قدیمی داشتند
+   (آبی/صورتی/نارنجی)؛ حالا در خانوادهٔ برند + دو رنگ معنایی محدود: */
+.fm-metric-icon--cart { color: var(--fm-primary-700); }
+.fm-metric-icon--delivered { color: var(--fm-success); }
+.fm-metric-icon--cancelled { color: var(--fm-danger); }
+.fm-metric-icon--comments { color: var(--fm-primary-700); }
+
+/* ردیف آخر شبکهٔ دسته‌بندی وقتی کامل نیست وسط‌چین شود تا تک‌آیتم تنها نماند */
+.fm-cat-grid { justify-content: center; }

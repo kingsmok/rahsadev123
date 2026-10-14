@@ -503,6 +503,9 @@ html { scroll-behavior: smooth; }
 .fm-newsletter p { color: #e9fbfb !important; margin: 0; font-size: 13.5px; }
 .fm-newsletter form {
     flex: 1 1 300px;
+    /* بدون این، حداقل اندازهٔ خودکارِ آیتم فلکس (min-content ورودی + دکمه)
+       در صفحه‌های باریک از عرض کانتینر بزرگ‌تر می‌شود و دکمه از لبه بریده می‌شود. */
+    min-width: 0;
     display: flex;
     gap: 8px;
     background: rgba(255,255,255,.16);

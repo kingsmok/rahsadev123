@@ -161,6 +161,10 @@ a { color: inherit; text-decoration: none; }
     position: sticky;
     top: 0;
     height: 100vh;
+    /* dvh دقیقاً فضای دیدِ لحظه‌ای است: در موبایل نوار آدرس باز می‌شود و 100vh
+       بلندتر از صفحه است، در نتیجه پایین نوار (خروج/امضا) زیر آن پنهان می‌ماند.
+       مرورگرهای قدیمی‌تر خط بالا را می‌خوانند و این خط را نادیده می‌گیرند. */
+    height: 100dvh;
     overflow-y: auto;
     overscroll-behavior: contain;
     border-left: 1px solid var(--ap-sidebar-border);
@@ -383,6 +387,15 @@ a { color: inherit; text-decoration: none; }
 }
 .ap-card__action:hover { text-decoration: underline; }
 
+/* کارتِ هشدار: پول گرفته شده ولی تحویل نشده — باید از تراکنش‌های ناموفق متمایز باشد */
+.ap-card--alert {
+    border-color: color-mix(in srgb, var(--ap-danger) 45%, var(--ap-border));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ap-danger) 9%, transparent);
+}
+.ap-card--alert .ap-card__title { border-bottom-color: var(--ap-danger); }
+.ap-card--alert .ap-card__title i { color: var(--ap-danger); }
+.ap-card--alert .ap-card__hint { max-width: 78ch; line-height: 1.9; }
+
 .ap-kpis {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
@@ -436,7 +449,9 @@ a { color: inherit; text-decoration: none; }
 
 .ap-grid { display: grid; gap: 16px; }
 .ap-grid--2 { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
-.ap-grid--3 { grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); }
+/* min(310px, 100%): ستون هرگز از کانتینر پهن‌تر نمی‌شود؛ در موبایلِ باریک
+   (کانتینر ۲۹۰px در عرض ۳۲۰) مقدارِ ثابتِ ۳۱۰ سند را ۵px سرریز می‌کرد. */
+.ap-grid--3 { grid-template-columns: repeat(auto-fit, minmax(min(310px, 100%), 1fr)); }
 
 .ap-chart { position: relative; width: 100%; height: 288px; }
 .ap-chart--sm { height: 236px; }
@@ -625,13 +640,30 @@ table.ap-table { width: 100%; border-collapse: collapse; min-width: 520px; backg
     .ap-sidebar {
         position: fixed;
         inset-block: 0;
-        inset-inline-end: 0;
+        /* داک باید inline-start باشد تا کشو در موبایل از همان سمتی بیاید که
+           سایدبار در دسکتاپ هست (در RTL: راست). با inline-end، سایدبار در RTL
+           سمت چپ می‌نشست و translateX(100%) آن را به‌جای بیرون، ۳۰۰px به
+           داخلِ صفحه می‌آورد و روی محتوا می‌افتاد. */
+        inset-inline-start: 0;
         width: min(300px, 86vw);
+        transform: translateX(-100%);
+        /* کشوی بسته نباید در ناحیهٔ اسکرول سند حساب شود (در ۳۲۰px پنج پیکسل
+           سرریز افقی می‌داد) و نباید فوکوس کیبورد بگیرد؛ visibility با تأخیرِ
+           هم‌طول انیمیشن بسته‌شدن اعمال می‌شود تا انیمیشن دیده شود. */
+        visibility: hidden;
+        transition: transform .25s ease, visibility 0s linear .25s;
+        box-shadow: 18px 0 40px rgba(8, 20, 30, .35);
+    }
+    /* در RTL سایدبار راست است و برای مخفی‌شدن باید به راست بلغزد. */
+    :dir(rtl) .ap-sidebar {
         transform: translateX(100%);
-        transition: transform .25s ease;
         box-shadow: -18px 0 40px rgba(8, 20, 30, .35);
     }
-    body.ap-nav-open .ap-sidebar { transform: translateX(0); }
+    body.ap-nav-open .ap-sidebar {
+        transform: translateX(0);
+        visibility: visible;
+        transition: transform .25s ease;
+    }
     .ap-scrim {
         display: block;
         position: fixed;

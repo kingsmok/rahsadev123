@@ -59,12 +59,16 @@
     {% block extra_schema %}{% endblock %}
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
     {# maximum-scale و user-scalable=0 زوم با دو انگشت را غیرفعال می‌کردند (نقض WCAG 1.4.4) #}
-    <meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no'
+    {# viewport-fit=cover لازم است تا env(safe-area-inset-*) که کشوی سبد و فوتر موبایل #}
+    {# استفاده می‌کنند روی گوشی‌های دارای بریدگی/نوار خانه مقدار واقعی بگیرند، نه صفر. #}
+    <meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no, viewport-fit=cover'
           name='viewport'/>
 
     <!-- CSS Files -->
     <link href="{% static 'fonts/font-awesome/css/fontawesome.min.css' %}" rel="stylesheet"/>
     <link href="{% static 'fonts/font-awesome/css/solid.css' %}" rel="stylesheet"/>
+    {# brands لازم است: آیکن‌های برند (وردپرس، اینستاگرام، تلگرام…) در solid نیستند و بدون این فایل خالی رندر می‌شدند. #}
+    <link href="{% static 'fonts/font-awesome/css/brands.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/main_ui.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/icon.css' %}" rel="stylesheet"/>
@@ -413,6 +417,9 @@
                                 <li>
                                     <a href="{% url 'pages:detail' 'قوانین-و-مقررات' %}">قوانین و مقررات</a>
                                 </li>
+                                <li>
+                                    <a href="{% url 'pages:detail' 'حریم-خصوصی' %}">حریم خصوصی</a>
+                                </li>
                                 {% if site_settings.phone1 %}<li><i class="fa fa-phone"></i> {{ site_settings.phone1 }}</li>{% endif %}
                                 {% if site_settings.email1 %}<li><i class="fa fa-envelope"></i> {{ site_settings.email1 }}</li>{% endif %}
                             </ul>
@@ -425,10 +432,10 @@
                             </div>
                             <div class="License_img">
                                 {% if site_settings.samandehi_link %}
-                                    <a href="{{ site_settings.samandehi_link }}" target="_blank" rel="noopener"><img src="{% static 'img/samandehi.png' %}" alt="نماد ساماندهی"></a>
+                                    <a href="{{ site_settings.samandehi_link }}" target="_blank" rel="noopener"><img loading="lazy" decoding="async" src="{% static 'img/samandehi.png' %}" alt="نماد ساماندهی"></a>
                                 {% endif %}
                                 {% if site_settings.enamad_link %}
-                                    <a href="{{ site_settings.enamad_link }}" target="_blank" rel="noopener"><img src="{% static 'img/enamad.png' %}" alt="نماد اعتماد اینماد"></a>
+                                    <a href="{{ site_settings.enamad_link }}" target="_blank" rel="noopener"><img loading="lazy" decoding="async" src="{% static 'img/enamad.png' %}" alt="نماد اعتماد اینماد"></a>
                                 {% endif %}
                             </div>
                         </div>
@@ -447,7 +454,11 @@
                 </div>
                 <form id="fmNewsletterForm" novalidate>
                     {% csrf_token %}
-                    <input type="email" name="email" placeholder="ایمیل شما؛ مثلاً name@gmail.com" autocomplete="email" required>
+                    {# برچسبِ واقعی (نه فقط placeholder): صفحه‌خوان‌ها هنگام تایپ هم نام فیلد را می‌خوانند. #}
+                    <label class="fm-sr-only" for="fmNewsletterEmail">ایمیل برای عضویت در خبرنامه</label>
+                    <input type="email" id="fmNewsletterEmail" name="email"
+                           placeholder="ایمیل شما؛ مثلاً name@gmail.com" autocomplete="email"
+                           inputmode="email" required>
                     <button type="submit">عضویت در خبرنامه</button>
                 </form>
                 <p class="fm-nl-status" id="fmNlStatus" role="status" aria-live="polite"></p>

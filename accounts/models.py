@@ -11,7 +11,10 @@ class Profile(models.Model):
     email = models.EmailField(max_length=100, null=True, blank=True, verbose_name='ایمیل')
     about_me = models.CharField(max_length=250, null=True, blank=True, verbose_name='درباره من')
     phone = models.CharField(max_length=11, null=True, blank=True, validators=[RegexValidator(regex=r'^09\d{9}$', message='شماره تلفن باید با 09 شروع شده و 11 رقم باشد')], verbose_name='شماره تلفن')
-    card_number = models.CharField(max_length=16, validators=[RegexValidator(regex=r'^\d{16}$', message='شماره کارت باید 16 رقم باشد', code='invalid_card_number')], null=True, blank=True, verbose_name='شماره کارت')
+    # فقط ۴ رقم آخر کارت نگه داشته می‌شود. شمارهٔ کامل هیچ مصرف عملیاتی ندارد
+    # (حتی پنل مدیریت فقط نمایش ماسک‌شده دارد) و نگهداری PAN کامل در دیتابیس
+    # ریسک انطباق و نشت را بدون هیچ منفعتی بالا می‌برد.
+    card_number = models.CharField(max_length=4, validators=[RegexValidator(regex=r'^\d{4}$', message='فقط ۴ رقم آخر شماره کارت نگه داشته می‌شود', code='invalid_card_last4')], null=True, blank=True, verbose_name='۴ رقم آخر شماره کارت')
     image = models.ImageField(upload_to='profile/', null=True, blank=True, verbose_name='تصویر پروفایل')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
 
@@ -31,20 +34,28 @@ class Profile(models.Model):
         return f"پروفایل {self.user.username}"
 
 
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(
-            user=instance,
-            first_name=instance.first_name,
-            last_name=instance.last_name,
-            email=instance.email
-        )
+def ensure_user_profile(sender, instance, **kwargs):
+    """Guarantee exactly one ``Profile`` row per user.
+
+    The previous implementation created the profile only on insert and then
+    unconditionally called ``instance.profile.save()`` on *every* subsequent
+    save.  A user created outside this signal (``bulk_create``, a data
+    migration, an imported database) has no profile, so that attribute access
+    raised ``RelatedObjectDoesNotExist`` — and because Django updates
+    ``last_login`` during authentication, such a user could not even log in.
+
+    ``get_or_create`` repairs those rows on first access instead of crashing,
+    and it also removes a redundant UPDATE-query on every user save.
+    """
+    Profile.objects.get_or_create(
+        user=instance,
+        defaults={
+            'first_name': instance.first_name,
+            'last_name': instance.last_name,
+            'email': instance.email,
+        },
+    )
 
 
-def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
-
-
-post_save.connect(create_user_profile, sender=User)
-post_save.connect(save_user_profile, sender=User)
+post_save.connect(ensure_user_profile, sender=User)
 

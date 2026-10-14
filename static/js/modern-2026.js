@@ -63,13 +63,16 @@
                 return;
             }
             var html = items.map(function (p) {
-                var img = p.image
-                    ? '<img src="' + p.image + '" alt="' + escapeHtml(p.title) + '" loading="lazy">'
-                    : '<img src="' + FALLBACK_IMG + '" alt="' + escapeHtml(p.title) + '" loading="lazy">';
-                return '<a class="ls-item" href="' + p.url + '" role="option">' + img +
+                // Every value coming from the search API is escaped, including
+                // the URL and image attributes. They are produced from model
+                // fields today, but interpolating them raw into an attribute
+                // would turn any future change into an injection point.
+                var src = p.image ? escapeHtml(p.image) : escapeHtml(FALLBACK_IMG);
+                var img = '<img src="' + src + '" alt="' + escapeHtml(p.title) + '" loading="lazy">';
+                return '<a class="ls-item" href="' + escapeHtml(p.url) + '" role="option">' + img +
                     '<span><span class="ls-title">' + escapeHtml(p.title) + '</span>' +
                     '<span class="ls-meta">' + escapeHtml(p.category || '') + '</span></span>' +
-                    '<span class="ls-price">' + faPrice(p.price) + ' تومان</span></a>';
+                    '<span class="ls-price">' + escapeHtml(faPrice(p.price)) + ' تومان</span></a>';
             }).join('');
             html += '<a class="ls-all" href="' + SEARCH_URL + encodeURIComponent(query) + '">مشاهده همه نتایج «' + escapeHtml(query) + '»</a>';
             box.innerHTML = html;

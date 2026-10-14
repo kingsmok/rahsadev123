@@ -21,7 +21,7 @@
                     سایت شرکتی، فروشگاه اینترنتی، سایت شخصی یا پرتال سازمانی. طراحی ریسپانسیو، سرعت بالا، سئوی اصولی
                     و پنل مدیریت ساده فقط بخشی از ویژگی‌های کار ماست.
                 </p>
-                <a href="#request-form" class="btn">استعلام قیمت رایگان</a>
+                <a href="#request-form" class="btn btn-light">استعلام قیمت رایگان</a>
             </div>
 
             <!-- Packages -->
@@ -41,9 +41,9 @@
                                 {% endif %}
                             </div>
                             <div class="meta">
-                                <i class="fa fa-clock" aria-hidden="true"></i> تحویل {{ package.delivery_days }} روز
+                                <i class="fa fa-clock" aria-hidden="true"></i> تحویل {{ package.delivery_days|persian_digits }} روز
                                 &nbsp;|&nbsp;
-                                <i class="fa fa-rotate" aria-hidden="true"></i> {{ package.revisions }} بازنگری
+                                <i class="fa fa-rotate" aria-hidden="true"></i> {{ package.revisions|persian_digits }} بازنگری
                             </div>
                             <ul>
                                 {% for feature in package.features_list %}

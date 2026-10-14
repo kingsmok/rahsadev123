@@ -7,6 +7,7 @@ from django.db import models
 from .models import Banner
 from blog.models import Article
 from services.models import ServicePackage
+from core.throttling import get_throttle
 
 
 def _storefront_products(queryset):
@@ -86,7 +87,17 @@ def service_worker(request):
 def contact(request):
     if request.method == 'POST':
         form = ContactUsForm(request.POST)
+        # The contact form is public and unauthenticated: without a limit a
+        # script can fill the staff inbox and the database with junk messages.
+        throttle = get_throttle('contact')
+        identity = form.data.get('email', '')
+        if throttle.is_throttled(request, identity):
+            throttle.record(request, identity)
+            messages.error(request, 'تعداد پیام‌های ارسالی شما زیاد است. لطفاً کمی بعد دوباره تلاش کنید.')
+            return render(request, 'core/contact.html', {'form': form}, status=429)
+
         if form.is_valid():
+            throttle.record(request, identity)
             form.save()
             messages.success(request, 'پیام شما با موفقیت ثبت شد. تیم پشتیبانی در اولین فرصت با شما تماس می‌گیرد.')
             return redirect('core:contact')
@@ -105,13 +116,32 @@ def llms_txt(request):
 
     خلاصه‌ای ساخت‌یافته از سایت به‌صورت مارک‌داون تا دستیارهای هوش مصنوعی
     بتوانند محتوا، محصولات و سیاست‌های سایت را دقیق درک و ارجاع دهند.
+    همهٔ لینک‌ها مطلق‌اند تا خزندهٔ هوش مصنوعی بدون دانستن دامنه بتواند
+    از آن‌ها استفاده کند؛ دسته‌هایی که محتوای منتشرشده ندارند فهرست
+    نمی‌شوند تا فایل، نقشهٔ واقعی و به‌روز سایت بماند.
     """
+    from blog.models import Category as BlogCategory
+    from product.models import ProductCategory
+
     context = {
+        # build_absolute_uri('/') انتهایش اسلش دارد؛ بدون اسلش نگه می‌داریم
+        # تا در قالب به‌صورت «{{ site_base }}/products/» استفاده شود.
+        'site_base': request.build_absolute_uri('/')[:-1],
         'top_products': Product.objects.filter(status='published')
             .order_by('-sales_count', '-views')[:15],
         'latest_articles': Article.objects.filter(status='published')
             .order_by('-created_at')[:10],
         'packages': ServicePackage.objects.filter(is_active=True),
+        'product_categories': ProductCategory.objects.annotate(
+            published_count=models.Count(
+                'categories', filter=models.Q(categories__status='published'),
+            ),
+        ).filter(published_count__gt=0).order_by('title'),
+        'blog_categories': BlogCategory.objects.annotate(
+            published_count=models.Count(
+                'articles', filter=models.Q(articles__status='published'),
+            ),
+        ).filter(published_count__gt=0).order_by('title'),
     }
     return render(request, 'core/llms.txt', context, content_type='text/plain; charset=utf-8')
 
@@ -178,9 +208,24 @@ def newsletter_subscribe(request):
             EmailValidator()(email)
         except ValidationError:
             return JsonResponse({'ok': False, 'message': 'ایمیل واردشده معتبر نیست.'})
-        _, created = NewsletterSubscriber.objects.get_or_create(email=email, defaults={'is_active': True})
+        throttle = get_throttle('newsletter')
+        if throttle.is_throttled(request, email):
+            throttle.record(request, email)
+            return JsonResponse(
+                {'ok': False, 'message': 'تعداد درخواست‌های شما زیاد است. کمی بعد دوباره تلاش کنید.'},
+                status=429,
+            )
+        throttle.record(request, email)
+        subscriber, created = NewsletterSubscriber.objects.get_or_create(email=email, defaults={'is_active': True})
         if created:
             return JsonResponse({'ok': True, 'message': 'عضویت شما در خبرنامه با موفقیت ثبت شد؛ تخفیف‌ها و فایل‌های جدید را زودتر از همه دریافت می‌کنید.'})
+        if not subscriber.is_active:
+            # عضویت قبلاً غیرفعال شده بود (مثلاً توسط مدیر)؛ پیام «قبلاً ثبت
+            # شده‌اید» بدون فعال‌سازی دوباره یعنی کاربر فکر می‌کند عضو است
+            # ولی هیچ ایمیلی نمی‌گیرد — پس عضویتش را واقعاً برمی‌گردانیم.
+            subscriber.is_active = True
+            subscriber.save(update_fields=['is_active'])
+            return JsonResponse({'ok': True, 'message': 'عضویت شما در خبرنامه دوباره فعال شد؛ تخفیف‌ها و فایل‌های جدید را زودتر از همه دریافت می‌کنید.'})
         return JsonResponse({'ok': True, 'message': 'این ایمیل قبلاً در خبرنامه ثبت شده است.'})
 
     return _subscribe(request)

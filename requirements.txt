@@ -17,3 +17,5 @@ six==1.17.0
 sqlparse==0.6.0
 tzdata==2025.2
 wheel==0.46.2
+# PostgreSQL driver for production DATABASE_URL deployments (dev stays on SQLite).
+psycopg[binary]==3.2.9

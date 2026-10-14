@@ -1,3 +1,5 @@
+import logging
+
 from django.db import models
 from django.contrib.auth.models import User
 from django_ckeditor_5.fields import CKEditor5Field
@@ -6,10 +8,12 @@ from shortuuid.django_fields import ShortUUIDField
 
 from .storage import PrivateDigitalStorage
 
+logger = logging.getLogger(__name__)
+
 
 STATUS = (
-    ("draft", "پیش نویس شود"),
-    ("published", "منتشر شود")
+    ("draft", "پیش‌نویس"),
+    ("published", "منتشر شده")
 )
 
 PRODUCT_TYPES = (
@@ -56,7 +60,10 @@ class ProductCategory(models.Model):
                         },
                     )
             except Exception:
-                pass
+                # Saving the object must never fail because the SEO redirect
+                # could not be recorded — but the failure must not be silent
+                # either, or a broken redirect table stays invisible.
+                logger.exception('ثبت ریدایرکت ۳۰۱ برای تغییر نامک انجام نشد.')
         super().save(*args, **kwargs)
 
     class Meta:
@@ -99,7 +106,10 @@ class ProductBrand(models.Model):
                         },
                     )
             except Exception:
-                pass
+                # Saving the object must never fail because the SEO redirect
+                # could not be recorded — but the failure must not be silent
+                # either, or a broken redirect table stays invisible.
+                logger.exception('ثبت ریدایرکت ۳۰۱ برای تغییر نامک انجام نشد.')
         super().save(*args, **kwargs)
 
     class Meta:
@@ -173,7 +183,10 @@ class Product(models.Model):
                         },
                     )
             except Exception:
-                pass
+                # Saving the object must never fail because the SEO redirect
+                # could not be recorded — but the failure must not be silent
+                # either, or a broken redirect table stays invisible.
+                logger.exception('ثبت ریدایرکت ۳۰۱ برای تغییر نامک انجام نشد.')
         super().save(*args, **kwargs)
 
     class Meta:
@@ -238,8 +251,10 @@ class DigitalAsset(models.Model):
         if self.file:
             try:
                 self.file_size = self.file.size
-            except Exception:
-                pass
+            except (OSError, ValueError):
+                # The file may not be readable yet (or may have been removed
+                # from storage); the size is metadata, not a hard requirement.
+                logger.warning('حجم فایل دیجیتال خوانده نشد: %s', self.file.name, exc_info=True)
             if not self.file_type:
                 self.file_type = self.file.name.rsplit('.', 1)[-1].upper() if '.' in self.file.name else ''
         super().save(*args, **kwargs)
@@ -276,7 +291,13 @@ class ProductComment(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_comments', verbose_name='محصول مربوطه')
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='product_comments', verbose_name='نویسنده دیدگاه')
     body = models.TextField(verbose_name='متن دیدگاه')
-    status = models.CharField(choices=STATUS, max_length=10, default='published', verbose_name='وضعیت')
+    # دیدگاه پیش از نمایش عمومی باید تأیید شود؛ رابط کاربری هم از ابتدا به
+    # کاربر همین را وعده می‌دهد («پس از بررسی نمایش داده می‌شود») ولی پیش‌فرضِ
+    # قبلی انتشار فوری بود. تأیید از ادمین (list_editable وضعیت) انجام می‌شود.
+    status = models.CharField(
+        choices=STATUS + (('pending', 'در انتظار تأیید'),),
+        max_length=10, default='pending', verbose_name='وضعیت',
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
 
     class Meta:

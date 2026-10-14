@@ -6,7 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError, transaction
 from django.test import TestCase, override_settings
 
-from .models import DigitalAsset, Product, ProductCategory
+from .models import DigitalAsset, Product, ProductCategory, ProductComment
 
 class ProductFlowTests(TestCase):
     def setUp(self):
@@ -88,3 +88,90 @@ class PrivateDigitalAssetStorageTests(TestCase):
         self.assertTrue(asset.file.path.startswith(self.temp_private.name))
         self.assertTrue(os.path.isfile(asset.file.path))
         self.assertFalse(os.path.exists(os.path.join(self.temp_media.name, asset.file.name)))
+
+
+class ProductCommentThrottleTests(TestCase):
+    """Public comment endpoint must resist automated flooding."""
+
+    def setUp(self):
+        self.user = User.objects.create_user('seller2', password='safe-pass-123')
+        self.product = Product.objects.create(
+            vendor=self.user, title='فایل دیدگاه', slug='comment-file',
+            description='توضیح', price=1000,
+        )
+        self.url = f'/products/{self.product.pid}/{self.product.slug}/'
+
+    def _post(self, author):
+        self.client.force_login(author)
+        return self.client.post(
+            self.url, data='{"body": "دیدگاه تست"}',
+            content_type='application/json',
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+    def test_comments_are_rate_limited_per_user(self):
+        author = User.objects.create_user('commenter', password='Safe-pass-123!')
+        with override_settings(PUBLIC_WRITE_RATE_LIMITS={'comment': (3, 100)}):
+            from django.core.cache import cache
+            cache.clear()
+
+            self.client.force_login(author)
+            for _ in range(3):
+                response = self.client.post(
+                    self.url, data='{"body": "دیدگاه تست"}',
+                    content_type='application/json',
+                    HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+                )
+                self.assertEqual(response.status_code, 200, response.content)
+
+            blocked = self.client.post(
+                self.url, data='{"body": "دیدگاه اضافی"}',
+                content_type='application/json',
+                HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            )
+            self.assertEqual(blocked.status_code, 429)
+            self.assertEqual(ProductComment.objects.filter(author=author).count(), 3)
+
+    def test_comment_requires_authentication(self):
+        response = self.client.post(
+            self.url, data='{"body": "بدون ورود"}',
+            content_type='application/json',
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(ProductComment.objects.count(), 0)
+
+
+class CommentModerationTests(TestCase):
+    """دیدگاه تا پیش از تأیید مدیر نباید عمومی دیده شود."""
+
+    def setUp(self):
+        self.user = User.objects.create_user('seller3', password='safe-pass-123')
+        self.product = Product.objects.create(
+            vendor=self.user, title='فایل نظارت', slug='moderated-file',
+            description='توضیح', price=1000,
+        )
+        self.author = User.objects.create_user('mod-author', password='Safe-pass-123!')
+        self.url = f'/products/{self.product.pid}/{self.product.slug}/'
+        self.client.force_login(self.author)
+
+    def _post_comment(self):
+        return self.client.post(
+            self.url, data='{"body": "دیدگاه در انتظار"}',
+            content_type='application/json', HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+    def test_new_comment_is_pending_and_hidden_until_approved(self):
+        response = self._post_comment()
+        self.assertEqual(response.status_code, 200, response.content)
+        comment = ProductComment.objects.get(author=self.author)
+        self.assertEqual(comment.status, 'pending')
+
+        self.client.logout()
+        page = self.client.get(self.url)
+        self.assertNotContains(page, 'دیدگاه در انتظار')
+
+        comment.status = 'published'
+        comment.save(update_fields=['status'])
+        page = self.client.get(self.url)
+        self.assertContains(page, 'دیدگاه در انتظار')

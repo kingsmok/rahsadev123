@@ -1,6 +1,6 @@
 from django.contrib import admin
 from . import models
-from core.admin_utils import EnhancedAdminMixin
+from core.admin_utils import EnhancedAdminMixin, to_jalali
 from jalali_date import datetime2jalali
 from jalali_date.admin import ModelAdminJalaliMixin
 
@@ -23,11 +23,11 @@ class CouponAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
 
     @admin.display(description='معتبر از', ordering='valid_from')
     def get_valid_from_jalali(self, obj):
-        return datetime2jalali(obj.valid_from).strftime('%a, %d %b %Y')
+        return to_jalali(obj.valid_from, '%a, %d %b %Y')
 
     @admin.display(description='معتبر تا', ordering='valid_to')
     def get_valid_to_jalali(self, obj):
-        return datetime2jalali(obj.valid_to).strftime('%a, %d %b %Y')
+        return to_jalali(obj.valid_to, '%a, %d %b %Y')
 
 
 @admin.register(models.Cart)
@@ -36,11 +36,11 @@ class CartAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
 
     @admin.display(description='تاریخ ایجاد', ordering='created_at')
     def get_created_at_jalali(self, obj):
-        return datetime2jalali(obj.created_at).strftime('%a, %d %b %Y')
+        return to_jalali(obj.created_at, '%a, %d %b %Y')
 
     @admin.display(description='تاریخ به‌روزرسانی', ordering='updated_at')
     def get_updated_at_jalali(self, obj):
-        return datetime2jalali(obj.updated_at).strftime('%a, %d %b %Y')
+        return to_jalali(obj.updated_at, '%a, %d %b %Y')
 
 
 @admin.register(models.CartItem)
@@ -55,7 +55,7 @@ class CartItemAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
 
     @admin.display(description='تاریخ ایجاد', ordering='created_at')
     def get_created_at_jalali(self, obj):
-        return datetime2jalali(obj.created_at).strftime('%a, %d %b %Y')
+        return to_jalali(obj.created_at, '%a, %d %b %Y')
 
 
 @admin.register(models.OrderItem)

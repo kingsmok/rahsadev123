@@ -13,17 +13,48 @@ from django.contrib import admin
 from django.db.models import Manager, QuerySet
 from django.http import HttpResponse
 from django.utils.html import strip_tags
+
+from core.csv_safety import csv_safe
 from jalali_date import datetime2jalali
 
 JALALI_DATETIME_FORMAT = '%Y/%m/%d — %H:%M'
 JALALI_DATE_FORMAT = '%Y/%m/%d'
 
+PERSIAN_MONTHS = [
+    'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
+    'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند',
+]
+# jdatetime.weekday() از شنبه شروع می‌شود.
+PERSIAN_WEEKDAYS = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه']
+
 
 def to_jalali(value, fmt=JALALI_DATETIME_FORMAT):
-    """تبدیل امن تاریخ/زمان به رشتهٔ شمسی (برای مقدار خالی خط تیره)."""
+    """تبدیل امن تاریخ/زمان به رشتهٔ شمسی (برای مقدار خالی خط تیره).
+
+    نام ماه و روز هفته فارسی برگردانده می‌شود؛ strftime خودِ jdatetime
+    برای %a/%A/%b/%B معادل لاتین («Wed»/«Mehr») می‌دهد که در پنل فارسی
+    بیگانه است، پس این نشانه‌ها پیش از قالب‌بندی جایگزین می‌شوند.
+    """
     if not value:
         return '—'
-    return datetime2jalali(value).strftime(fmt)
+    jalali = datetime2jalali(value)
+    replacements = {
+        '%B': PERSIAN_MONTHS[jalali.month - 1],
+        '%b': PERSIAN_MONTHS[jalali.month - 1],
+        '%A': PERSIAN_WEEKDAYS[jalali.weekday()],
+        '%a': PERSIAN_WEEKDAYS[jalali.weekday()],
+    }
+    safe_fmt = fmt
+    tokens = {}
+    for index, (token, text) in enumerate(replacements.items()):
+        placeholder = f'\x00{index}\x00'
+        if token in safe_fmt:
+            safe_fmt = safe_fmt.replace(token, placeholder)
+            tokens[placeholder] = text
+    rendered = jalali.strftime(safe_fmt)
+    for placeholder, text in tokens.items():
+        rendered = rendered.replace(placeholder, text)
+    return rendered
 
 
 class PersianDateMixin:
@@ -90,7 +121,7 @@ class ExportCsvMixin:
         if value is None:
             return ''
         # پیش‌نمایش تصویر و ستون‌های HTML‌دار به متن ساده تبدیل می‌شوند
-        return strip_tags(str(value)).strip()
+        return csv_safe(strip_tags(str(value)).strip())
 
     @admin.action(description='خروجی CSV از موارد انتخاب‌شده')
     def export_selected_as_csv(self, request, queryset):

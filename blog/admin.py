@@ -1,6 +1,6 @@
 from django.contrib import admin
 from . import models
-from core.admin_utils import EnhancedAdminMixin
+from core.admin_utils import EnhancedAdminMixin, to_jalali
 from jalali_date import datetime2jalali
 from jalali_date.admin import ModelAdminJalaliMixin
 
@@ -21,7 +21,7 @@ class CategoryAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
 
     @admin.display(description='تاریخ ایجاد', ordering='created_at')
     def get_created_jalali(self, obj):
-        return datetime2jalali(obj.created_at).strftime('%a, %d %b %Y')
+        return to_jalali(obj.created_at, '%a, %d %b %Y')
 
 
 @admin.register(models.Article)

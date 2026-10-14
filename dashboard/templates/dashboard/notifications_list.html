@@ -2,6 +2,7 @@
 {% block title %}اعلان ها{% endblock title %}
 {% load static %}
 {% load jalali_tags %}
+{% load custom_filters %}
 
 {% block content %}
     <main class="order-delivered default">
@@ -25,9 +26,9 @@
                                                         <h4 class="profile-recent-fav-name">
                                                             <i class="fa fa-bell " aria-hidden="true"></i> {{ notification.message }}
                                                         </h4>
-                                                        <span class="span-sub-bel"><b>تاریخ ایجاد: </b>{{ notification.created_at|to_jalali:'%d %b %Y' }}</span>
+                                                        <span class="span-sub-bel"><b>تاریخ ایجاد: </b>{{ notification.created_at|to_jalali_fa:'%d %B %Y' }}</span>
                                                         {% if notification.expiration_date %}
-                                                            <span class="span-sub-bel"><b>اعتبار اعلان تا: </b>{{ notification.expiration_date|to_jalali:'%d %b %Y' }}</span>
+                                                            <span class="span-sub-bel"><b>اعتبار اعلان تا: </b>{{ notification.expiration_date|to_jalali_fa:'%d %B %Y' }}</span>
                                                         {% endif %}
                                                     </div>
                                                 </div>

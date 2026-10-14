@@ -1,5 +1,11 @@
+import logging
+
 from django.db import models
 from django_ckeditor_5.fields import CKEditor5Field
+
+logger = logging.getLogger(__name__)
+
+
 class StaticPage(models.Model):
     title=models.CharField(max_length=200, verbose_name='عنوان')
     slug=models.SlugField(max_length=220, unique=True, allow_unicode=True)
@@ -27,8 +33,11 @@ class StaticPage(models.Model):
                         },
                     )
             except Exception:
-                pass
+                # Saving the page must never fail because the SEO redirect could
+                # not be recorded, but the failure must not be silent either.
+                logger.exception('ثبت ریدایرکت ۳۰۱ برای تغییر نامک صفحه انجام نشد.')
         super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = 'صفحه'
         verbose_name_plural = 'صفحات'
