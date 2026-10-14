@@ -638,10 +638,19 @@ table.ap-table { width: 100%; border-collapse: collapse; min-width: 520px; backg
     .ap-sidebar {
         position: fixed;
         inset-block: 0;
-        inset-inline-end: 0;
+        /* داک باید inline-start باشد تا کشو در موبایل از همان سمتی بیاید که
+           سایدبار در دسکتاپ هست (در RTL: راست). با inline-end، سایدبار در RTL
+           سمت چپ می‌نشست و translateX(100%) آن را به‌جای بیرون، ۳۰۰px به
+           داخلِ صفحه می‌آورد و روی محتوا می‌افتاد. */
+        inset-inline-start: 0;
         width: min(300px, 86vw);
-        transform: translateX(100%);
+        transform: translateX(-100%);
         transition: transform .25s ease;
+        box-shadow: 18px 0 40px rgba(8, 20, 30, .35);
+    }
+    /* در RTL سایدبار راست است و برای مخفی‌شدن باید به راست بلغزد. */
+    :dir(rtl) .ap-sidebar {
+        transform: translateX(100%);
         box-shadow: -18px 0 40px rgba(8, 20, 30, .35);
     }
     body.ap-nav-open .ap-sidebar { transform: translateX(0); }
