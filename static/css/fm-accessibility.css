@@ -90,6 +90,10 @@
     color: var(--fm-text-soft);
     cursor: pointer;
     font: inherit;
+    /* ناحیهٔ لمس ۳۰px بود؛ بدون تغییر ظاهر، حداقل ارتفاع لمسی می‌گیرد. */
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
 }
 .back-to-top button:hover span:last-child { color: var(--fm-primary-600); }
 .order-steps li > span.active { color: var(--fm-primary-500); font-size: 15px; font-weight: 500; }

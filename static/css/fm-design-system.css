@@ -237,6 +237,9 @@ main h4 { font-size: 16px; font-weight: 700; line-height: 1.8; }
     color: var(--fm-text-soft);
     text-decoration: none;
     transition: color .2s var(--fm-ease);
+    /* لینک‌های بردکرامب ۱۹px ارتفاع لمسی داشتند (حداقل AA برابر ۲۴px است)؛
+       پدینگ عمودی ناحیهٔ لمس را بدون تغییر ظاهر متن بزرگ می‌کند. */
+    padding-block: 5px;
 }
 
 .fm-crumbs a:hover { color: var(--fm-primary-500); }

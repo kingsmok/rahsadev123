@@ -989,8 +989,9 @@ header.Masai-header .main-menu .list .list-item.mega-menu > .sub-menu {
     }
     nav.header-responsive .search-nav form button {
         right: 4px;
-        width: 36px;
-        height: 36px;
+        /* ۳۶px برای لمس تنگ بود؛ داخل ورودی ۴۲px، دکمهٔ ۴۰px جا می‌شود. */
+        width: 40px;
+        height: 40px;
     }
     nav.header-responsive .search-nav .search-submit-symbol { font-size: 22px; }
     nav.header-responsive .live-search-results {

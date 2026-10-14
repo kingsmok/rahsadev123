@@ -7479,7 +7479,9 @@ color: #2ec4b1;
     background-color: #759698;
 }
 .big_btn{
-    width:200px!important
+    width:200px!important;
+    /* دکمهٔ اصلی فرم‌ها (ارسال پیام و…) روی لمسی حداقل ۴۴px ارتفاع داشته باشد. */
+    min-height:44px
 }
 .btn-main-masai{
     background-color:#46a9ae!important;

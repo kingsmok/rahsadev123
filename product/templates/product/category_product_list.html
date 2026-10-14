@@ -137,10 +137,10 @@
                                                     <a class="product-box-img"
                                                        href="{% url 'product:product_detail' product.pid product.slug %}">
                                                         {% if product.image %}
-                                                            <img src="{{ product.image.url }}"
+                                                            <img loading="lazy" decoding="async" src="{{ product.image.url }}"
                                                                  alt="{{ product.title|truncatewords:10 }}">
                                                         {% else %}
-                                                            <img src="{% static 'img/product_image_not_found.jpg' %}"
+                                                            <img loading="lazy" decoding="async" src="{% static 'img/product_image_not_found.jpg' %}"
                                                                  alt="{{ product.title|truncatewords:10 }}">
                                                         {% endif %}
                                                         {% if not product.is_available %}

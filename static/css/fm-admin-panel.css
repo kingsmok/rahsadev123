@@ -449,7 +449,9 @@ a { color: inherit; text-decoration: none; }
 
 .ap-grid { display: grid; gap: 16px; }
 .ap-grid--2 { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
-.ap-grid--3 { grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); }
+/* min(310px, 100%): ستون هرگز از کانتینر پهن‌تر نمی‌شود؛ در موبایلِ باریک
+   (کانتینر ۲۹۰px در عرض ۳۲۰) مقدارِ ثابتِ ۳۱۰ سند را ۵px سرریز می‌کرد. */
+.ap-grid--3 { grid-template-columns: repeat(auto-fit, minmax(min(310px, 100%), 1fr)); }
 
 .ap-chart { position: relative; width: 100%; height: 288px; }
 .ap-chart--sm { height: 236px; }
@@ -645,7 +647,11 @@ table.ap-table { width: 100%; border-collapse: collapse; min-width: 520px; backg
         inset-inline-start: 0;
         width: min(300px, 86vw);
         transform: translateX(-100%);
-        transition: transform .25s ease;
+        /* کشوی بسته نباید در ناحیهٔ اسکرول سند حساب شود (در ۳۲۰px پنج پیکسل
+           سرریز افقی می‌داد) و نباید فوکوس کیبورد بگیرد؛ visibility با تأخیرِ
+           هم‌طول انیمیشن بسته‌شدن اعمال می‌شود تا انیمیشن دیده شود. */
+        visibility: hidden;
+        transition: transform .25s ease, visibility 0s linear .25s;
         box-shadow: 18px 0 40px rgba(8, 20, 30, .35);
     }
     /* در RTL سایدبار راست است و برای مخفی‌شدن باید به راست بلغزد. */
@@ -653,7 +659,11 @@ table.ap-table { width: 100%; border-collapse: collapse; min-width: 520px; backg
         transform: translateX(100%);
         box-shadow: -18px 0 40px rgba(8, 20, 30, .35);
     }
-    body.ap-nav-open .ap-sidebar { transform: translateX(0); }
+    body.ap-nav-open .ap-sidebar {
+        transform: translateX(0);
+        visibility: visible;
+        transition: transform .25s ease;
+    }
     .ap-scrim {
         display: block;
         position: fixed;
