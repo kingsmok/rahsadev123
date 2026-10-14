@@ -7,6 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
+from cart.coupons import revalidate_coupon
 from cart.models import Cart, Order, OrderItem
 from downloads.models import DownloadToken
 from dashboard.models import Notification
@@ -219,6 +220,30 @@ def _complete(tx, ref_id='', response=None):
     return order
 
 
+def _complete_free_order(request, order):
+    """Fulfil an order whose payable amount is zero without any gateway.
+
+    A coupon may cover the whole cart (the discount is capped at the cart
+    total).  Gateways refuse a zero amount, so such an order used to end on
+    "could not connect to the payment gateway, please retry" forever.  The
+    normal fulfilment path (``_complete``: snapshot, stock, download tokens,
+    notification, cart cleanup) is reused with a ``free`` transaction record.
+    """
+    transaction = PaymentTransaction.objects.create(order=order, gateway='free', amount=0)
+    try:
+        order = _complete(transaction, ref_id=f'FREE-{order.order_number}', response={'free_order': True})
+    except FulfilmentError as exc:
+        # Nothing was charged, so this is not a refund case: record and explain.
+        logger.warning('Free order %s could not be fulfilled: %s', order.order_number, exc)
+        PaymentTransaction.objects.filter(pk=transaction.pk).update(
+            status='failed', raw_response={'free_order': True, 'error': str(exc)},
+        )
+        messages.error(request, f'ثبت سفارش انجام نشد: {exc}')
+        return redirect('cart:cart')
+    messages.success(request, 'سفارش شما با کد تخفیف به‌طور کامل پوشش داده شد و فایل‌ها آماده دانلود است.')
+    return redirect('payments:successful_done', order_number=order.order_number)
+
+
 @login_required
 def start_payment(request, order_number):
     if request.method != 'POST':
@@ -231,6 +256,17 @@ def start_payment(request, order_number):
         if any(item.product.status != 'published' or not item.product.is_available for item in items):
             messages.error(request, 'یکی از فایل‌های سبد دیگر برای خرید در دسترس نیست. لطفاً سبد را به‌روزرسانی کنید.')
             return redirect('cart:cart')
+
+        # The coupon may have expired or been disabled since the payment page
+        # was rendered.  Never charge a total the customer has not seen: show
+        # the corrected amount and let them confirm it.
+        if revalidate_coupon(cart, items):
+            messages.warning(
+                request,
+                'کد تخفیف سبد شما دیگر معتبر نیست یا مبلغ آن تغییر کرده است؛ مبلغ قابل پرداخت '
+                'به‌روزرسانی شد. لطفاً آن را بررسی و دوباره پرداخت کنید.',
+            )
+            return redirect('cart:shopping_payment')
 
         # Reuse only an order whose immutable snapshot still matches the cart.
         # A stale pending order must never charge an updated cart total.
@@ -262,8 +298,11 @@ def start_payment(request, order_number):
             messages.info(request, f'وضعیت این سفارش «{order.get_status_display()}» است و در حال حاضر قابل پرداخت نیست.')
             return redirect('dashboard:order_detail', order_number=order.order_number)
 
+    if order.final_price == 0:
+        return _complete_free_order(request, order)
+
     gateway = request.POST.get('gateway', 'zarinpal')
-    if gateway not in dict(PaymentTransaction.GATEWAYS):
+    if gateway not in GATEWAYS:
         gateway = 'zarinpal'
 
     # Only gateways enabled by staff can be used.  A configured environment
@@ -308,6 +347,11 @@ def callback(request):
     if not authority:
         return HttpResponse('شناسه پرداخت نامعتبر است.', status=400)
     transaction = get_object_or_404(PaymentTransaction, authority=authority, order__user=request.user)
+    if transaction.status == 'paid':
+        # A refreshed, bookmarked or replayed callback URL (even one carrying
+        # Status=NOK, or a verify call that now errors) must never downgrade a
+        # payment that was already verified and fulfilled to "failed".
+        return redirect('payments:successful_done', order_number=transaction.order.order_number)
     if request.GET.get('Status') != 'OK':
         transaction.status = 'failed'
         transaction.save(update_fields=['status', 'updated_at'])

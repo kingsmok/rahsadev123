@@ -41,16 +41,20 @@ class Coupon(models.Model):
         return self.code
 
     def is_valid(self):
+        """Whether a *new* reservation of this coupon may be taken now.
+
+        Pure check, no writes.  It used to set ``is_active=False`` and call a
+        full ``save()`` once ``max_usage`` was reached: that overwrote
+        concurrent ``usage_count`` updates and, because cart revalidation
+        requires ``is_active``, stripped the discount from carts whose
+        reservation had already been counted.
+        """
         now = timezone.now()
         if not self.is_active:
             return False
         if self.max_usage and self.usage_count >= self.max_usage:
-            self.is_active = False
-            self.save()
             return False
-        if now < self.valid_from or now > self.valid_to:
-            return False
-        return True
+        return self.valid_from <= now <= self.valid_to
 
 
 class Cart(models.Model):

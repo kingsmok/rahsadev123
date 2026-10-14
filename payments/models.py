@@ -4,7 +4,11 @@ from cart.models import Order
 
 
 class PaymentTransaction(models.Model):
-    GATEWAYS = [('zarinpal', 'زرین‌پال'), ('snappay', 'اسنپ‌پی'), ('torobpay', 'ترب‌پی')]
+    GATEWAYS = [
+        ('zarinpal', 'زرین‌پال'), ('snappay', 'اسنپ‌پی'), ('torobpay', 'ترب‌پی'),
+        # سفارشی که کد تخفیف کل مبلغش را پوشش داده؛ هیچ درگاهی درگیر نیست.
+        ('free', 'سفارش رایگان (بدون درگاه)'),
+    ]
     STATUS = [('created', 'ایجاد شده'), ('redirected', 'ارسال به درگاه'), ('paid', 'موفق'), ('failed', 'ناموفق')]
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='payments', verbose_name='سفارش')
     gateway = models.CharField(max_length=20, choices=GATEWAYS, verbose_name='درگاه')

@@ -2,109 +2,40 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.contrib import messages
-from django.db.models import F
-from django.utils import timezone
+from .coupons import discount_amount, release_coupon_reservation, revalidate_coupon
 from .models import Cart, CartItem, Coupon, Order
 from product.models import Product
 from django.db import transaction as db_transaction
 from django.views.decorators.http import require_POST
 
 
-def _cart_summary(user):
-    """جمع سبد خرید دیجیتال (بدون هزینه ارسال)."""
-    cart = Cart.objects.filter(user=user).first()
+def _cart_summary(user, revalidate=False):
+    """جمع سبد خرید دیجیتال (بدون هزینه ارسال).
+
+    With ``revalidate`` the applied coupon is re-checked *before* the totals
+    are computed; computing them first showed a stale payable amount next to
+    an already-corrected discount on the first view after a coupon lapsed.
+    """
+    cart = Cart.objects.filter(user=user).select_related('coupon').first()
     items = list(cart.items.select_related('product')) if cart else []
+    if revalidate:
+        revalidate_coupon(cart, items)
     total_price = sum(item.total_price for item in items)
+    coupon_discount = cart.coupon_discount if cart else 0
     return {
         'cart': cart,
         'cart_items': items,
         'total_price': total_price,
-        'coupon_discount': cart.coupon_discount if cart else 0,
-        'final_price': max(0, total_price - (cart.coupon_discount if cart else 0)),
+        'coupon_discount': coupon_discount,
+        'final_price': max(0, total_price - coupon_discount),
     }
-
-
-def _discount_amount(coupon, total_price):
-    """مبلغ تخفیف یک کوپن برای یک جمع مشخص (هرگز منفی یا بیش از جمع سبد)."""
-    if coupon.discount_type == 'percentage':
-        discount = int((total_price * coupon.discount_value) / 100)
-    else:
-        discount = coupon.discount_value
-    if coupon.maximum_discount:
-        discount = min(discount, coupon.maximum_discount)
-    return max(0, min(discount, total_price))
-
-
-def _release_coupon_reservation(coupon):
-    """Give back the global use reserved for a coupon that is being detached.
-
-    ``apply_coupon`` reserves one of the coupon's global uses so that two carts
-    cannot both claim the last one.  If that reservation is dropped without a
-    payment (cart emptied, coupon removed, or it stopped qualifying), the use
-    must be returned — otherwise anyone could burn a campaign's whole budget by
-    repeatedly applying and dropping the same code.
-
-    ``is_active`` is intentionally left alone: a coupon deactivated by staff must
-    stay deactivated, and one that hit ``max_usage`` is safely re-enabled by
-    staff rather than silently resurrected here.
-    """
-    if coupon is None:
-        return
-    Coupon.objects.filter(pk=coupon.pk, usage_count__gt=0).update(
-        usage_count=F('usage_count') - 1
-    )
-
-
-def _revalidate_coupon(cart, items):
-    """Recompute the applied coupon against the cart's *current* contents.
-
-    A discount is calculated from the cart total at the time it is applied.  If
-    the customer then removes the expensive item that justified it, the stale
-    amount must not survive: left untouched, a 500,000 discount on a 100,000
-    cart makes the order payable for zero.  Re-run the same rules here and drop
-    the coupon when it no longer qualifies.
-    """
-    if cart is None or cart.coupon is None:
-        return
-
-    coupon = cart.coupon
-    total_price = sum(item.total_price for item in items)
-    now = timezone.now()
-
-    still_valid = (
-        bool(items)
-        and coupon.is_active
-        and coupon.valid_from <= now <= coupon.valid_to
-        and (not coupon.minimum_order_amount or total_price >= coupon.minimum_order_amount)
-    )
-
-    if still_valid:
-        new_coupon, new_discount = coupon, _discount_amount(coupon, total_price)
-    else:
-        new_coupon, new_discount = None, 0
-
-    # ``cart`` is revalidated on every page view, so only touch the database
-    # when the stored values really are stale.
-    if cart.coupon_id == (new_coupon.pk if new_coupon else None) \
-            and cart.coupon_discount == new_discount:
-        return
-
-    if new_coupon is None:
-        # The reservation is dropped without a payment, so return the use.
-        _release_coupon_reservation(coupon)
-
-    cart.coupon = new_coupon
-    cart.coupon_discount = new_discount
-    cart.save(update_fields=['coupon', 'coupon_discount', 'updated_at'])
 
 
 @login_required
 def cart(request):
-    summary = _cart_summary(request.user)
-
     # محتویات سبد می‌تواند از آخرین باری که تخفیف اعمال شده تغییر کرده باشد
     # (مثلاً حذف آیتم در یک تب دیگر)؛ تخفیف را دوباره با جمع فعلی بسنجیم.
-    _revalidate_coupon(summary['cart'], summary['cart_items'])
+    summary = _cart_summary(request.user, revalidate=True)
 
     context = {
         'cart': summary['cart'],
@@ -145,7 +76,7 @@ def remove_cart_item(request, item_id):
     # تخفیف باید نسبت به جمع جدید سبد دوباره محاسبه شود؛ در غیر این صورت
     # حذف آیتم گران‌قیمت، مبلغ قابل پرداخت را به صفر می‌رساند.
     remaining_items = list(cart.items.select_related('product'))
-    _revalidate_coupon(cart, remaining_items)
+    revalidate_coupon(cart, remaining_items)
 
     return JsonResponse({
         'success': True,
@@ -185,12 +116,12 @@ def apply_coupon(request):
                 return redirect('cart:cart')
 
             coupon = Coupon.objects.select_for_update().get(code__iexact=coupon_code)
-            if not coupon.is_valid():
-                messages.error(request, 'کد تخفیف معتبر نیست یا منقضی شده است')
-                return redirect('cart:cart')
-
             if cart.coupon:
                 messages.warning(request, 'یک کد تخفیف قبلاً اعمال شده است')
+                return redirect('cart:cart')
+
+            if not coupon.is_valid():
+                messages.error(request, 'کد تخفیف معتبر نیست یا منقضی شده است')
                 return redirect('cart:cart')
 
             if coupon.per_user_limit and _paid_coupon_uses(request.user, coupon) >= coupon.per_user_limit:
@@ -202,7 +133,7 @@ def apply_coupon(request):
                 messages.error(request, f'حداقل مبلغ سفارش برای این کد تخفیف {coupon.minimum_order_amount:,} تومان است')
                 return redirect('cart:cart')
 
-            discount = _discount_amount(coupon, total_price)
+            discount = discount_amount(coupon, total_price)
 
             cart.coupon = coupon
             cart.coupon_discount = discount
@@ -210,10 +141,12 @@ def apply_coupon(request):
 
             # Applying a coupon reserves one of its global uses.  This keeps a
             # final-use coupon from being granted simultaneously in two carts.
+            # A full coupon is *not* deactivated: ``is_valid`` already refuses
+            # new reservations, while deactivating made every cart that held
+            # a counted reservation lose its discount on the next revalidation
+            # and kept released uses unclaimable for good.
             coupon.usage_count += 1
-            if coupon.max_usage and coupon.usage_count >= coupon.max_usage:
-                coupon.is_active = False
-            coupon.save(update_fields=['usage_count', 'is_active'])
+            coupon.save(update_fields=['usage_count'])
 
         messages.success(request, f'کد تخفیف {coupon.code} با موفقیت اعمال شد ({discount:,} تومان تخفیف)')
     except Coupon.DoesNotExist:
@@ -223,7 +156,9 @@ def apply_coupon(request):
 
 @login_required
 def shopping_payment(request):
-    summary = _cart_summary(request.user)
+    # The payment page is reachable without opening the cart, so an expired or
+    # staff-disabled coupon must be re-checked here before a total is shown.
+    summary = _cart_summary(request.user, revalidate=True)
     if not summary['cart_items']:
         messages.warning(request, 'سبد خرید شما خالی است')
         return redirect('cart:cart')
@@ -265,7 +200,7 @@ def remove_coupon(request):
         messages.info(request, 'هیچ کد تخفیفی روی سبد شما اعمال نشده است.')
         return redirect('cart:cart')
 
-    _release_coupon_reservation(cart.coupon)
+    release_coupon_reservation(cart.coupon)
     cart.coupon = None
     cart.coupon_discount = 0
     cart.save(update_fields=['coupon', 'coupon_discount', 'updated_at'])
