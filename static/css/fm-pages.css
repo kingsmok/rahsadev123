@@ -70,7 +70,8 @@
 
 .svc-cta a.btn {
     background: #fff;
-    color: var(--fm-primary-600);
+    /* primary-600 روی سفید ۴٫۲ بود (AA=۴٫۵)؛ primary-700 هم‌خانواده ۵٫۳ می‌دهد */
+    color: var(--fm-primary-700);
     font-weight: 700;
     border-radius: var(--fm-r-pill);
     padding: 10px 34px;
@@ -91,7 +92,7 @@
 
 .svc-hero .btn {
     background: #fff;
-    color: var(--fm-primary-600);
+    color: var(--fm-primary-700);
     font-weight: 700;
     border-radius: var(--fm-r-pill);
     padding: 11px 38px;
@@ -171,7 +172,7 @@
 
 .price-card .btn-order.outline {
     background: var(--fm-surface);
-    color: var(--fm-primary-600);
+    color: var(--fm-primary-700);
     border: 1px solid var(--fm-primary-500);
 }
 
@@ -221,7 +222,7 @@
 .portfolio-card img { width: 100%; height: 190px; object-fit: cover; display: block; }
 .portfolio-card .body { padding: 14px 16px; }
 .portfolio-card h4 { font-size: 15px; font-weight: 800; margin-bottom: 4px; color: var(--fm-text); }
-.portfolio-card .cat { font-size: 12px; color: var(--fm-primary-600); font-weight: 700; }
+.portfolio-card .cat { font-size: 12px; color: var(--fm-primary-700); font-weight: 700; }
 .portfolio-card p { font-size: 12.5px; color: var(--fm-text-soft); line-height: 1.9; margin: 6px 0 0; }
 
 /* فرم درخواست پروژه */

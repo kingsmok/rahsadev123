@@ -99,7 +99,8 @@
     justify-content: space-between;
     font-weight: bold;
     font-size: 15px;
-    color: #338286;
+    /* #338286 روی پس‌زمینهٔ روشن ۴٫۴۹ بود؛ primary-700 هم‌خانواده ۵٫۳ می‌دهد */
+    color: var(--fm-primary-700, #2d6e74);
     margin-bottom: 15px;
 }
 

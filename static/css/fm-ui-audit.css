@@ -643,7 +643,10 @@ header.Masai-header .main-menu .list .list-item.mega-menu > .sub-menu {
         transform-origin: center;
     }
     header.Masai-header .nav__ullist .list__link:hover,
-    header.Masai-header .nav__ullist .list__link.is-active { color: #fff; text-decoration: none; }
+    /* !important لازم است چون fm-accessibility برای .is-active مقدار
+       primary-600 را با !important گذاشته و روی هدرِ تیره کنتراست ۳٫۸۷ می‌داد؛
+       قصد طراحی در همین فایل از اول سفید بوده است. */
+    header.Masai-header .nav__ullist .list__link.is-active { color: #fff !important; text-decoration: none; }
     header.Masai-header .nav__ullist .list__link:hover::after,
     header.Masai-header .nav__ullist .list__link.is-active::after { width: auto; transform: scaleX(1); }
     /* منوی RTL از راست با دسته‌بندی، خانه و سپس پیوندهای فروشگاه ادامه پیدا می‌کند. */
@@ -1457,3 +1460,21 @@ header.Masai-header .main-menu .list .list-item.mega-menu > .sub-menu {
     .slider_main__description { display: none; }
     .slider_main__cta { margin-top: 7px; }
 }
+
+/* ── کنتراست متن قیمت (WCAG AA) ──────────────────────────────
+   قیمت‌ها با #61bec3 روی سفید فقط ۲٫۱۷ کنتراست داشتند. متن قیمت
+   به primary-700 همان خانوادهٔ فیروزه‌ای می‌رود (۵٫۳)؛ رنگ روشنِ
+   برند برای عناصر گرافیکی/حاشیه‌ها بدون تغییر می‌ماند. */
+.widget-product .product-carousel .item .price,
+.brand-slider .product-carousel .item .price,
+.product_main_details .price,
+.price ins,
+.price .amount { color: var(--fm-primary-700); }
+
+/* قیمت قبلی (del) با #979898 فقط ۲٫۸۹ داشت؛ توکن muted متنی ۴٫۹۹ می‌دهد
+   و همچنان از قیمت فعلی کم‌رنگ‌تر می‌ماند. */
+.price del { color: var(--fm-text-soft); }
+
+/* آیتم فعال منوی پروفایل داشبورد */
+.responsive-profile-menu .dropdown-menu a.active,
+.dropdown-menu .dropdown-item.active { color: var(--fm-primary-700); }
