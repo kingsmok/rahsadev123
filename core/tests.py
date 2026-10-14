@@ -25,7 +25,7 @@ import manage
 
 from core.models import ContactUs
 from product.models import Product, ProductCategory
-from services.models import ServiceRequest
+from services.models import ServicePackage, ServiceRequest
 
 
 class PublicFormAndSafetyTests(TestCase):
@@ -520,3 +520,36 @@ class PersianJalaliFilterTests(SimpleTestCase):
         from core.templatetags.custom_filters import to_jalali_fa
 
         self.assertEqual(to_jalali_fa(None), '-')
+
+
+class LlmsTxtTests(TestCase):
+    """فایل llms.txt — راهنمای محتوای سایت برای دستیارهای هوش مصنوعی.
+
+    رگرسیون: لینک‌ها باید مطلق باشند تا خزنده بدون دانستن دامنه از آن‌ها
+    استفاده کند؛ بستهٔ بدون قیمت نباید «None تومان» چاپ کند؛ و دسته‌های
+    خالی نباید در فهرست بیایند.
+    """
+
+    def setUp(self):
+        vendor = User.objects.create_user(username='llms-vendor', password='x')
+        category = ProductCategory.objects.create(title='قالب تست', slug='test-themes')
+        product = Product.objects.create(
+            vendor=vendor, title='فایل تست llms', slug='llms-test-file',
+            description='توضیح', price=1250000, stock_count=5, status='published',
+        )
+        product.category.add(category)
+        ServicePackage.objects.create(title='بسته توافقی', features='امکان', price=None)
+
+    def test_llms_txt_absolute_links_and_no_none_price(self):
+        response = self.client.get('/llms.txt')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        # لینک محصول و دسته‌بندی مطلق‌اند (با دامنهٔ درخواست)
+        self.assertIn('http://testserver/products/', content)
+        self.assertIn('/products/category/test-themes/', content)
+        # قیمت قالب‌بندی‌شده و نبود «None» برای بستهٔ توافقی
+        self.assertIn('1,250,000 تومان', content)
+        self.assertIn('توافقی', content)
+        self.assertNotIn('None', content)
+        # هیچ لینک نسبی مارک‌داونی باقی نمانده است
+        self.assertNotIn('](/', content)

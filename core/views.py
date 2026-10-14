@@ -116,13 +116,32 @@ def llms_txt(request):
 
     خلاصه‌ای ساخت‌یافته از سایت به‌صورت مارک‌داون تا دستیارهای هوش مصنوعی
     بتوانند محتوا، محصولات و سیاست‌های سایت را دقیق درک و ارجاع دهند.
+    همهٔ لینک‌ها مطلق‌اند تا خزندهٔ هوش مصنوعی بدون دانستن دامنه بتواند
+    از آن‌ها استفاده کند؛ دسته‌هایی که محتوای منتشرشده ندارند فهرست
+    نمی‌شوند تا فایل، نقشهٔ واقعی و به‌روز سایت بماند.
     """
+    from blog.models import Category as BlogCategory
+    from product.models import ProductCategory
+
     context = {
+        # build_absolute_uri('/') انتهایش اسلش دارد؛ بدون اسلش نگه می‌داریم
+        # تا در قالب به‌صورت «{{ site_base }}/products/» استفاده شود.
+        'site_base': request.build_absolute_uri('/')[:-1],
         'top_products': Product.objects.filter(status='published')
             .order_by('-sales_count', '-views')[:15],
         'latest_articles': Article.objects.filter(status='published')
             .order_by('-created_at')[:10],
         'packages': ServicePackage.objects.filter(is_active=True),
+        'product_categories': ProductCategory.objects.annotate(
+            published_count=models.Count(
+                'categories', filter=models.Q(categories__status='published'),
+            ),
+        ).filter(published_count__gt=0).order_by('title'),
+        'blog_categories': BlogCategory.objects.annotate(
+            published_count=models.Count(
+                'articles', filter=models.Q(articles__status='published'),
+            ),
+        ).filter(published_count__gt=0).order_by('title'),
     }
     return render(request, 'core/llms.txt', context, content_type='text/plain; charset=utf-8')
 
