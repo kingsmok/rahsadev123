@@ -409,6 +409,7 @@ PUBLIC_WRITE_RATE_LIMITS = {
     # namespace: (attempts per address+identity, attempts per address)
     'comment': (10, 40),
     'contact': (5, 20),
+    'register': (5, 20),
     'service_request': (5, 20),
     'newsletter': (10, 40),
 }

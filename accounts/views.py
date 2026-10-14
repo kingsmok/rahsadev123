@@ -5,6 +5,8 @@ from django.shortcuts import redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
+from core.throttling import get_throttle
+
 from .forms import LoginForm, UserRegistrationForm
 from .security import (
     clear_login_failures,
@@ -31,6 +33,15 @@ def user_register(request):
 
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
+        # ساخت حساب ناشناس و نامحدود است؛ بدون سقف، یک اسکریپت می‌تواند
+        # هزاران حساب جعلی بسازد. همان الگوی بقیهٔ POSTهای عمومی اعمال می‌شود.
+        throttle = get_throttle('register')
+        identity = form.data.get('username', '')
+        if throttle.is_throttled(request, identity):
+            throttle.record(request, identity)
+            form.add_error(None, 'تعداد تلاش‌های ثبت‌نام زیاد است. لطفاً چند دقیقه دیگر دوباره امتحان کنید.')
+            return render(request, 'accounts/register.html', {'form': form}, status=429)
+        throttle.record(request, identity)
         if form.is_valid():
             user = form.save(commit=False)
             user.set_password(form.cleaned_data['password'])

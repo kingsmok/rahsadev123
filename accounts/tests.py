@@ -163,3 +163,37 @@ class PasswordResetThrottleTests(TestCase):
         # همان پاسخ همیشگی، اما ایمیل دیگری ارسال نمی‌شود.
         self.assertRedirects(response, reverse('account:password_reset_done'))
         self.assertEqual(len(mail.outbox), 3)
+
+
+@override_settings(PUBLIC_WRITE_RATE_LIMITS={
+    'comment': (10, 40), 'contact': (5, 20), 'register': (2, 10),
+    'service_request': (5, 20), 'newsletter': (10, 40),
+})
+class RegistrationThrottleTests(TestCase):
+    """ثبت‌نام عمومی هم مثل بقیهٔ POSTهای ناشناس سقف دارد."""
+
+    def setUp(self):
+        cache.clear()
+        self.url = reverse('account:register')
+        self.data = {
+            'first_name': 'تست', 'last_name': 'کاربر',
+            'username': 'bulk-user', 'email': 'bulk@example.com',
+            'password': 'Strong-pass-123!', 'agree': 'on',
+        }
+
+    def test_third_attempt_is_rejected_with_429(self):
+        first = self.client.post(self.url, self.data)
+        self.assertEqual(first.status_code, 302)  # حساب ساخته شد
+        second = self.client.post(self.url, self.data)
+        self.assertEqual(second.status_code, 200)  # خطای تکراری‌بودن، هنوز سقف نرسیده
+        third = self.client.post(self.url, self.data)
+        self.assertEqual(third.status_code, 429)
+        self.assertContains(third, 'تعداد تلاش‌های ثبت‌نام زیاد است', status_code=429)
+        self.assertEqual(User.objects.filter(username='bulk-user').count(), 1)
+
+    def test_other_usernames_have_their_own_budget(self):
+        self.client.post(self.url, self.data)
+        self.client.post(self.url, self.data)
+        other = dict(self.data, username='other-user', email='other@example.com')
+        response = self.client.post(self.url, other)
+        self.assertEqual(response.status_code, 302)
