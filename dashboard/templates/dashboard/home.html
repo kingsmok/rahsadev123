@@ -112,7 +112,7 @@
                                             {% for order in recent_orders %}
                                                 <tr>
                                                     <td>{{ order.order_number }}</td>
-                                                    <td>{{ order.created_at|to_jalali:'%d %b %Y' }}</td>
+                                                    <td>{{ order.created_at|to_jalali_fa:'%d %B %Y' }}</td>
                                                     <td>{{ order.final_price|format_price }} تومان</td>
                                                     <td>
                                                         {% if order.status == 'paid' %}

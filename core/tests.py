@@ -501,3 +501,22 @@ class NewsletterSendCommandTests(TestCase):
 
         with self.assertRaises(CommandError):
             call_command('send_newsletter', '--subject', 'x', '--text', '  ')
+
+
+class PersianJalaliFilterTests(SimpleTestCase):
+    """نام ماه در تاریخ‌های شمسی باید فارسی باشد، نه «Meh»/«Mehr» لاتین."""
+
+    def test_month_name_and_digits_are_persian(self):
+        from datetime import datetime, timezone
+
+        from core.templatetags.custom_filters import to_jalali_fa
+
+        # ۱۴ اکتبر ۲۰۲۶ = ۲۲ مهر ۱۴۰۵
+        rendered = to_jalali_fa(datetime(2026, 10, 14, tzinfo=timezone.utc))
+        self.assertEqual(rendered, '۲۲ مهر ۱۴۰۵')
+        self.assertNotIn('Meh', rendered)
+
+    def test_none_is_dash(self):
+        from core.templatetags.custom_filters import to_jalali_fa
+
+        self.assertEqual(to_jalali_fa(None), '-')

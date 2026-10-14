@@ -63,13 +63,13 @@
                                                 {{ token.order.order_number }}
                                             </a>
                                         </td>
-                                        <td>{{ token.created_at|to_jalali:'%d %B %Y' }}</td>
+                                        <td>{{ token.created_at|to_jalali_fa:'%d %B %Y' }}</td>
                                         <td>
                                             {% if token.is_valid %}
                                                 <span class="item_property fm-ico-ok">
                                                     {{ token.remaining_downloads }} دانلود باقی‌مانده
                                                 </span>
-                                                <div><small class="text-muted">انقضا: {{ token.expires_at|to_jalali:'%d %B %Y' }}</small></div>
+                                                <div><small class="text-muted">انقضا: {{ token.expires_at|to_jalali_fa:'%d %B %Y' }}</small></div>
                                             {% else %}
                                                 <span class="fm-ico-bad">لینک منقضی شده</span>
                                             {% endif %}
