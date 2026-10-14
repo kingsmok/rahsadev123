@@ -8,7 +8,7 @@ from django.db import models
 from django.core.paginator import Paginator
 from django.db.models import Min, Max
 from urllib.parse import urlencode
-from django.http import JsonResponse, FileResponse, Http404
+from django.http import JsonResponse
 
 from .models import Product, ProductComment, ProductCategory, ProductBrand, PRODUCT_TYPES
 from downloads.models import DownloadToken
@@ -370,7 +370,14 @@ def product_detail(request, pid, slug):
     in_cart = False
     if request.user.is_authenticated:
         is_in_wishlist = Wishlist.objects.filter(user=request.user, product=products).exists()
-        user_tokens = list(DownloadToken.objects.filter(user=request.user, product=products).order_by('-created_at'))
+        # Tokens of cancelled/refunded orders no longer mean "already purchased":
+        # showing them hid the buy button from a refunded customer.
+        user_tokens = list(
+            DownloadToken.objects.entitled()
+            .filter(user=request.user, product=products)
+            .select_related('order')
+            .order_by('-created_at')
+        )
         already_purchased = _has_purchased_product(request.user, products)
         in_cart = products.cartitem_set.filter(cart__user=request.user).exists()
 
@@ -388,22 +395,22 @@ def product_detail(request, pid, slug):
 
 @login_required
 def download_asset(request, pid):
-    """دانلود فایل دیجیتال برای خریدار تأییدشده (از طریق توکن دانلود)."""
-    product = get_object_or_404(Product.objects.select_related('digital_asset'), pid=pid)
-    asset = getattr(product, 'digital_asset', None)
-    if asset is None:
-        raise Http404('فایلی برای این محصول ثبت نشده است.')
+    """Legacy per-product download URL (``/products/download/<pid>/``).
 
-    token = DownloadToken.objects.filter(user=request.user, product=product).order_by('-created_at').first()
-    if token is None or not token.is_valid:
+    It used to serve the file itself after checking only the token, so a
+    customer whose order had been cancelled or refunded could keep downloading
+    here although ``/downloads/<token>/`` refused them.  It now hands over to
+    that view, which is the single place deciding whether a download is allowed.
+    """
+    product = get_object_or_404(Product, pid=pid)
+    tokens = (
+        DownloadToken.objects.entitled()
+        .filter(user=request.user, product=product)
+        .select_related('order')
+        .order_by('-created_at')
+    )
+    token = next((candidate for candidate in tokens if candidate.is_valid), None)
+    if token is None:
         messages.error(request, 'شما به این فایل دسترسی ندارید یا لینک دانلود شما منقضی شده است.')
         return redirect('product:product_detail', pid=product.pid, slug=product.slug)
-
-    # ``register_download`` rechecks validity in one conditional database
-    # update, preventing concurrent requests from exceeding the token limit.
-    if not token.register_download():
-        messages.error(request, 'لینک دانلود شما منقضی شده یا به سقف تعداد دانلود رسیده است.')
-        return redirect('product:product_detail', pid=product.pid, slug=product.slug)
-
-    type(asset).objects.filter(pk=asset.pk).update(download_count=models.F('download_count') + 1)
-    return FileResponse(asset.file.open('rb'), as_attachment=True, filename=asset.file.name.rsplit('/', 1)[-1])
+    return redirect('downloads:download', token=token.token)

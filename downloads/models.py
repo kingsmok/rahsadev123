@@ -9,6 +9,20 @@ from cart.models import Order
 from product.models import Product
 
 
+#: Order statuses meaning the money went back to the customer.  A token whose
+#: order is in one of these must stop serving the file — otherwise buying a
+#: product, downloading it and asking for a refund within the return window
+#: keeps both the file and the money.  Every download path (the token link, the
+#: legacy per-product URL, the product page) relies on this one definition.
+REVOKED_ORDER_STATUSES = frozenset({'cancelled', 'refunded'})
+
+
+class DownloadTokenQuerySet(models.QuerySet):
+    def entitled(self):
+        """Tokens whose order still grants access to the file."""
+        return self.exclude(order__status__in=REVOKED_ORDER_STATUSES)
+
+
 class DownloadToken(models.Model):
     token = ShortUUIDField(
         length=32, max_length=40, unique=True, editable=False,
@@ -32,6 +46,8 @@ class DownloadToken(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
     expires_at = models.DateTimeField(null=True, blank=True, verbose_name='تاریخ انقضا')
 
+    objects = DownloadTokenQuerySet.as_manager()
+
     class Meta:
         verbose_name = 'توکن دانلود'
         verbose_name_plural = 'توکن‌های دانلود'
@@ -54,8 +70,18 @@ class DownloadToken(models.Model):
         return max(0, self.max_downloads - self.download_count)
 
     @property
+    def is_revoked(self):
+        """The order was cancelled or refunded, so the entitlement is withdrawn."""
+        return self.order.status in REVOKED_ORDER_STATUSES
+
+    @property
     def is_valid(self):
-        return self.is_active and not self.is_expired and self.download_count < self.max_downloads
+        return (
+            self.is_active
+            and not self.is_expired
+            and self.download_count < self.max_downloads
+            and not self.is_revoked
+        )
 
     def register_download(self):
         """Atomically consume one permitted download.
@@ -66,7 +92,9 @@ class DownloadToken(models.Model):
         enforced by the database as well as the view.
         """
         now = timezone.now()
-        consumed = DownloadToken.objects.filter(
+        # ``entitled()`` keeps the refund rule inside the same atomic UPDATE,
+        # so no caller can consume a download for a cancelled/refunded order.
+        consumed = DownloadToken.objects.entitled().filter(
             pk=self.pk,
             is_active=True,
             download_count__lt=F('max_downloads'),

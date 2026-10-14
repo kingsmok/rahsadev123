@@ -106,7 +106,7 @@ def order_detail(request, order_number):
             continue
 
     # توکن‌های دانلود این سفارش (فایل‌های دیجیتال)
-    download_tokens = DownloadToken.objects.filter(order=order, user=user).select_related('product')
+    download_tokens = DownloadToken.objects.filter(order=order, user=user).select_related('product', 'order')
 
     context = {
         'profile': profile,

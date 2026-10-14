@@ -148,6 +148,8 @@
                                                         دانلود ({{ token.remaining_downloads }} باقی‌مانده)
                                                     </a>
                                                 </span>
+                                            {% elif token.is_revoked %}
+                                                <span class="value fm-ico-bad">با لغو یا استرداد سفارش، دانلود غیرفعال شده است</span>
                                             {% else %}
                                                 <span class="value fm-ico-bad">لینک منقضی شده است</span>
                                             {% endif %}

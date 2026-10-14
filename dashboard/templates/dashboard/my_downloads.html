@@ -70,6 +70,8 @@
                                                     {{ token.remaining_downloads }} دانلود باقی‌مانده
                                                 </span>
                                                 <div><small class="text-muted">انقضا: {{ token.expires_at|to_jalali_fa:'%d %B %Y' }}</small></div>
+                                            {% elif token.is_revoked %}
+                                                <span class="fm-ico-bad">سفارش لغو یا مسترد شده</span>
                                             {% else %}
                                                 <span class="fm-ico-bad">لینک منقضی شده</span>
                                             {% endif %}

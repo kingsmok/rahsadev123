@@ -350,5 +350,5 @@ def successful_payment_done(request, order_number):
     order = get_object_or_404(Order, order_number=order_number, user=request.user)
     if order.status != 'paid':
         return redirect('dashboard:order_detail', order_number=order.order_number)
-    tokens = DownloadToken.objects.filter(order=order, user=request.user).select_related('product')
+    tokens = DownloadToken.objects.filter(order=order, user=request.user).select_related('product', 'order')
     return render(request, 'cart/successful_payment.html', {'order': order, 'tokens': tokens})
