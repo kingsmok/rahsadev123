@@ -326,3 +326,43 @@ class GatewayAvailabilityTests(TestCase):
         self.assertFalse(snappay.is_implemented)
         self.assertFalse(snappay.is_available)
         self.assertTrue(zarinpal.is_available)
+
+
+class CheckoutRedirectCspTests(TestCase):
+    """The payment page's CSP must let the browser follow the checkout redirect.
+
+    ``form-action`` governs every hop of a form submission's redirect chain, not
+    just the form's own ``action``.  Checkout POSTs to ``payments:start``, which
+    answers with a 302 to the gateway; with a bare ``form-action 'self'`` real
+    Chrome refused to follow it ("Sending form data to … violates … form-action")
+    and no customer could reach the payment page.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user('csp-buyer', password='Safe-pass-123!')
+        product = Product.objects.create(
+            vendor=self.user, title='فایل CSP', slug='csp-file', description='توضیح', price=40000,
+        )
+        GatewaySettings.objects.create(key='zarinpal', title='زرین‌پال', is_enabled=True, merchant_id='merchant')
+        CartItem.objects.create(cart=Cart.objects.create(user=self.user), product=product)
+        self.client.force_login(self.user)
+
+    @staticmethod
+    def _form_action(response):
+        directives = (part.strip() for part in response['Content-Security-Policy'].split(';'))
+        return next(d for d in directives if d.startswith('form-action')).split()[1:]
+
+    def test_gateway_redirect_target_is_allowed_by_the_payment_page_form_action(self):
+        from urllib.parse import urlsplit
+
+        form_action = self._form_action(self.client.get(reverse('cart:shopping_payment')))
+        self.assertIn("'self'", form_action)
+        for index, sandbox in enumerate((False, True)):
+            GatewaySettings.objects.filter(key='zarinpal').update(is_sandbox=sandbox)
+            gateway_reply = {'data': {'code': 100, 'authority': f'A{index:035d}'}}
+            with patch('payments.gateways.post_json', return_value=gateway_reply):
+                response = self.client.post(reverse('payments:start', args=['new']), {'gateway': 'zarinpal'})
+
+            self.assertEqual(response.status_code, 302)
+            target = urlsplit(response['Location'])
+            self.assertIn(f'{target.scheme}://{target.netloc}', form_action, msg=f'sandbox={sandbox}')
