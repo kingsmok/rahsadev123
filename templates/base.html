@@ -483,6 +483,7 @@
         loginUrl: '{% url "account:login" %}',
         cartAddUrl: '{% url "cart:add_to_cart" 0 %}'.replace('/0/', '/{id}/'),
         cartRemoveUrl: '{% url "cart:remove_cart_item" 0 %}'.replace('/0/', '/{id}/'),
+        cartDrawerUrl: '{% url "cart:cart_drawer" %}',
         wishlistAddUrl: '{% url "dashboard:add_to_wishlist" 0 %}'.replace('/0/', '/{id}/'),
         wishlistRemoveUrl: '{% url "dashboard:remove_from_wishlist" 0 %}'.replace('/0/', '/{id}/')
     };

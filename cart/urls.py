@@ -5,6 +5,7 @@ from . import views
 app_name = 'cart'
 urlpatterns = [
     path('', views.cart, name='cart'),
+    path('drawer/', views.cart_drawer, name='cart_drawer'),
     path('add/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
     path('remove/<int:item_id>/', views.remove_cart_item, name='remove_cart_item'),
     path('apply_coupon/', views.apply_coupon, name='apply_coupon'),

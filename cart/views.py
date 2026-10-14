@@ -6,6 +6,7 @@ from .coupons import discount_amount, release_coupon_reservation, revalidate_cou
 from .models import Cart, CartItem, Coupon, Order
 from product.models import Product
 from django.db import transaction as db_transaction
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
 
@@ -44,6 +45,18 @@ def cart(request):
         'final_price': summary['final_price'],
     }
     return render(request, 'cart/cart.html', context)
+
+
+@login_required
+@never_cache
+def cart_drawer(request):
+    """The cart drawer fragment, re-fetched by the storefront after an AJAX add.
+
+    The drawer is rendered with the page (``includes/cart_drawer.html``, fed by
+    the ``shop_func`` context processor).  Without a refresh it still said
+    "your cart is empty" right after the "added to cart" message.
+    """
+    return render(request, 'includes/cart_drawer.html')
 
 
 @login_required

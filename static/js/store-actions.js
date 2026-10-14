@@ -48,6 +48,25 @@
         }
     }
 
+    // The drawer is rendered with the page; after an AJAX add it would keep
+    // showing the old contents ("your cart is empty") until a reload.  Swap in
+    // a fresh copy of its contents, keeping the <aside> element itself (it is
+    // referenced above).  On failure the old drawer stays; the cart page is
+    // always correct.
+    function refreshCartDrawer() {
+        if (!drawer || !config.cartDrawerUrl || !window.DOMParser) return;
+        fetch(config.cartDrawerUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}, credentials: 'same-origin'})
+            .then(function (response) {
+                if (!response.ok) throw new Error('drawer refresh failed');
+                return response.text();
+            })
+            .then(function (html) {
+                var fresh = new DOMParser().parseFromString(html, 'text/html').getElementById('fm-cart-drawer');
+                if (fresh) drawer.innerHTML = fresh.innerHTML;
+            })
+            .catch(function () {});
+    }
+
     function setCartDrawer(open, trigger) {
         if (!drawer) return;
         if (open) {
@@ -148,6 +167,7 @@
             .then(function (data) {
                 element.classList.add('is-added');
                 element.setAttribute('aria-label', 'این فایل به سبد خرید افزوده شد');
+                refreshCartDrawer();
                 notify({text: data.message || 'فایل با موفقیت به سبد خرید اضافه شد.', icon: 'success', confirmButtonText: 'تأیید', confirmButtonColor: '#46a9ae'});
             })
             .catch(function (error) { showError(error.message); })

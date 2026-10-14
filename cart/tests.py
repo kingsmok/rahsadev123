@@ -399,3 +399,30 @@ class StaleCouponTotalsTests(TestCase):
         self.assertIsNone(self.cart.coupon)
         self.coupon.refresh_from_db()
         self.assertEqual(self.coupon.usage_count, 0, 'the dropped reservation is returned')
+
+
+class CartDrawerFragmentTests(TestCase):
+    """The drawer fragment re-fetched after an AJAX add must reflect the live cart."""
+
+    def setUp(self):
+        self.user = User.objects.create_user('drawer-buyer', password='Safe-pass-123!')
+        self.product = Product.objects.create(
+            vendor=self.user, title='فایل کشو', slug='drawer-file', description='توضیح', price=12000,
+        )
+
+    def test_requires_login(self):
+        response = self.client.get('/cart/drawer/')
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/account/', response['Location'])
+
+    def test_lists_items_added_after_the_page_was_rendered_and_is_not_cached(self):
+        self.client.force_login(self.user)
+        self.assertContains(self.client.get('/cart/drawer/'), 'سبد خرید شما خالی است')
+
+        self.client.post(f'/cart/add/{self.product.pk}/')
+        response = self.client.get('/cart/drawer/')
+
+        self.assertContains(response, 'فایل کشو')
+        self.assertContains(response, 'id="fm-cart-drawer"')
+        self.assertNotContains(response, 'سبد خرید شما خالی است')
+        self.assertIn('no-cache', response['Cache-Control'])
