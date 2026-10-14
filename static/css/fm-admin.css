@@ -310,6 +310,12 @@ div.breadcrumbs a:focus, div.breadcrumbs a:hover { color: var(--fm-primary-500);
 #main { display: flex; gap: 0; }
 
 /* سایدبار کناری — هم‌سبک profile-menu داشبورد: سفید، آیتم‌های فیروزه‌ای */
+/* ستون محتوا در ردیف flexِ ادمین «flex: 1 0 0%» (بدون جمع‌شدن) دارد و جنگو
+   سقفش را calc(100% - 299px) می‌گیرد، اما سایدبار این تم ۳۰۰px است؛ پس محتوای
+   پهن (فهرست تغییرات) ستون را ۲۴px از لبهٔ صفحه بیرون می‌برد. min-width:0 آن را
+   به فضای واقعیِ باقی‌مانده محدود می‌کند و جدول‌ها داخل ظرف اسکرول‌دارشان می‌مانند. */
+.main > .content { min-width: 0; }
+
 body #nav-sidebar {
     background: var(--header-bg);
     border-inline-end: 1px solid var(--adm-header-line);
@@ -778,6 +784,8 @@ html.fm-auto-dark #content #changelist .results tbody tr:hover th { background: 
 
 /* نوار انتخاب گروهی اعمال */
 #content #changelist .actions {
+    /* جنگو width:100% می‌دهد؛ با padding بالا جعبه ۳۲px از ظرفش پهن‌تر می‌شد. */
+    box-sizing: border-box;
     background: var(--fm-surface);
     border-top: 1px solid var(--adm-head-line);
     border-bottom: 1px solid var(--adm-head-line);
