@@ -216,9 +216,16 @@ def newsletter_subscribe(request):
                 status=429,
             )
         throttle.record(request, email)
-        _, created = NewsletterSubscriber.objects.get_or_create(email=email, defaults={'is_active': True})
+        subscriber, created = NewsletterSubscriber.objects.get_or_create(email=email, defaults={'is_active': True})
         if created:
             return JsonResponse({'ok': True, 'message': 'عضویت شما در خبرنامه با موفقیت ثبت شد؛ تخفیف‌ها و فایل‌های جدید را زودتر از همه دریافت می‌کنید.'})
+        if not subscriber.is_active:
+            # عضویت قبلاً غیرفعال شده بود (مثلاً توسط مدیر)؛ پیام «قبلاً ثبت
+            # شده‌اید» بدون فعال‌سازی دوباره یعنی کاربر فکر می‌کند عضو است
+            # ولی هیچ ایمیلی نمی‌گیرد — پس عضویتش را واقعاً برمی‌گردانیم.
+            subscriber.is_active = True
+            subscriber.save(update_fields=['is_active'])
+            return JsonResponse({'ok': True, 'message': 'عضویت شما در خبرنامه دوباره فعال شد؛ تخفیف‌ها و فایل‌های جدید را زودتر از همه دریافت می‌کنید.'})
         return JsonResponse({'ok': True, 'message': 'این ایمیل قبلاً در خبرنامه ثبت شده است.'})
 
     return _subscribe(request)

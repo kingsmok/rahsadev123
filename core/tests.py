@@ -553,3 +553,59 @@ class LlmsTxtTests(TestCase):
         self.assertNotIn('None', content)
         # هیچ لینک نسبی مارک‌داونی باقی نمانده است
         self.assertNotIn('](/', content)
+
+
+class NewsletterSubscribeReactivationTests(TestCase):
+    """رگرسیون: مشترک غیرفعال‌شده با عضویت دوباره باید واقعاً فعال شود.
+
+    قبلاً پیام «قبلاً ثبت شده‌اید» برمی‌گشت ولی is_active همان False
+    می‌ماند و send_newsletter هیچ‌وقت به او ایمیل نمی‌زد.
+    """
+
+    def _subscribe(self, email):
+        return self.client.post(
+            '/newsletter/subscribe/',
+            data=json.dumps({'email': email}),
+            content_type='application/json',
+        )
+
+    def test_inactive_subscriber_is_reactivated_on_resubscribe(self):
+        from core.models import NewsletterSubscriber
+
+        subscriber = NewsletterSubscriber.objects.create(
+            email='back@example.com', is_active=False)
+        response = self._subscribe('back@example.com')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['ok'])
+        self.assertIn('دوباره فعال شد', response.json()['message'])
+        subscriber.refresh_from_db()
+        self.assertTrue(subscriber.is_active)
+
+    def test_active_subscriber_stays_single_record(self):
+        from core.models import NewsletterSubscriber
+
+        self._subscribe('once@example.com')
+        response = self._subscribe('once@example.com')
+        self.assertIn('قبلاً', response.json()['message'])
+        self.assertEqual(
+            NewsletterSubscriber.objects.filter(email='once@example.com').count(), 1)
+
+
+class BareCategoryRedirectTests(TestCase):
+    """رگرسیون تعارض URL: مسیرهای دستهٔ بدون نامک فقط یک مالک داشته باشند.
+
+    قبلاً /blog/category/ هم در blog.urls (301 به فهرست مقالات) تعریف شده
+    بود هم در urls ریشه (غیرقابل‌دسترسی) و نام redirect_to_home سه بار
+    تکرار می‌شد. رفتار قابل مشاهده نباید عوض شود.
+    """
+
+    def test_blog_category_redirects_to_article_list(self):
+        response = self.client.get('/blog/category/')
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response['Location'], '/blog/')
+
+    def test_products_category_and_brand_redirect_to_shop(self):
+        for path in ('/products/category/', '/products/brand/'):
+            response = self.client.get(path)
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(response['Location'], '/products/')

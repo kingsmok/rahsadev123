@@ -52,9 +52,11 @@ urlpatterns = [
     path('cart/', include('cart.urls')),
     path('dashboard/', include('dashboard.urls')),
     path('ckeditor5/', include('django_ckeditor_5.urls')),
-    # redirect urls
-    path('products/category/', views.redirect_to_home, name='redirect_to_home'),
-    path('products/brand/', views.redirect_to_home, name='redirect_to_home'),
-    path('blog/category/', views.redirect_to_home, name='redirect_to_home'),
+    # redirect urls — مسیرهای بدون نامک به فهرست مرتبط می‌روند.
+    # /blog/category/ را خودِ اپ blog با 301 به فهرست مقالات می‌فرستد؛
+    # تعریف دوباره‌اش اینجا هم غیرقابل‌دسترسی بود (include زودتر match می‌شود)
+    # هم نام یکسانِ «redirect_to_home» را سه بار تکرار می‌کرد.
+    path('products/category/', views.redirect_to_home, name='redirect_products_category'),
+    path('products/brand/', views.redirect_to_home, name='redirect_products_brand'),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

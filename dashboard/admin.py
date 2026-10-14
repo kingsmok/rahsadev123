@@ -1,6 +1,5 @@
 from django.contrib import admin
 from . import models
-from jalali_date import datetime2jalali
 
 from core.admin_utils import to_jalali
 from jalali_date.admin import ModelAdminJalaliMixin
