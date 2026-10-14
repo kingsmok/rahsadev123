@@ -17,9 +17,32 @@ class BrowserPolicyMiddleware:
     The storefront does not use sensors, device hardware, or the Payment
     Request API (payments are redirected to a gateway), so disabling them
     reduces attack surface without changing checkout behavior.
+
+    The Content-Security-Policy is deliberately scoped to how this project
+    actually renders pages: templates rely on inline scripts/styles and
+    same-origin static assets (no third-party script/style origins exist),
+    so external script execution, plugins, base-tag hijacking and framing
+    can be denied without breaking the storefront. ``img-src`` keeps
+    ``https:`` because staff-authored rich text may legitimately embed
+    externally hosted images; images cannot execute script. Views may
+    still override the header when a page demonstrably needs more.
     """
 
     _POLICY = 'camera=(), geolocation=(), microphone=(), payment=(), usb=()'
+    _CSP = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: blob: https:; "
+        "font-src 'self' data:; "
+        "media-src 'self'; "
+        "connect-src 'self'; "
+        "object-src 'none'; "
+        "base-uri 'self'; "
+        "form-action 'self'; "
+        "frame-ancestors 'none'; "
+        "worker-src 'self'"
+    )
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -27,6 +50,7 @@ class BrowserPolicyMiddleware:
     def __call__(self, request):
         response = self.get_response(request)
         response.setdefault('Permissions-Policy', self._POLICY)
+        response.setdefault('Content-Security-Policy', self._CSP)
         return response
 
 

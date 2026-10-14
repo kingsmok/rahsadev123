@@ -13,6 +13,8 @@ from django.contrib import admin
 from django.db.models import Manager, QuerySet
 from django.http import HttpResponse
 from django.utils.html import strip_tags
+
+from core.csv_safety import csv_safe
 from jalali_date import datetime2jalali
 
 JALALI_DATETIME_FORMAT = '%Y/%m/%d — %H:%M'
@@ -119,7 +121,7 @@ class ExportCsvMixin:
         if value is None:
             return ''
         # پیش‌نمایش تصویر و ستون‌های HTML‌دار به متن ساده تبدیل می‌شوند
-        return strip_tags(str(value)).strip()
+        return csv_safe(strip_tags(str(value)).strip())
 
     @admin.action(description='خروجی CSV از موارد انتخاب‌شده')
     def export_selected_as_csv(self, request, queryset):

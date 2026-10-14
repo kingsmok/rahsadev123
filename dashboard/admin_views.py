@@ -14,6 +14,7 @@ from django.utils import timezone
 
 from blog.models import Article
 from cart.models import Order
+from core.csv_safety import csv_safe
 from core.models import Redirect
 from downloads.models import DownloadToken
 from payments.models import GatewaySettings, PaymentTransaction
@@ -117,8 +118,8 @@ def admin_export_orders(request):
         payment = order.payments.filter(status='paid').order_by('-created_at').first()
         writer.writerow([
             order.order_number,
-            order.user.get_username(),
-            order.user.email or '',
+            csv_safe(order.user.get_username()),
+            csv_safe(order.user.email or ''),
             analytics.jalali_full(order.created_at),
             order.total_price,
             order.coupon_discount,

@@ -523,6 +523,38 @@ class NewsletterSendCommandTests(TestCase):
             call_command('send_newsletter', '--subject', 'x', '--text', '  ')
 
 
+class SecurityHardeningTests(SimpleTestCase):
+    """رگرسیون‌های ممیزی امنیتی: CSP سراسری و خنثی‌سازی فرمول CSV."""
+
+    def test_csp_header_is_set_and_restrictive(self):
+        from django.test import RequestFactory
+
+        from core.middleware import BrowserPolicyMiddleware
+
+        response = BrowserPolicyMiddleware(lambda request: __import__('django.http', fromlist=['HttpResponse']).HttpResponse('ok'))(RequestFactory().get('/'))
+        csp = response['Content-Security-Policy']
+        self.assertIn("default-src 'self'", csp)
+        self.assertIn("object-src 'none'", csp)
+        self.assertIn("frame-ancestors 'none'", csp)
+        self.assertIn("form-action 'self'", csp)
+        # هیچ منبع اسکریپت خارجی مجاز نیست
+        self.assertNotIn('script-src https:', csp.replace("img-src 'self' data: blob: https:", ''))
+
+    def test_csv_safe_neutralises_formula_cells(self):
+        from core.csv_safety import csv_safe
+
+        self.assertEqual(csv_safe('=SUM(A1:A2)'), "'=SUM(A1:A2)")
+        self.assertEqual(csv_safe('+cmd'), "'+cmd")
+        self.assertEqual(csv_safe('  -2+2'), "'  -2+2")
+        self.assertEqual(csv_safe('@SUM(1)'), "'@SUM(1)")
+        self.assertEqual(csv_safe('\t=1'), "'\t=1")
+        # مقادیر عادی دست نمی‌خورند
+        self.assertEqual(csv_safe('کاربر نمونه'), 'کاربر نمونه')
+        self.assertEqual(csv_safe('demo@filemarket.ir'), 'demo@filemarket.ir')
+        self.assertEqual(csv_safe(1250000), 1250000)
+        self.assertEqual(csv_safe(''), '')
+
+
 class PersianJalaliFilterTests(SimpleTestCase):
     """نام ماه در تاریخ‌های شمسی باید فارسی باشد، نه «Meh»/«Mehr» لاتین."""
 
