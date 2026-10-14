@@ -127,7 +127,10 @@ def my_downloads(request):
     """فایل‌های خریداری‌شده کاربر به همراه لینک دانلود امن."""
     user = request.user
     profile = Profile.objects.get(user=user)
-    tokens = DownloadToken.objects.filter(user=user).select_related('product', 'order').order_by('-created_at')
+    # The template shows each product's file size/version (digital_asset).
+    tokens = DownloadToken.objects.filter(user=user).select_related(
+        'product', 'product__digital_asset', 'order',
+    ).order_by('-created_at')
 
     page_number = request.GET.get('page')
     paginator = Paginator(tokens, 10)
@@ -168,7 +171,7 @@ def cart_summary(request):
     user = request.user
     profile = Profile.objects.get(user=user)
     cart, created = Cart.objects.get_or_create(user=user)
-    cart_items = cart.items.all()
+    cart_items = cart.items.select_related('product').order_by('-created_at', '-id')
 
     # Pagination
     page_number = request.GET.get('page')

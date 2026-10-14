@@ -490,3 +490,46 @@ class AdminPanelCountersTests(TestCase):
 
         self.assertEqual(queries, baseline)
         self.assertIn('REF-A', body)
+
+
+class CustomerPageQueryTests(TestCase):
+    """My-downloads and cart-summary pages must not run a query per row."""
+
+    def setUp(self):
+        from product.models import DigitalAsset
+
+        self.user = User.objects.create_user('query-customer', password='Safe-pass-123!')
+        self.products = []
+        for index in range(8):
+            product = Product.objects.create(
+                vendor=self.user, title=f'فایل شمارش {index}', slug=f'query-file-{index}',
+                description='-', price=1000,
+            )
+            DigitalAsset.objects.create(product=product, file=f'digital-products/q{index}.zip', version='1.0')
+            self.products.append(product)
+        self.client.force_login(self.user)
+
+    def _queries(self, url):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        with CaptureQueriesContext(connection) as ctx:
+            self.assertEqual(self.client.get(url).status_code, 200)
+        return len(ctx.captured_queries)
+
+    def _add(self, products):
+        from cart.models import Cart, CartItem
+        from downloads.models import DownloadToken
+
+        cart, _ = Cart.objects.get_or_create(user=self.user)
+        for product in products:
+            order = Order.objects.create(user=self.user, total_price=1000, final_price=1000, status='paid')
+            DownloadToken.objects.create(user=self.user, product=product, order=order)
+            CartItem.objects.create(cart=cart, product=product)
+
+    def test_query_count_does_not_grow_with_rows(self):
+        urls = ('/dashboard/downloads/', '/dashboard/cart_summary/')
+        self._add(self.products[:1])
+        baseline = [self._queries(url) for url in urls]
+        self._add(self.products[1:6])
+        self.assertEqual([self._queries(url) for url in urls], baseline)
