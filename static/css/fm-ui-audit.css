@@ -1489,3 +1489,13 @@ header.Masai-header .main-menu .list .list-item.mega-menu > .sub-menu {
     font-family: "Font Awesome 6 Brands";
     font-weight: 400;
 }
+
+/* آیکن‌های آمار داشبورد قبلاً هرکدام رنگ نامرتبطی از theme قدیمی داشتند
+   (آبی/صورتی/نارنجی)؛ حالا در خانوادهٔ برند + دو رنگ معنایی محدود: */
+.fm-metric-icon--cart { color: var(--fm-primary-700); }
+.fm-metric-icon--delivered { color: var(--fm-success); }
+.fm-metric-icon--cancelled { color: var(--fm-danger); }
+.fm-metric-icon--comments { color: var(--fm-primary-700); }
+
+/* ردیف آخر شبکهٔ دسته‌بندی وقتی کامل نیست وسط‌چین شود تا تک‌آیتم تنها نماند */
+.fm-cat-grid { justify-content: center; }

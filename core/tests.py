@@ -521,6 +521,16 @@ class PersianJalaliFilterTests(SimpleTestCase):
 
         self.assertEqual(to_jalali_fa(None), '-')
 
+    def test_prices_render_with_persian_digits(self):
+        """تصمیم محصولی ممیزی طراحی: همهٔ اعداد نمایشی، از جمله قیمت، فارسی‌اند."""
+        from core.templatetags.custom_filters import format_price
+
+        self.assertEqual(format_price(1250000), '۱٬۲۵۰٬۰۰۰')
+        self.assertEqual(format_price(0), '۰')
+        # مقدار متنی/خالی همان‌طور که هست برمی‌گردد (رفتار قبلی حفظ شود)
+        self.assertEqual(format_price('توافقی'), 'توافقی')
+        self.assertIsNone(format_price(None))
+
 
 class LlmsTxtTests(TestCase):
     """فایل llms.txt — راهنمای محتوای سایت برای دستیارهای هوش مصنوعی.
@@ -548,7 +558,7 @@ class LlmsTxtTests(TestCase):
         self.assertIn('http://testserver/products/', content)
         self.assertIn('/products/category/test-themes/', content)
         # قیمت قالب‌بندی‌شده و نبود «None» برای بستهٔ توافقی
-        self.assertIn('1,250,000 تومان', content)
+        self.assertIn('۱٬۲۵۰٬۰۰۰ تومان', content)
         self.assertIn('توافقی', content)
         self.assertNotIn('None', content)
         # هیچ لینک نسبی مارک‌داونی باقی نمانده است

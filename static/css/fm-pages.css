@@ -87,7 +87,9 @@
     margin-bottom: 40px;
 }
 
-.svc-hero h1 { color: #fff; font-size: clamp(21px, 2.8vw, 28px); font-weight: 800; margin-bottom: 12px; }
+/* فلکس: آیکن ‎</>‎ ابتدای تیتر در چیدمان RTL با جریان inline به‌علت دوزبانگی
+   در انتهای بصری خط می‌نشست؛ با فلکس جای آیکن (ابتدای منطقی=راست) ثابت می‌ماند. */
+.svc-hero h1 { color: #fff; font-size: clamp(21px, 2.8vw, 28px); font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
 .svc-hero p  { color: #e9fbfb; font-size: 15px; line-height: 2.1; max-width: 760px; margin: 0 auto 18px; }
 
 .svc-hero .btn {

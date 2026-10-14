@@ -24,44 +24,44 @@
                                     <!-- Current Cart Items -->
                                     <div class="col-md-4 col-sm-6 col-6 space-bottom-15">
                                         <div class="bg-light p-3 rounded">
-                                            <div class="font-20 color-font-2d66ce">
+                                            <div class="font-20 fm-metric-icon--cart">
                                                 <i class="fa fa-shopping-cart"></i>
                                             </div>
                                             <div class="font-16">سفارشات در سبد</div>
-                                            <div class="font-18 font-weight-bold">{{ current_cart_items }}</div>
+                                            <div class="font-18 font-weight-bold">{{ current_cart_items|persian_digits }}</div>
                                         </div>
                                     </div>
 
                                     <!-- Delivered Orders -->
                                     <div class="col-md-4 col-sm-6 col-6 space-bottom-15">
                                         <div class="bg-light p-3 rounded">
-                                            <div class="font-20 color-font-2dce93">
+                                            <div class="font-20 fm-metric-icon--delivered">
                                                 <i class="fa fa-check-circle"></i>
                                             </div>
                                             <div class="font-16">تحویل داده شده</div>
-                                            <div class="font-18 font-weight-bold">{{ delivered_orders }}</div>
+                                            <div class="font-18 font-weight-bold">{{ delivered_orders|persian_digits }}</div>
                                         </div>
                                     </div>
 
                                     <!-- Cancelled Orders -->
                                     <div class="col-md-4 col-sm-6 col-6 space-bottom-15">
                                         <div class="bg-light p-3 rounded">
-                                            <div class="font-20 color-font-ce2d9b">
+                                            <div class="font-20 fm-metric-icon--cancelled">
                                                 <i class="fa fa-undo"></i>
                                             </div>
                                             <div class="font-16">لغو شده</div>
-                                            <div class="font-18 font-weight-bold">{{ cancelled_orders }}</div>
+                                            <div class="font-18 font-weight-bold">{{ cancelled_orders|persian_digits }}</div>
                                         </div>
                                     </div>
 
                                     <!-- Comments Count -->
                                     <div class="col-md-4 col-sm-6 col-6 space-bottom-15">
                                         <div class="bg-light p-3 rounded">
-                                            <div class="font-20 fm-ico-warn">
+                                            <div class="font-20 fm-metric-icon--comments">
                                                 <i class="fa fa-comment"></i>
                                             </div>
                                             <div class="font-16">نظرات ثبت شده</div>
-                                            <div class="font-18 font-weight-bold">{{ comments_count }}</div>
+                                            <div class="font-18 font-weight-bold">{{ comments_count|persian_digits }}</div>
                                         </div>
                                     </div>
 
@@ -72,7 +72,7 @@
                                                 <i class="fa fa-heart"></i>
                                             </div>
                                             <div class="font-16">محصولات مورد علاقه</div>
-                                            <div class="font-18 font-weight-bold">{{ wishlist_products_count }}</div>
+                                            <div class="font-18 font-weight-bold">{{ wishlist_products_count|persian_digits }}</div>
                                         </div>
                                     </div>
 
@@ -83,7 +83,7 @@
                                                 <i class="fa fa-bell"></i>
                                             </div>
                                             <div class="font-16">اعلان ها</div>
-                                            <div class="font-18 font-weight-bold">{{ user_notifications_count }}</div>
+                                            <div class="font-18 font-weight-bold">{{ user_notifications_count|persian_digits }}</div>
                                         </div>
                                     </div>
                                 </div>

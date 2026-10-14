@@ -37,7 +37,7 @@
                     </header>
                     <div class="table-responsive default">
                         <table class="table">
-                            <thead>
+                            {% if cart_items %}<thead>
                             <tr>
                                 <th scope="col">فایل</th>
                                 <th scope="col">عنوان</th>
@@ -45,7 +45,7 @@
                                 <th scope="col">قیمت</th>
                                 <th scope="col">قیمت نهایی</th>
                             </tr>
-                            </thead>
+                            </thead>{% endif %}
                             <tbody>
                             {% for item in cart_items %}
                                 <tr class="cart_item">

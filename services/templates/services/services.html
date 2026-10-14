@@ -41,9 +41,9 @@
                                 {% endif %}
                             </div>
                             <div class="meta">
-                                <i class="fa fa-clock" aria-hidden="true"></i> تحویل {{ package.delivery_days }} روز
+                                <i class="fa fa-clock" aria-hidden="true"></i> تحویل {{ package.delivery_days|persian_digits }} روز
                                 &nbsp;|&nbsp;
-                                <i class="fa fa-rotate" aria-hidden="true"></i> {{ package.revisions }} بازنگری
+                                <i class="fa fa-rotate" aria-hidden="true"></i> {{ package.revisions|persian_digits }} بازنگری
                             </div>
                             <ul>
                                 {% for feature in package.features_list %}

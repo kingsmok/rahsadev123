@@ -5,11 +5,17 @@ register = template.Library()
 
 @register.filter
 def format_price(value):
-    """قالب‌بندی قیمت با جداکننده هزارگان؛ در برابر مقدار خالی یا متنی مقاوم است."""
+    """قالب‌بندی قیمت: ارقام فارسی با جداکنندهٔ هزارگان فارسی (٬).
+
+    تصمیم محصولی (ممیزی طراحی): همهٔ اعداد نمایشی سایت فارسی باشند،
+    پس قیمت‌ها هم مثل تاریخ‌ها با ارقام فارسی رندر می‌شوند. در برابر
+    مقدار خالی یا متنی مقاوم است و همان را برمی‌گرداند.
+    """
     try:
-        return f"{int(value):,}"
+        formatted = f"{int(value):,}"
     except (TypeError, ValueError):
         return value
+    return persian_digits(formatted).replace(',', '٬')
 
 
 @register.filter

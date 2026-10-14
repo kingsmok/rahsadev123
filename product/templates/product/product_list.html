@@ -20,7 +20,7 @@
                         </header>
                         <div class="row">
                             <div class="col-12">
-                                <div class="row">
+                                <div class="row fm-cat-grid">
                                     {% for category in categories %}
                                         <div class="col-6 col-md-2 contact-bigicon">
                                             <a href="{% url 'product:category_product_list' category.slug %}">
@@ -178,9 +178,9 @@
                                             {% if page == '...' %}
                                                 <span class="page-number">...</span>
                                             {% elif products.number == page %}
-                                                <a href="?page={{ page }}{% if querystring %}&{{ querystring }}{% endif %}" class="page-number active">{{ page }}</a>
+                                                <a href="?page={{ page }}{% if querystring %}&{{ querystring }}{% endif %}" class="page-number active">{{ page|persian_digits }}</a>
                                             {% else %}
-                                                <a href="?page={{ page }}{% if querystring %}&{{ querystring }}{% endif %}" class="page-number">{{ page }}</a>
+                                                <a href="?page={{ page }}{% if querystring %}&{{ querystring }}{% endif %}" class="page-number">{{ page|persian_digits }}</a>
                                             {% endif %}
                                         {% endfor %}
                                         {% if products.has_next %}
