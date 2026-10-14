@@ -1479,3 +1479,13 @@ header.Masai-header .main-menu .list .list-item.mega-menu > .sub-menu {
 /* آیتم فعال منوی پروفایل داشبورد */
 .responsive-profile-menu .dropdown-menu a.active,
 .dropdown-menu .dropdown-item.active { color: var(--fm-primary-700); }
+
+/* آیکن‌های برند با کلاس قدیمی «fa» نوشته می‌شوند (دسته‌بندی‌ها از دیتابیس،
+   شبکه‌های اجتماعی فوتر) ولی گلیفشان فقط در فونت Brands هست؛ بدون این پل،
+   مربع خالی (tofu) رندر می‌شد. فونت Brands در base لود می‌شود. */
+.fa.fa-wordpress, .fa.fa-instagram, .fa.fa-telegram, .fa.fa-whatsapp,
+.fa.fa-youtube, .fa.fa-linkedin, .fa.fa-github, .fa.fa-android,
+.fa.fa-apple, .fa.fa-chrome, .fa.fa-firefox, .fa.fa-google {
+    font-family: "Font Awesome 6 Brands";
+    font-weight: 400;
+}
