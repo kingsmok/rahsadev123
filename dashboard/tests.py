@@ -259,6 +259,17 @@ class AdminIndexBrandingTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'fm-admin.css')
 
+    def test_admin_pages_do_not_print_template_comments(self):
+        # کامنت‌های چندخطیِ {# … #} در admin/base_site.html خام بالای همهٔ صفحات
+        # ادمین (از جمله صفحهٔ ورود) چاپ می‌شدند و <head> را زودتر از موعد می‌بستند.
+        responses = [self.client.get(reverse('admin:index'))]
+        self.client.logout()
+        responses.append(self.client.get(reverse('admin:login')))
+        for response in responses:
+            self.assertNotContains(response, '{#')
+            self.assertNotContains(response, '#}')
+            self.assertContains(response, '<h1 id="site-name">')
+
 
 class ProfileImageSizeLimitTests(TestCase):
     """A customer's avatar upload must be bounded in size."""

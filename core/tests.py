@@ -4,14 +4,18 @@ import re
 import sys
 import tempfile
 from io import BytesIO, StringIO
+from pathlib import Path
 from unittest.mock import patch
 
+from django.apps import apps
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.template import Context
+from django.template.base import Lexer, TokenType
 from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from PIL import Image
@@ -671,3 +675,48 @@ class BareCategoryRedirectTests(TestCase):
             response = self.client.get(path)
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response['Location'], '/products/')
+
+
+class TemplateCommentSyntaxTests(SimpleTestCase):
+    """کامنتِ {# … #} در جنگو فقط تک‌خطی است.
+
+    اگر {# و #} در یک خط نباشند جنگو آن را کامنت نمی‌شناسد و متنش خام در
+    صفحه چاپ می‌شود؛ این باگ یک بار در cart_drawer.html و بار دیگر در
+    admin/base_site.html رخ داد. کامنت چندخطی باید {% comment %} باشد.
+    """
+
+    @staticmethod
+    def _project_template_files():
+        base_dir = Path(settings.BASE_DIR).resolve()
+        directories = [Path(path) for engine in settings.TEMPLATES for path in engine.get('DIRS', [])]
+        # فقط اپ‌های خودِ پروژه؛ قالب‌های جنگو و بسته‌های نصب‌شده بررسی نمی‌شوند،
+        # حتی وقتی .venv (مثل run.sh) داخل پوشهٔ پروژه ساخته شده باشد.
+        directories += [
+            Path(config.path) / 'templates'
+            for config in apps.get_app_configs()
+            if Path(config.path).resolve().parent == base_dir
+        ]
+        for directory in directories:
+            if directory.is_dir():
+                yield from sorted(path for path in directory.rglob('*') if path.is_file())
+
+    def test_project_templates_have_no_multiline_hash_comments(self):
+        leaks = []
+        for path in self._project_template_files():
+            try:
+                source = path.read_text(encoding='utf-8')
+            except UnicodeDecodeError:
+                continue  # فایل باینری، قالب نیست
+            # توکن‌سازِ خودِ جنگو: {# … #} تک‌خطی توکن COMMENT می‌شود و نسخهٔ
+            # چندخطی‌اش TEXT می‌ماند، یعنی عیناً در خروجی چاپ می‌شود.
+            for token in Lexer(source).tokenize():
+                if token.token_type != TokenType.TEXT:
+                    continue
+                for match in re.finditer(r'\{#', token.contents):
+                    line = token.lineno + token.contents.count('\n', 0, match.start())
+                    leaks.append(f'{os.path.relpath(path, settings.BASE_DIR)}:{line}')
+        self.assertEqual(
+            leaks, [],
+            'این کامنت‌های {# … #} چندخطی‌اند و خام در صفحه چاپ می‌شوند؛ '
+            'تک‌خطی‌شان کنید یا از {% comment %} … {% endcomment %} استفاده کنید.',
+        )
