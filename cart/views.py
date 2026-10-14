@@ -128,7 +128,15 @@ def apply_coupon(request):
                 messages.error(request, 'سبد خرید شما خالی است')
                 return redirect('cart:cart')
 
-            coupon = Coupon.objects.select_for_update().get(code__iexact=coupon_code)
+            # Codes are matched case-insensitively.  Prefer an exact-case match;
+            # an ambiguous code (legacy case-variant duplicates) is refused
+            # instead of raising MultipleObjectsReturned.
+            matches = list(Coupon.objects.select_for_update().filter(code__iexact=coupon_code))
+            coupon = next((c for c in matches if c.code == coupon_code), None)
+            if coupon is None and len(matches) == 1:
+                coupon = matches[0]
+            if coupon is None:
+                raise Coupon.DoesNotExist
             if cart.coupon:
                 messages.warning(request, 'یک کد تخفیف قبلاً اعمال شده است')
                 return redirect('cart:cart')

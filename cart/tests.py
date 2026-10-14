@@ -461,3 +461,41 @@ class AdminChangelistQueryTests(TestCase):
         self._add_rows(8, 2)
         self.assertEqual([self._queries(url) for url in urls], baseline)
         self.assertContains(self.client.get('/admin/cart/order/'), '1 قلم')
+
+
+class CouponCodeCaseTests(TestCase):
+    """Case-variant coupon codes must not crash checkout and cannot be created anew."""
+
+    def setUp(self):
+        self.user = User.objects.create_user('case-buyer', password='Safe-pass-123!')
+        product = Product.objects.create(vendor=self.user, title='فایل حروف', slug='case-file',
+                                         description='توضیح', price=100000)
+        CartItem.objects.create(cart=Cart.objects.create(user=self.user), product=product)
+        self.valid = dict(discount_type='fixed', discount_value=1000,
+                          valid_from=timezone.now() - timedelta(days=1), valid_to=timezone.now() + timedelta(days=1))
+        self.client.force_login(self.user)
+
+    def test_existing_case_variants_do_not_cause_a_server_error(self):
+        upper = Coupon.objects.create(code='SAVE5', **self.valid)
+        Coupon.objects.create(code='save5', **self.valid)  # legacy duplicate (bypassing clean)
+
+        response = self.client.post('/cart/apply_coupon/', {'coupon_code': 'SAVE5'})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Cart.objects.get(user=self.user).coupon, upper)  # exact-case match wins
+
+        self.client.post('/cart/remove_coupon/')
+        response = self.client.post('/cart/apply_coupon/', {'coupon_code': 'Save5'})  # ambiguous
+        self.assertEqual(response.status_code, 302)
+        self.assertIsNone(Cart.objects.get(user=self.user).coupon)
+
+    def test_a_case_variant_duplicate_is_rejected_by_validation(self):
+        from django.core.exceptions import ValidationError
+
+        Coupon.objects.create(code='SAVE5', **self.valid)
+        with self.assertRaises(ValidationError) as caught:
+            Coupon(code='save5', **self.valid).full_clean()
+        self.assertIn('code', caught.exception.message_dict)
+        # Single coupons are still matched regardless of case.
+        Coupon.objects.filter(code='SAVE5').update(code='ONLY1')
+        self.client.post('/cart/apply_coupon/', {'coupon_code': 'only1'})
+        self.assertEqual(Cart.objects.get(user=self.user).coupon.code, 'ONLY1')

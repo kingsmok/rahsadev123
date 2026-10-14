@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import User
 from shortuuid.django_fields import ShortUUIDField
@@ -39,6 +40,15 @@ class Coupon(models.Model):
 
     def __str__(self):
         return self.code
+
+    def clean(self):
+        # Customers type codes in any case and checkout looks them up with
+        # ``code__iexact``; "WELCOME10" next to "welcome10" made that lookup
+        # raise MultipleObjectsReturned (HTTP 500).  ``unique=True`` alone is
+        # case-sensitive, so reject case-insensitive duplicates here.
+        super().clean()
+        if self.code and Coupon.objects.filter(code__iexact=self.code).exclude(pk=self.pk).exists():
+            raise ValidationError({'code': 'این کد تخفیف (بدون توجه به حروف بزرگ و کوچک) قبلاً ثبت شده است.'})
 
     def is_valid(self):
         """Whether a *new* reservation of this coupon may be taken now.
