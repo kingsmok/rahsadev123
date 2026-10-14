@@ -3,6 +3,23 @@ from django.db import models
 from cart.models import Order
 
 
+class PaymentTransactionQuerySet(models.QuerySet):
+    def unfulfilled(self):
+        """Verified (the customer WAS charged) but not deliverable: the refund queue."""
+        return self.filter(status='failed', raw_response__unfulfilled=True)
+
+    def declined(self):
+        """Failed attempts in which no money was taken.
+
+        Not ``exclude(raw_response__unfulfilled=True)``: for rows without that
+        key the JSON comparison is NULL, so the negation drops *every* row
+        (verified on SQLite).  A primary-key subquery is exact on any backend.
+        """
+        return self.filter(status='failed').exclude(
+            pk__in=self.model.objects.unfulfilled().values('pk'),
+        )
+
+
 class PaymentTransaction(models.Model):
     GATEWAYS = [
         ('zarinpal', 'زرین‌پال'), ('snappay', 'اسنپ‌پی'), ('torobpay', 'ترب‌پی'),
@@ -19,6 +36,8 @@ class PaymentTransaction(models.Model):
     raw_response = models.JSONField(default=dict, blank=True, verbose_name='پاسخ درگاه')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = PaymentTransactionQuerySet.as_manager()
 
     class Meta:
         verbose_name = 'تراکنش پرداخت'

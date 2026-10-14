@@ -218,10 +218,22 @@
                 <div><b class="ap-num">{{ pending.pending_orders|persian_digits }} سفارش در انتظار پرداخت</b>
                     <span><a href="{% url 'admin:cart_order_changelist' %}?status__exact=pending">پیگیری و یادآوری</a></span></div>
             </div>
+            {% if pending.unfulfilled_payments %}
+            <div class="ap-alert is-danger">
+                <i class="fa-solid fa-scale-unbalanced" aria-hidden="true"></i>
+                <div><b class="ap-num">{{ pending.unfulfilled_payments|persian_digits }} پرداختِ تأییدشده و تحویل‌نشده</b>
+                    <span><a href="{% url 'admin_health' %}">پول از مشتری کسر شده — استرداد یا پیگیری</a></span></div>
+            </div>
+            {% endif %}
             <div class="ap-alert {% if pending.failed_payments %}is-danger{% else %}is-success{% endif %}">
                 <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
                 <div><b class="ap-num">{{ pending.failed_payments|persian_digits }} تراکنش ناموفق</b>
                     <span><a href="{% url 'admin:payments_paymenttransaction_changelist' %}?status__exact=failed">بررسی لاگ درگاه</a></span></div>
+            </div>
+            <div class="ap-alert {% if pending.pending_comments %}is-warning{% else %}is-success{% endif %}">
+                <i class="fa-solid fa-comments" aria-hidden="true"></i>
+                <div><b class="ap-num">{{ pending.pending_comments|persian_digits }} دیدگاه در انتظار تأیید</b>
+                    <span><a href="{% url 'admin:product_productcomment_changelist' %}?status__exact=pending">بررسی و انتشار</a></span></div>
             </div>
             <div class="ap-alert {% if pending.new_service_requests %}is-warning{% else %}is-success{% endif %}">
                 <i class="fa-solid fa-envelope-open-text" aria-hidden="true"></i>

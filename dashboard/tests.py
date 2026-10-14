@@ -433,3 +433,60 @@ class CustomerDashboardConsistencyTests(TestCase):
         for field in ('delete_address', 'set_default'):
             response = self.client.post(reverse('dashboard:user_addresses'), {field: 'abc'})
             self.assertEqual(response.status_code, 404, field)
+
+
+class AdminPanelCountersTests(TestCase):
+    """Staff counters must not mix charged-but-undelivered payments with declines."""
+
+    setUp = AdminReconciliationQueueTests.setUp
+    _transaction = AdminReconciliationQueueTests._transaction
+
+    def test_an_undelivered_payment_is_not_also_listed_or_counted_as_failed(self):
+        undelivered = self._transaction({'ref_id': 'REF-9', 'error': 'x', 'unfulfilled': True})
+        declined = self._transaction({'error': 'انصراف'})
+        bare_decline = self._transaction({})
+
+        health = self.client.get('/admin-panel/health/')
+        failed_ids = [t.pk for t in health.context['failed_payments']]
+        self.assertNotIn(undelivered.pk, failed_ids)
+        self.assertCountEqual(failed_ids, [declined.pk, bare_decline.pk])
+
+        home = self.client.get('/admin-panel/')
+        self.assertEqual(home.context['kpis']['failed_payments'], 2)
+        self.assertEqual(home.context['pending']['failed_payments'], 2)
+        self.assertEqual(home.context['pending']['unfulfilled_payments'], 1)
+        self.assertContains(home, 'پرداختِ تأییدشده و تحویل‌نشده')
+
+    def test_comments_awaiting_moderation_are_counted_and_linked(self):
+        from product.models import ProductComment
+
+        self._transaction({})
+        product = Product.objects.first()
+        ProductComment.objects.create(product=product, author=self.staff, body='در انتظار')  # default: pending
+        ProductComment.objects.create(product=product, author=self.staff, body='منتشر', status='published')
+
+        home = self.client.get('/admin-panel/')
+
+        self.assertEqual(home.context['pending']['pending_comments'], 1)
+        self.assertContains(home, 'productcomment/?status__exact=pending')
+
+    def test_order_export_runs_a_constant_number_of_queries(self):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        def export_queries():
+            with CaptureQueriesContext(connection) as ctx:
+                response = self.client.get('/admin-panel/export/orders/?range=365')
+            self.assertEqual(response.status_code, 200)
+            return len(ctx.captured_queries), response.content.decode('utf-8')
+
+        paid = self._transaction({'ref_id': 'REF-A'}, status='paid')
+        Order.objects.filter(pk=paid.order_id).update(status='paid')
+        PaymentTransaction.objects.filter(pk=paid.pk).update(ref_id='REF-A')
+        baseline, _ = export_queries()
+        for _ in range(4):
+            self._transaction({}, status='paid')
+        queries, body = export_queries()
+
+        self.assertEqual(queries, baseline)
+        self.assertIn('REF-A', body)

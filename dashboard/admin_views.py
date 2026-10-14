@@ -8,6 +8,7 @@ import csv
 from datetime import timedelta
 
 from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Prefetch
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
@@ -102,6 +103,12 @@ def admin_export_orders(request):
         Order.objects.select_related('user')
         .filter(created_at__gte=start)
         .order_by('-created_at')
+        # One query for all paid payments instead of one per exported order.
+        .prefetch_related(Prefetch(
+            'payments',
+            queryset=PaymentTransaction.objects.filter(status='paid').order_by('-created_at'),
+            to_attr='paid_payments',
+        ))
     )
 
     response = HttpResponse(content_type='text/csv; charset=utf-8')
@@ -115,7 +122,7 @@ def admin_export_orders(request):
         'تخفیف', 'مبلغ پرداختی', 'وضعیت', 'درگاه', 'کد رهگیری',
     ])
     for order in orders:
-        payment = order.payments.filter(status='paid').order_by('-created_at').first()
+        payment = order.paid_payments[0] if order.paid_payments else None
         writer.writerow([
             order.order_number,
             csv_safe(order.user.get_username()),
@@ -148,15 +155,14 @@ def admin_health(request):
         'draft_articles': Article.objects.filter(status='draft').order_by('-created_at'),
         'low_stock': analytics.low_stock_products(limit=20),
         'pending_orders': Order.objects.filter(status='pending').order_by('-created_at'),
-        'failed_payments': PaymentTransaction.objects.filter(status='failed').order_by('-created_at')[:30],
+        'failed_payments': PaymentTransaction.objects.declined().select_related('order').order_by('-created_at')[:30],
         # Money that the gateway confirmed but that could not be delivered to
         # the order (the customer had just cancelled it, or the last licence
         # sold out).  These look like failed payments in the database, but the
         # customer HAS been charged, so they must not be read as declines.
         # Showing them separately is what makes the refund queue actionable.
-        'unfulfilled_payments': PaymentTransaction.objects.filter(
-            status='failed', raw_response__unfulfilled=True,
-        ).order_by('-created_at')[:30],
+        'unfulfilled_payments': PaymentTransaction.objects.unfulfilled()
+        .select_related('order').order_by('-created_at')[:30],
         'unconfigured_gateways': [
             gateway for gateway in GatewaySettings.objects.all()
             if gateway.is_enabled and not gateway.is_configured
