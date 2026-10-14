@@ -461,3 +461,43 @@ class DatabaseUrlParsingTests(SimpleTestCase):
 
         with self.assertRaises(ImproperlyConfigured):
             _database_from_url('mysql://user@host/db')
+
+
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+class NewsletterSendCommandTests(TestCase):
+    def _subscriber_model(self):
+        from core.models import NewsletterSubscriber
+
+        return NewsletterSubscriber
+
+    """دستور send_newsletter باید واقعاً و فقط به مشترکان فعال ارسال کند."""
+
+    def test_sends_only_to_active_subscribers(self):
+        from django.core import mail
+
+        self._subscriber_model().objects.create(email='active@example.com', is_active=True)
+        self._subscriber_model().objects.create(email='gone@example.com', is_active=False)
+
+        out = StringIO()
+        call_command('send_newsletter', '--subject', 'خبرنامه تست',
+                     '--text', 'متن خبرنامه', stdout=out)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ['active@example.com'])
+        self.assertIn('1 موفق', out.getvalue())
+
+    def test_dry_run_sends_nothing(self):
+        from django.core import mail
+
+        self._subscriber_model().objects.create(email='a@example.com', is_active=True)
+        out = StringIO()
+        call_command('send_newsletter', '--subject', 'x', '--text', 'y',
+                     '--dry-run', stdout=out)
+        self.assertEqual(len(mail.outbox), 0)
+        self.assertIn('dry-run', out.getvalue())
+
+    def test_empty_body_is_rejected(self):
+        from django.core.management.base import CommandError
+
+        with self.assertRaises(CommandError):
+            call_command('send_newsletter', '--subject', 'x', '--text', '  ')

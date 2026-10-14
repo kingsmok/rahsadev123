@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 from django.contrib.auth.models import User
 from django.test import SimpleTestCase, TestCase, override_settings
+from django.urls import reverse
 
 from cart.models import Cart, CartItem, Order
 from payments import views as payment_views
@@ -34,6 +35,8 @@ class PaymentGatewayHostValidationTests(SimpleTestCase):
 
 class _VerifyingGateway:
     """Minimal gateway adapter that reports a confirmed payment."""
+
+    implemented = True
 
     def verify(self, transaction, data):
         return True, {'ref_id': 'REF-AUDIT'}
@@ -251,6 +254,7 @@ class GatewayErrorDisclosureTests(TestCase):
     def test_gateway_exception_is_not_shown_to_the_customer(self):
         class ExplodingGateway:
             code = 'zarinpal'
+            implemented = True
 
             def start(self, transaction, callback_url):
                 raise RuntimeError(
@@ -277,6 +281,7 @@ class GatewayErrorDisclosureTests(TestCase):
     def test_customer_gets_a_reference_to_quote(self):
         class ExplodingGateway:
             code = 'zarinpal'
+            implemented = True
 
             def start(self, transaction, callback_url):
                 raise RuntimeError('boom')
@@ -290,3 +295,34 @@ class GatewayErrorDisclosureTests(TestCase):
 
         order = Order.objects.get(user=self.user, status='pending')
         self.assertContains(response, order.order_number)
+
+
+class GatewayAvailabilityTests(TestCase):
+    """درگاهِ پیاده‌سازی‌نشده نباید به مشتری پیشنهاد یا برای شروع پرداخت قبول شود."""
+
+    def setUp(self):
+        self.user = User.objects.create_user('gw-user', password='Safe-pass-123!')
+        self.product = Product.objects.create(vendor=self.user, title='فایل', slug='gw-file', price=1000)
+        self.cart = Cart.objects.create(user=self.user)
+        CartItem.objects.create(cart=self.cart, product=self.product)
+        GatewaySettings.objects.create(
+            key='snappay', title='اسنپ‌پی', is_enabled=True,
+            client_id='cid', client_secret='csecret',
+        )
+        GatewaySettings.objects.create(
+            key='zarinpal', title='زرین‌پال', is_enabled=True, merchant_id='merchant-1',
+        )
+        self.client.force_login(self.user)
+
+    def test_unimplemented_gateway_is_not_offered(self):
+        response = self.client.get(reverse('cart:shopping_payment'))
+        offered = [g.key for g in response.context['enabled_gateways']]
+        self.assertEqual(offered, ['zarinpal'])
+
+    def test_availability_flags(self):
+        snappay = GatewaySettings.objects.get(key='snappay')
+        zarinpal = GatewaySettings.objects.get(key='zarinpal')
+        self.assertTrue(snappay.is_enabled and snappay.is_configured)
+        self.assertFalse(snappay.is_implemented)
+        self.assertFalse(snappay.is_available)
+        self.assertTrue(zarinpal.is_available)

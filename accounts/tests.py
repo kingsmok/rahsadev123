@@ -197,3 +197,41 @@ class RegistrationThrottleTests(TestCase):
         other = dict(self.data, username='other-user', email='other@example.com')
         response = self.client.post(self.url, other)
         self.assertEqual(response.status_code, 302)
+
+
+class CardNumberStorageTests(TestCase):
+    """شمارهٔ کامل کارت هرگز نباید در دیتابیس بنشیند؛ فقط ۴ رقم آخر."""
+
+    def setUp(self):
+        self.user = User.objects.create_user('card-user', password='Safe-pass-123!')
+        self.profile = self.user.profile
+
+    def _form(self, card):
+        from dashboard.forms import ProfileEditForm
+
+        return ProfileEditForm(
+            data={'first_name': 'الف', 'last_name': 'ب', 'email': 'c@example.com',
+                  'about_me': '', 'phone': '', 'card_number': card},
+            instance=self.profile,
+        )
+
+    def test_full_card_is_reduced_to_last_four(self):
+        form = self._form('6037498514785236')
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.card_number, '5236')
+        self.assertEqual(self.profile.masked_card_number, '**** **** **** 5236')
+
+    def test_prefilled_last_four_is_kept_not_rejected(self):
+        self.profile.card_number = '5236'
+        self.profile.save(update_fields=['card_number'])
+        form = self._form('5236')
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.card_number, '5236')
+
+    def test_partial_card_is_rejected(self):
+        form = self._form('123456')
+        self.assertFalse(form.is_valid())

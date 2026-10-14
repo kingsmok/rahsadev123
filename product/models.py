@@ -291,7 +291,13 @@ class ProductComment(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_comments', verbose_name='محصول مربوطه')
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='product_comments', verbose_name='نویسنده دیدگاه')
     body = models.TextField(verbose_name='متن دیدگاه')
-    status = models.CharField(choices=STATUS, max_length=10, default='published', verbose_name='وضعیت')
+    # دیدگاه پیش از نمایش عمومی باید تأیید شود؛ رابط کاربری هم از ابتدا به
+    # کاربر همین را وعده می‌دهد («پس از بررسی نمایش داده می‌شود») ولی پیش‌فرضِ
+    # قبلی انتشار فوری بود. تأیید از ادمین (list_editable وضعیت) انجام می‌شود.
+    status = models.CharField(
+        choices=STATUS + (('pending', 'در انتظار تأیید'),),
+        max_length=10, default='pending', verbose_name='وضعیت',
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
 
     class Meta:

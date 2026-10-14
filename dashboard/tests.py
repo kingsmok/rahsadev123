@@ -69,7 +69,7 @@ class AccountDataRegressionTests(TestCase):
         profile.last_name = 'نام خانوادگی'
         profile.email = 'old@example.test'
         profile.phone = '09121234567'
-        profile.card_number = '6037498514785236'
+        profile.card_number = '5236'  # فقط ۴ رقم آخر نگه داشته می‌شود
         profile.about_me = 'متن قبلی'
         profile.save()
 
@@ -94,14 +94,14 @@ class AccountDataRegressionTests(TestCase):
         self.assertRedirects(normalized, reverse('dashboard:user_profile'))
         profile.refresh_from_db()
         self.assertEqual(profile.phone, '09121234567')
-        self.assertEqual(profile.card_number, '6037498514785236')
+        self.assertEqual(profile.card_number, '5236')
         profile_page = self.client.get(reverse('dashboard:user_profile'))
         self.assertContains(profile_page, '**** **** **** 5236')
         self.assertNotContains(profile_page, '6037498514785236')
 
     def test_cancellation_request_is_digital_only_and_has_a_non_javascript_fallback(self):
         profile = self.user.profile
-        profile.card_number = '6037498514785236'
+        profile.card_number = '5236'
         profile.save()
         url = reverse('dashboard:orders_return')
 

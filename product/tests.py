@@ -140,3 +140,38 @@ class ProductCommentThrottleTests(TestCase):
         )
         self.assertEqual(response.status_code, 403)
         self.assertEqual(ProductComment.objects.count(), 0)
+
+
+class CommentModerationTests(TestCase):
+    """دیدگاه تا پیش از تأیید مدیر نباید عمومی دیده شود."""
+
+    def setUp(self):
+        self.user = User.objects.create_user('seller3', password='safe-pass-123')
+        self.product = Product.objects.create(
+            vendor=self.user, title='فایل نظارت', slug='moderated-file',
+            description='توضیح', price=1000,
+        )
+        self.author = User.objects.create_user('mod-author', password='Safe-pass-123!')
+        self.url = f'/products/{self.product.pid}/{self.product.slug}/'
+        self.client.force_login(self.author)
+
+    def _post_comment(self):
+        return self.client.post(
+            self.url, data='{"body": "دیدگاه در انتظار"}',
+            content_type='application/json', HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+    def test_new_comment_is_pending_and_hidden_until_approved(self):
+        response = self._post_comment()
+        self.assertEqual(response.status_code, 200, response.content)
+        comment = ProductComment.objects.get(author=self.author)
+        self.assertEqual(comment.status, 'pending')
+
+        self.client.logout()
+        page = self.client.get(self.url)
+        self.assertNotContains(page, 'دیدگاه در انتظار')
+
+        comment.status = 'published'
+        comment.save(update_fields=['status'])
+        page = self.client.get(self.url)
+        self.assertContains(page, 'دیدگاه در انتظار')

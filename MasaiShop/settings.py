@@ -209,6 +209,28 @@ DATABASES = {
     )
 }
 
+# Cache: پیش‌فرض حافظهٔ محلیِ هر پردازه است (توسعه و هاست تک‌پردازه کافی است).
+# در استقرار چندپردازه‌ای CACHE_URL=redis://127.0.0.1:6379/1 بگذارید تا
+# محدودسازی نرخ و شمارنده‌ها بین همهٔ پردازه‌ها مشترک شوند؛ بک‌اند Redis
+# داخل خودِ جنگو است و وابستگی تازه‌ای لازم نیست.
+_cache_url = os.environ.get('CACHE_URL', '')
+if _cache_url.startswith(('redis://', 'rediss://')):
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': _cache_url,
+        }
+    }
+elif _cache_url in ('', 'locmem://'):
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'rahsadev-local',
+        }
+    }
+else:
+    raise ImproperlyConfigured(f'Unsupported CACHE_URL: {_cache_url!r}')
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

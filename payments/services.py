@@ -4,6 +4,7 @@ from .base import PaymentGateway
 
 class ZarinpalGateway(PaymentGateway):
     code = 'zarinpal'
+    implemented = True
 
     def start(self, transaction, callback_url):
         return zarinpal_request(transaction, callback_url)

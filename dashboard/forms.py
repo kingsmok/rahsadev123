@@ -78,6 +78,13 @@ class AddressForm(forms.ModelForm):
 
 
 class ProfileEditForm(forms.ModelForm):
+    # کاربر شمارهٔ کامل را وارد می‌کند اما فقط ۴ رقم آخرش ذخیره می‌شود؛
+    # فیلد فرم عمداً ۱۶ رقمی می‌ماند و در clean_ به ۴ رقم تبدیل می‌شود.
+    card_number = forms.CharField(
+        max_length=16, required=False,
+        widget=forms.TextInput(attrs={'inputmode': 'numeric', 'autocomplete': 'off', 'dir': 'ltr'}),
+    )
+
     class Meta:
         model = Profile
         fields = ['first_name', 'last_name', 'email', 'about_me', 'phone', 'card_number', 'image']
@@ -133,9 +140,15 @@ class ProfileEditForm(forms.ModelForm):
 
     def clean_card_number(self):
         card_number = to_latin_digits(self.cleaned_data.get('card_number'))
-        if card_number:
-            if len(card_number) != 16:
-                raise ValidationError("شماره کارت باید 16 رقم باشد.")
-            if not card_number.isdigit():
-                raise ValidationError("شماره کارت باید فقط شامل اعداد باشد.")
-        return card_number
+        if not card_number:
+            return ''
+        if not card_number.isdigit():
+            raise ValidationError("شماره کارت باید فقط شامل اعداد باشد.")
+        stored = (self.instance.card_number or '')[-4:] if self.instance else ''
+        if len(card_number) == 4 and card_number == stored:
+            # مقدارِ ازپیش‌پرشده (۴ رقم آخرِ ذخیره‌شده) بدون تغییر مانده است.
+            return stored
+        if len(card_number) != 16:
+            raise ValidationError("شماره کارت باید 16 رقم باشد.")
+        # فقط ۴ رقم آخر نگه داشته می‌شود؛ شمارهٔ کامل هرگز در دیتابیس نمی‌نشیند.
+        return card_number[-4:]

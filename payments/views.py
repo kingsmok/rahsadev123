@@ -273,6 +273,9 @@ def start_payment(request, order_number):
         gateway_title = gateway_settings.title if gateway_settings else 'انتخاب‌شده'
         messages.error(request, f'درگاه «{gateway_title}» در حال حاضر غیرفعال است.')
         return redirect('cart:shopping_payment')
+    if not gateway_settings.is_implemented:
+        messages.error(request, f'درگاه «{gateway_settings.title}» هنوز فعال نشده است؛ لطفاً درگاه دیگری را انتخاب کنید.')
+        return redirect('cart:shopping_payment')
     if not gateway_settings.is_configured:
         messages.error(request, f'اطلاعات اتصال درگاه «{gateway_settings.title}» کامل نشده است.')
         return redirect('cart:shopping_payment')

@@ -78,6 +78,19 @@ class GatewaySettings(models.Model):
             return bool(credentials['client_id'] and credentials['client_secret'])
         return False
 
+    @property
+    def is_implemented(self):
+        """آیا آداپتر این درگاه واقعاً به API آن وصل است؟"""
+        from .services import GATEWAYS
+
+        adapter = GATEWAYS.get(self.key)
+        return bool(adapter and getattr(adapter, 'implemented', False))
+
+    @property
+    def is_available(self):
+        """قابل پیشنهاد به مشتری: فعال + پیکربندی‌شده + پیاده‌سازی‌شده."""
+        return self.is_enabled and self.is_configured and self.is_implemented
+
     def effective_credentials(self):
         """اعتبارنامه‌ها: اول دیتابیس، بعد متغیر محیطی."""
         env_fallback = {

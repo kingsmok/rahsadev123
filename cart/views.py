@@ -234,7 +234,13 @@ def shopping_payment(request):
         'cart_items': summary['cart_items'],
         'total_price': summary['total_price'],
         'final_price': summary['final_price'],
-        'enabled_gateways': GatewaySettings.objects.filter(is_enabled=True),
+        # درگاهِ پیاده‌سازی‌نشده (مثل اسنپ‌پی تا پیش از قرارداد) هرگز به مشتری
+        # پیشنهاد نمی‌شود؛ درگاهِ فعالِ پیکربندی‌نشده در شروع پرداخت با پیام
+        # روشن رد می‌شود و اینجا می‌ماند تا مدیر متوجه ناقص‌بودن تنظیمات شود.
+        'enabled_gateways': [
+            gateway for gateway in GatewaySettings.objects.filter(is_enabled=True)
+            if gateway.is_implemented
+        ],
     }
     return render(request, 'cart/shopping_payment.html', context)
 
