@@ -7,7 +7,6 @@ from django.contrib import messages
 from django.db import models
 from django.core.paginator import Paginator
 from django.db.models import Min, Max
-from urllib.parse import urlencode
 from django.http import JsonResponse
 
 from .models import Product, ProductComment, ProductCategory, ProductBrand, PRODUCT_TYPES
@@ -110,7 +109,10 @@ def _paginate(request, products, per_page=None):
     query_params = request.GET.copy()
     if 'page' in query_params:
         query_params.pop('page')
-    return object_list, pages_to_show, urlencode(query_params)
+    # ``QueryDict.urlencode`` keeps every value of multi-select filters
+    # (?type=a&type=b); ``urllib.parse.urlencode`` only saw the last one, so
+    # page 2 silently showed a different filter than page 1.
+    return object_list, pages_to_show, query_params.urlencode()
 
 
 def _snapshot_contains_product(items_data, product_id):
@@ -297,6 +299,9 @@ def product_search(request):
         'products': object_list,
         'product_types': PRODUCT_TYPES,
         'selected_types': selected_types,
+        # product_list.html ticks brand checkboxes from this; without it an
+        # active brand filter looked unticked and was dropped on resubmit.
+        'selected_brands': [int(b) for b in selected_brands if b.isdigit()],
         'pages_to_show': pages_to_show,
         'search': products_search,
         'min_price': request.GET.get('min_price') or prices['min'],
@@ -327,7 +332,12 @@ def product_detail(request, pid, slug):
             data = json.loads(request.body or '{}')
         except (TypeError, ValueError, json.JSONDecodeError):
             return JsonResponse({'status': 'fail', 'message': 'درخواست دیدگاه نامعتبر است.'}, status=400)
-        body = (data.get('body') or '').strip()
+        # Valid JSON that is not an object ([], "x", 5, null) or a non-string
+        # body used to raise AttributeError -> HTTP 500, even for anonymous users.
+        if not isinstance(data, dict):
+            return JsonResponse({'status': 'fail', 'message': 'درخواست دیدگاه نامعتبر است.'}, status=400)
+        body = data.get('body')
+        body = body.strip() if isinstance(body, str) else ''
         if not request.user.is_authenticated:
             return JsonResponse({'status': 'fail', 'message': 'برای ثبت دیدگاه وارد حساب شوید.'}, status=403)
         if not body:

@@ -175,3 +175,66 @@ class CommentModerationTests(TestCase):
         comment.save(update_fields=['status'])
         page = self.client.get(self.url)
         self.assertContains(page, 'دیدگاه در انتظار')
+
+
+class ListingFilterStateTests(TestCase):
+    """Filters must survive pagination and stay visible on the search page."""
+
+    def setUp(self):
+        from django.contrib.auth.models import User as _User
+
+        from product.models import ProductBrand
+
+        vendor = _User.objects.create_user('filter-vendor', password='Safe-pass-123!')
+        self.brand = ProductBrand.objects.create(title='سازنده فیلتر', slug='filter-brand')
+        for index in range(12):
+            product = Product.objects.create(
+                vendor=vendor, title=f'قالب فیلتر {index}', slug=f'filter-item-{index}', description='-',
+                price=1000 + index, product_type='template' if index % 2 else 'plugin',
+            )
+            product.brand.add(self.brand)
+
+    def test_pagination_keeps_every_selected_type(self):
+        response = self.client.get('/products/', {'type': ['template', 'plugin']})
+
+        querystring = response.context['querystring']
+        self.assertIn('type=template', querystring)
+        self.assertIn('type=plugin', querystring)
+
+    def test_search_page_keeps_the_brand_filter_ticked(self):
+        response = self.client.get('/products/product_search/', {'search': 'قالب', 'brand': str(self.brand.pk)})
+
+        self.assertEqual(response.context['selected_brands'], [self.brand.pk])
+        self.assertContains(response, f'id="brand_{self.brand.pk}" checked')
+
+
+class MalformedJsonInputTests(TestCase):
+    """Valid-but-unexpected JSON must be a 400, never an unhandled 500."""
+
+    def setUp(self):
+        from django.contrib.auth.models import User as _User
+
+        self.user = _User.objects.create_user('json-fuzz', password='Safe-pass-123!')
+        self.product = Product.objects.create(
+            vendor=self.user, title='فایل دیدگاه JSON', slug='json-comment', description='-', price=1000,
+        )
+        self.detail = f'/products/{self.product.pid}/{self.product.slug}/'
+
+    def test_comment_endpoint_rejects_non_object_json(self):
+        self.client.force_login(self.user)
+        for body in ('[]', '"x"', '5', 'null', '{"body": 5}', '{"body": {"a": 1}}'):
+            response = self.client.post(self.detail, data=body, content_type='application/json')
+            self.assertEqual(response.status_code, 400, body)
+
+    def test_comment_endpoint_rejects_non_object_json_from_anonymous_users(self):
+        response = self.client.post(self.detail, data='[]', content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_newsletter_rejects_non_object_json_and_non_string_email(self):
+        for body in ('[]', '"x"', '5', 'null'):
+            response = self.client.post('/newsletter/subscribe/', data=body, content_type='application/json')
+            self.assertEqual(response.status_code, 400, body)
+        for body in ('{"email": 5}', '{"email": ["a@b.co"]}'):
+            response = self.client.post('/newsletter/subscribe/', data=body, content_type='application/json')
+            self.assertEqual(response.status_code, 200, body)
+            self.assertFalse(response.json()['ok'])

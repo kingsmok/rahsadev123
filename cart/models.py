@@ -144,6 +144,10 @@ class Order(models.Model):
         ('cancelled', 'لغو شده'),
     )
 
+    #: A digital order is delivered the moment it is paid (download tokens are
+    #: issued in the same transaction); ``delivered`` remains for legacy rows.
+    COMPLETED_STATUSES = ('paid', 'delivered')
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders', verbose_name='کاربر')
     order_number = ShortUUIDField(length=10, max_length=10, alphabet="1234567890", unique=True, verbose_name="شماره سفارش")
     cart = models.ForeignKey(Cart, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='سبد خرید')

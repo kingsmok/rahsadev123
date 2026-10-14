@@ -5,7 +5,7 @@ from cart.models import Order, CartItem, Cart
 from product.models import Product, ProductComment
 from downloads.models import DownloadToken
 from django.core.paginator import Paginator
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.utils import timezone
 from .models import Wishlist, Address, Notification
 from .forms import AddressForm, ProfileEditForm
@@ -36,14 +36,18 @@ def home(request):
 
     # User account statistics
     current_cart_items = CartItem.objects.filter(cart__user=user).count()
-    delivered_orders = Order.objects.filter(user=user, status='delivered').count()
+    delivered_orders = Order.objects.filter(user=user, status__in=Order.COMPLETED_STATUSES).count()
     cancelled_orders = Order.objects.filter(user=user, status='cancelled').count()
     comments_count = ProductComment.objects.filter(author=user).count()
     wishlist_products_count = Wishlist.objects.filter(user=user).count()
-    user_notifications_count = Notification.objects.filter(Q(is_for_all_users=True) | Q(users=user), is_active=True).count()
+    user_notifications_count = Notification.objects.visible_to(user).count()
 
     recent_orders = Order.objects.filter(user=user).order_by('-created_at')[:5]
-    popular_products = Product.objects.filter(status='published', stock_count__gt=0).order_by('-views')[:10]
+    # Unlimited-licence products keep stock_count at 0 (the field is only for
+    # limited licences), so filtering on stock alone hid most of the catalogue.
+    popular_products = Product.objects.filter(
+        Q(is_unlimited=True) | Q(stock_count__gt=0), status='published',
+    ).order_by('-views')[:10]
 
     context = {
         'profile': profile,
@@ -142,7 +146,7 @@ def my_downloads(request):
 def orders_delivered(request):
     user = request.user
     profile = Profile.objects.get(user=user)
-    orders = Order.objects.filter(user=user, status='delivered').order_by('-created_at')
+    orders = Order.objects.filter(user=user, status__in=Order.COMPLETED_STATUSES).order_by('-created_at')
 
     # Pagination
     page_number = request.GET.get('page')
@@ -310,17 +314,23 @@ def user_addresses(request):
     addresses = Address.objects.filter(user=user).order_by('-created_at')
 
     show_address_modal = False
+    def owned_address(field):
+        # A non-numeric id is a bad request for *this* user's address, not a
+        # server error (get_object_or_404 raised ValueError -> HTTP 500).
+        address_id = (request.POST.get(field) or '').strip()
+        if not address_id.isdigit():
+            raise Http404('آدرس یافت نشد.')
+        return get_object_or_404(Address, pk=int(address_id), user=user)
+
     if request.method == 'POST':
         if 'delete_address' in request.POST:
-            address_id = request.POST.get('delete_address')
-            address = get_object_or_404(Address, pk=address_id, user=user)
+            address = owned_address('delete_address')
             address.delete()
             messages.success(request, 'آدرس با موفقیت حذف شد.')
             return redirect('dashboard:user_addresses')
 
         if 'set_default' in request.POST:
-            address_id = request.POST.get('set_default')
-            address = get_object_or_404(Address, pk=address_id, user=user)
+            address = owned_address('set_default')
             address.is_default = True
             address.save()
             messages.success(request, 'آدرس پیش‌فرض شما به‌روزرسانی شد.')
@@ -361,14 +371,7 @@ def notifications_list(request):
 
     Notification.delete_expired_notifications()
 
-    now = timezone.now()
-    notifications = Notification.objects.filter(
-        is_active=True
-    ).filter(
-        Q(is_for_all_users=True) | Q(users=user)
-    ).filter(
-        Q(expiration_date__isnull=True) | Q(expiration_date__gte=now)
-    ).distinct().order_by('-created_at')
+    notifications = Notification.objects.visible_to(user).order_by('-created_at')
 
     context = {
         'profile': profile,

@@ -201,7 +201,12 @@ def newsletter_subscribe(request):
             data = _json.loads(request.body.decode('utf-8'))
         except Exception:
             return JsonResponse({'ok': False, 'message': 'درخواست نامعتبر است.'}, status=400)
-        email = (data.get('email') or '').strip().lower()
+        # Valid JSON that is not an object, or a non-string email, used to raise
+        # AttributeError -> HTTP 500.
+        if not isinstance(data, dict):
+            return JsonResponse({'ok': False, 'message': 'درخواست نامعتبر است.'}, status=400)
+        email = data.get('email')
+        email = email.strip().lower() if isinstance(email, str) else ''
         from django.core.validators import EmailValidator
         from django.core.exceptions import ValidationError
         try:

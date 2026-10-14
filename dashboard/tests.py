@@ -370,3 +370,66 @@ class AdminReconciliationQueueTests(TestCase):
         response = self.client.get('/admin-panel/health/')
         self.assertEqual(len(response.context['unfulfilled_payments']), 0)
         self.assertContains(response, 'تأییدشده و تحویل‌نشده‌ای وجود ندارد')
+
+
+class CustomerDashboardConsistencyTests(TestCase):
+    """Dashboard counters and lists must agree with the pages they summarise."""
+
+    def setUp(self):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        self.user = User.objects.create_user('dash-consistency', password='Safe-pass-123!')
+        self.others = [User.objects.create_user(f'dash-other-{i}', password='Safe-pass-123!') for i in range(3)]
+        self.timedelta, self.timezone = timedelta, timezone
+        self.client.force_login(self.user)
+
+    def test_notification_badge_matches_the_notifications_page(self):
+        from dashboard.models import Notification
+
+        broadcast = Notification.objects.create(message='برای همه', is_for_all_users=True)
+        broadcast.users.set([self.user, *self.others])  # used to be counted once per listed user
+        Notification.objects.create(
+            message='منقضی', is_for_all_users=True,
+            expiration_date=self.timezone.now() - self.timedelta(days=1),
+        )
+        Notification.objects.create(message='غیرفعال', is_for_all_users=True, is_active=False)
+        personal = Notification.objects.create(message='شخصی')
+        personal.users.set([self.user])
+
+        badge = self.client.get(reverse('dashboard:home')).context['user_notifications_count']
+        listed = list(self.client.get(reverse('dashboard:notifications')).context['notifications'])
+
+        self.assertEqual(badge, 2)
+        self.assertEqual(len(listed), 2)
+
+    def test_popular_products_include_unlimited_licences(self):
+        unlimited = Product.objects.create(
+            vendor=self.user, title='نامحدود', slug='unlimited-popular', description='-', price=1000,
+            is_unlimited=True, stock_count=0, views=50,
+        )
+        sold_out = Product.objects.create(
+            vendor=self.user, title='تمام‌شده', slug='soldout-popular', description='-', price=1000,
+            is_unlimited=False, stock_count=0, views=99,
+        )
+
+        popular = list(self.client.get(reverse('dashboard:home')).context['popular_products'])
+
+        self.assertIn(unlimited, popular)
+        self.assertNotIn(sold_out, popular)
+
+    def test_a_paid_digital_order_counts_as_completed(self):
+        paid = Order.objects.create(user=self.user, total_price=1000, final_price=1000, status='paid')
+        Order.objects.create(user=self.user, total_price=1000, final_price=1000, status='pending')
+
+        home = self.client.get(reverse('dashboard:home'))
+        completed = self.client.get(reverse('dashboard:orders_delivered'))
+
+        self.assertEqual(home.context['delivered_orders'], 1)
+        self.assertEqual([order.pk for order in completed.context['orders']], [paid.pk])
+
+    def test_malformed_address_ids_are_404_not_500(self):
+        for field in ('delete_address', 'set_default'):
+            response = self.client.post(reverse('dashboard:user_addresses'), {field: 'abc'})
+            self.assertEqual(response.status_code, 404, field)
