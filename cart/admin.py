@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Count
 from . import models
 from core.admin_utils import EnhancedAdminMixin, to_jalali
 from jalali_date import datetime2jalali
@@ -90,9 +91,15 @@ class OrderAdmin(ModelAdminJalaliMixin, EnhancedAdminMixin, admin.ModelAdmin):
         }),
     )
 
-    @admin.display(description='اقلام')
+    def get_queryset(self, request):
+        # Counted in the list query; ``order_items.count()`` per row was N+1.
+        return super().get_queryset(request).annotate(items_count=Count('order_items', distinct=True))
+
+    @admin.display(description='اقلام', ordering='items_count')
     def items_summary(self, obj):
-        count = obj.order_items.count()
+        count = getattr(obj, 'items_count', None)
+        if count is None:
+            count = obj.order_items.count()
         return f'{count} قلم'
 
     @admin.display(description='تاریخ ایجاد', ordering='created_at')

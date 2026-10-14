@@ -426,3 +426,38 @@ class CartDrawerFragmentTests(TestCase):
         self.assertContains(response, 'id="fm-cart-drawer"')
         self.assertNotContains(response, 'سبد خرید شما خالی است')
         self.assertIn('no-cache', response['Cache-Control'])
+
+
+class AdminChangelistQueryTests(TestCase):
+    """Order and download-token change lists must not run a query per row."""
+
+    def setUp(self):
+        self.admin = User.objects.create_superuser('cl-admin', 'cl@example.test', 'Admin-pass-123!')
+        self.client.force_login(self.admin)
+        self.product = Product.objects.create(
+            vendor=self.admin, title='فایل لیست', slug='changelist-file', description='توضیح', price=1000,
+        )
+
+    def _add_rows(self, count, offset):
+        for index in range(offset, offset + count):
+            buyer = User.objects.create_user(f'cl-buyer-{index}', password='Safe-pass-123!')
+            order = Order.objects.create(user=buyer, total_price=1000, final_price=1000, status='paid')
+            OrderItem.objects.create(order=order, product=self.product, title_snapshot='x',
+                                     unit_price=1000, total_price=1000)
+            DownloadToken.objects.create(user=buyer, product=self.product, order=order)
+
+    def _queries(self, url):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        with CaptureQueriesContext(connection) as ctx:
+            self.assertEqual(self.client.get(url).status_code, 200)
+        return len(ctx.captured_queries)
+
+    def test_query_count_does_not_grow_with_rows(self):
+        self._add_rows(2, 0)
+        urls = ('/admin/cart/order/', '/admin/downloads/downloadtoken/')
+        baseline = [self._queries(url) for url in urls]
+        self._add_rows(8, 2)
+        self.assertEqual([self._queries(url) for url in urls], baseline)
+        self.assertContains(self.client.get('/admin/cart/order/'), '1 قلم')

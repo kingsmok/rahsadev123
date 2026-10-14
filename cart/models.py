@@ -176,7 +176,7 @@ class Order(models.Model):
                     'title': item.product.title,
                     'quantity': item.quantity,
                     'price': item.product.price
-                } for item in self.cart.items.all()],
+                } for item in self.cart.items.select_related('product')],
                 'coupon': self.cart.coupon.code if self.cart.coupon else None,
                 'discount': self.cart.coupon_discount
             }
