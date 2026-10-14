@@ -193,6 +193,26 @@ class ImageAndSeoAutomationTests(TestCase):
             self.assertEqual(image.format, 'WEBP')
             self.assertLessEqual(max(image.size), 100)
 
+    def test_seed_image_helper_also_produces_webp(self):
+        """رگرسیون ممیزی عمیق: تصاویر seed با field.save() ذخیره می‌شوند و سیگنال
+        بهینه‌سازی آپلود را نمی‌بینند؛ helper سید باید خودش WebP بسازد وگرنه
+        صفحهٔ خانه با PNGهای چندمگابایتی ~۲۰MB می‌شود."""
+        from core.management.commands.seed_demo import _save_optimised_image
+
+        product = Product.objects.create(
+            vendor=self.user,
+            title='محصول تصویر سید',
+            slug='seed-image-product',
+            description='توضیح محصول برای تست تصویر سید.',
+            price=15000,
+        )
+        upload = self._image_upload('seed-photo.png', (320, 160))
+        _save_optimised_image(product.image, upload, 'seed-photo.png')
+        product.refresh_from_db()
+        self.assertTrue(product.image.name.endswith('.webp'))
+        with Image.open(product.image.path) as image:
+            self.assertEqual(image.format, 'WEBP')
+
     @override_settings(IMAGE_OPTIMIZATION_MAX_DIMENSION=100, IMAGE_OPTIMIZATION_WEBP_QUALITY=80)
     def test_ckeditor_upload_storage_uses_the_same_webp_pipeline(self):
         storage = CkeditorImageStorage(location=self.temp_media.name, base_url='/media/')

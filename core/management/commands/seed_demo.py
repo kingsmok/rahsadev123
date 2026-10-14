@@ -27,6 +27,26 @@ from services.models import PortfolioItem, ServicePackage
 from payments.models import GatewaySettings, PaymentTransaction
 
 SEED_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'media', 'seed')
+
+def _save_optimised_image(field_file, file_obj, filename):
+    """ذخیرهٔ تصویر seed از همان خط لولهٔ بهینه‌سازی آپلودهای واقعی.
+
+    ذخیرهٔ مستقیم با ``field.save()`` بعد از commit شدن فایل اتفاق می‌افتد و
+    سیگنال pre_save بهینه‌سازی (که برای آپلودهای فرم است) آن را نمی‌بیند؛
+    بدون این مرحله، تصاویر نمونه PNGهای چندمگابایتی می‌ماندند درحالی‌که
+    آپلود واقعی مدیر WebP سبک می‌شود. اگر بهینه‌سازی ممکن نبود، اصل فایل
+    ذخیره می‌شود تا seed هیچ‌وقت به‌خاطر تصویر متوقف نشود.
+    """
+    from core.image_optimization import optimise_uploaded_image
+
+    optimised = optimise_uploaded_image(ImageFile(file_obj, name=filename))
+    if optimised is not None:
+        field_file.save(optimised.name, optimised, save=True)
+    else:
+        file_obj.seek(0)
+        field_file.save(filename, ImageFile(file_obj, name=filename), save=True)
+
+
 PRODUCT_IMAGES = os.path.join(SEED_DIR, 'products')
 BANNER_IMAGES = os.path.join(SEED_DIR, 'banners')
 PORTFOLIO_IMAGES = os.path.join(SEED_DIR, 'portfolio')
@@ -530,7 +550,7 @@ class Command(BaseCommand):
             image_path = os.path.join(PRODUCT_IMAGES, data['image'])
             if os.path.exists(image_path):
                 with open(image_path, 'rb') as f:
-                    product.image.save(data['image'], ImageFile(f), save=True)
+                    _save_optimised_image(product.image, f, data['image'])
 
             # فایل دیجیتال قابل دانلود
             zip_name = f"{data['file_prefix']}-v{data['version'] or '1.0'}.zip" if data['file_type'] == 'ZIP' else f"{data['file_prefix']}.txt"
@@ -572,7 +592,7 @@ class Command(BaseCommand):
             image_path = os.path.join(BANNER_IMAGES, image)
             if os.path.exists(image_path):
                 with open(image_path, 'rb') as f:
-                    banner.image.save(image, ImageFile(f), save=True)
+                    _save_optimised_image(banner.image, f, image)
                     self.stdout.write(f'بنر ثبت شد: {title}')
 
         # ------------------------------------------------------------------ پکیج‌های طراحی سایت
@@ -613,7 +633,7 @@ class Command(BaseCommand):
             image_path = os.path.join(PORTFOLIO_IMAGES, image)
             if os.path.exists(image_path):
                 with open(image_path, 'rb') as f:
-                    item.image.save(image, ImageFile(f), save=True)
+                    _save_optimised_image(item.image, f, image)
                     self.stdout.write(f'نمونه کار ثبت شد: {title}')
 
         # ------------------------------------------------------------------ مقالات وبلاگ
@@ -669,7 +689,7 @@ class Command(BaseCommand):
             image_path = os.path.join(PRODUCT_IMAGES, data['image'])
             if os.path.exists(image_path):
                 with open(image_path, 'rb') as f:
-                    article.image.save(data['image'], ImageFile(f), save=True)
+                    _save_optimised_image(article.image, f, data['image'])
             article.category.add(article_cat)
             article.tags.add(seo_tag)
             self.stdout.write(f'مقاله ثبت شد: {data["title"]}')
