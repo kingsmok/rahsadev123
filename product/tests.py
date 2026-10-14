@@ -238,3 +238,32 @@ class MalformedJsonInputTests(TestCase):
             response = self.client.post('/newsletter/subscribe/', data=body, content_type='application/json')
             self.assertEqual(response.status_code, 200, body)
             self.assertFalse(response.json()['ok'])
+
+
+class AdminThumbnailTests(TestCase):
+    """Admin list thumbnails: alt text, valid sizes, no distortion, no fake headings."""
+
+    def test_thumbnail_markup(self):
+        from core.thumbnails import admin_thumbnail
+
+        class _Image:
+            url = '/media/images/products/x.webp'
+
+        html = str(admin_thumbnail(_Image(), 'عنوان <b>'))
+        self.assertIn('alt="عنوان &lt;b&gt;"', html)
+        self.assertIn('width="50" height="50"', html)  # unitless, as HTML requires
+        self.assertIn('object-fit: cover', html)
+        self.assertNotIn('<h3', str(admin_thumbnail(None, 'x')))
+
+    def test_changelist_has_a_persian_header_and_no_heading_per_row(self):
+        staff = User.objects.create_superuser('thumb-admin', 'thumb@example.test', 'Admin-pass-123!')
+        Product.objects.create(vendor=staff, title='بدون تصویر', slug='no-image-item', description='-', price=1)
+        self.client.force_login(staff)
+
+        html = self.client.get('/admin/product/product/').content.decode()
+        results = html[html.index('id="result_list"'):]
+        results = results[:results.index('</table>')]
+
+        self.assertNotIn('Product image', html)
+        self.assertIn('تصویر ندارد', results)
+        self.assertNotIn('<h3', results)

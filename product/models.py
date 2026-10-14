@@ -1,9 +1,9 @@
 import logging
 
 from django.db import models
+from core.thumbnails import admin_thumbnail
 from django.contrib.auth.models import User
 from django_ckeditor_5.fields import CKEditor5Field
-from django.utils.html import format_html
 from shortuuid.django_fields import ShortUUIDField
 
 from .storage import PrivateDigitalStorage
@@ -72,9 +72,8 @@ class ProductCategory(models.Model):
         ordering = ['title']
 
     def category_image(self):
-        if self.image:
-            return format_html('<img src="{}" width="50px" height="50px">', self.image.url)
-        return format_html('<h3 style="color: red">تصویر ندارد</h3>')
+        return admin_thumbnail(self.image, self.title)
+    category_image.short_description = 'تصویر'
 
     def __str__(self):
         return self.title
@@ -117,9 +116,8 @@ class ProductBrand(models.Model):
         verbose_name_plural = 'برندها / سازنده‌ها'
 
     def brand_image(self):
-        if self.image:
-            return format_html('<img src="{}" width="50px" height="50px">', self.image.url)
-        return format_html('<h3 style="color: red">تصویر ندارد</h3>')
+        return admin_thumbnail(self.image, self.title)
+    brand_image.short_description = 'تصویر'
 
     def __str__(self):
         return self.title
@@ -220,9 +218,8 @@ class Product(models.Model):
         return 0
 
     def product_image(self):
-        if self.image:
-            return format_html('<img src="{}" width="50px" height="50px">', self.image.url)
-        return format_html('<h3 style="color: red">تصویر ندارد</h3>')
+        return admin_thumbnail(self.image, self.title)
+    product_image.short_description = 'تصویر'
 
     def __str__(self):
         return self.title

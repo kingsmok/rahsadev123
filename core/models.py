@@ -1,6 +1,6 @@
 from django.db import models
+from core.thumbnails import admin_thumbnail
 from django_ckeditor_5.fields import CKEditor5Field
-from django.utils.html import format_html
 
 
 BANNER_TYPES = (
@@ -66,9 +66,8 @@ class Banner(models.Model):
         verbose_name_plural = 'بنر ها'
 
     def banner_image(self):
-        if self.image:
-            return format_html('<img src="{}" width="100px" height="50px">', self.image.url)
-        return format_html('<h3 style="color: red">تصویر ندارد</h3>')
+        return admin_thumbnail(self.image, self.title, width=100, height=50)
+    banner_image.short_description = 'تصویر'
 
     def __str__(self):
         return self.title
