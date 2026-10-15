@@ -37,6 +37,10 @@
         {% else %}
             <div class="container space-bottom-30">
                 <div class="row{% if page.layout == 'narrow' %} justify-content-center{% endif %}">
+                    {% if page.layout == 'sidebar' %}
+                        {# موبایل و تبلت: «صفحات راهنما» در کشوی همبرگری (static/js/fm-drawers.js) #}
+                        {% include 'includes/side_drawer_toggle.html' with target='fm-page-side' label='صفحات راهنما' hint='قوانین، سوالات متداول و پشتیبانی' %}
+                    {% endif %}
                     <div class="col-12{% if page.layout == 'sidebar' %} col-lg-9{% elif page.layout == 'narrow' %} col-lg-8{% endif %}">
                         {% if page.custom_html_before %}<div class="fm-custom-html">{{ page.custom_html|safe }}</div>{% endif %}
                         {% if page.custom_html_replaces_content %}
@@ -55,7 +59,9 @@
                     </div>
 
                     {% if page.layout == 'sidebar' %}
-                        <aside class="col-12 col-lg-3">
+                        <aside class="col-12 col-lg-3 fm-side" id="fm-page-side" data-fm-drawer
+                               data-fm-drawer-media="(max-width: 991.98px)" aria-labelledby="fm-page-side-title">
+                            {% include 'includes/side_drawer_head.html' with target='fm-page-side' title='صفحات راهنما' icon='fa-circle-info' %}
                             <div class="fm-panel fm-aside-nav">
                                 <div class="fm-panel__head">
                                     <i class="fa fa-circle-info" aria-hidden="true"></i>

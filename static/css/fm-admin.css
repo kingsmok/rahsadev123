@@ -51,7 +51,12 @@
     font-display: swap;
 }
 
-:root {
+/* html[data-theme='light'] هم لازم است: base.css جنگو متغیرهایش را روی
+   «html[data-theme="light"], :root» تعریف می‌کند؛ با انتخاب صریح «روز» (مثلاً
+   وقتی کاربر در فروشگاه تم را روز کرده و پل تم آن را به ادمین داده) اختصاصیِ
+   بیشترِ آن انتخابگر برنده می‌شد و سربرگ و دکمه‌ها آبی پیش‌فرض جنگو (#417690)
+   می‌شدند. حالا «روز» دقیقاً همان ظاهر پیش‌فرض را دارد. */
+:root, html[data-theme='light'] {
     --fm-font: 'Vazirmatn FD', 'Segoe UI', Tahoma, sans-serif;
 
     /* متغیرهای محلی — معادل‌های دقیقِ داشبورد کاربر (لایت) */
@@ -1256,3 +1261,281 @@ html.fm-auto-dark #nav-filter::placeholder { color: #8ba0b2; opacity: 1; }
 .fm-status { font-weight: 700; }
 .fm-status--ok { color: var(--adm-accent-fg, #0f766e); }
 .fm-status--bad { color: var(--error-fg, #b91c1c); }
+
+/* ───────────────────────── ۷) منوی همبرگری موبایل (زیر ۷۶۸px) ─────────────────────────
+   جنگو در این عرض #nav-sidebar را پنهان می‌کند و ۹ لینک دسترسی سریع زیر هم ۳۰۰px از
+   بالای هر صفحه را می‌گرفتند. حالا یک دکمهٔ «منو» در سربرگ، کشوی سمت راست را با
+   دسترسی سریع + همهٔ بخش‌ها باز می‌کند (admin/includes/mobile_drawer.html،
+   static/js/fm-admin.js). بدون JS (کلاس fm-adm-js) سربرگ مثل قبل می‌ماند. */
+.fm-adm-burger,
+.fm-adm-drawer,
+.fm-adm-backdrop,
+.fm-adm-filter-toggle,
+.fm-adm-filter-close { display: none; }
+
+@media (max-width: 767px) {
+    html.fm-adm-js #header > .fm-adm-quick-link { display: none; }
+    /* responsive.css جنگو زیر ۱۰۲۴px سربرگ را ستونی می‌کند؛ اینجا ردیف اول
+       «برند … دکمهٔ منو» است و ابزار کاربر در ردیف بعد. */
+    html.fm-adm-js #header { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+    html.fm-adm-js #branding { order: 1; flex: 1 1 0; min-width: 0; }
+    html.fm-adm-js #user-tools { order: 3; flex: 1 1 100%; width: 100%; margin-inline-start: 0; }
+    html.fm-adm-js .fm-adm-burger {
+        order: 2;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 42px;
+        padding: 0 14px;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        background: var(--fm-primary-50);
+        color: var(--fm-primary-700);
+        font-family: var(--fm-font);
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+    }
+    html.fm-adm-js .fm-adm-burger .fa-solid { font-size: 16px; }
+
+    html.fm-adm-nav-open { overflow: hidden; }
+
+    .fm-adm-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 1199;
+        background: rgba(9, 18, 26, .52);
+        opacity: 0;
+        transition: opacity .28s ease;
+    }
+    .fm-adm-backdrop[hidden] { display: none; }
+    .fm-adm-backdrop.is-visible { opacity: 1; }
+
+    html.fm-adm-js .fm-adm-drawer {
+        box-sizing: border-box;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1200;
+        display: flex;
+        flex-direction: column;
+        width: min(320px, 86vw);
+        height: 100vh;
+        height: 100dvh;
+        padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        background: var(--fm-surface);
+        color: var(--fm-text);
+        border-left: 1px solid var(--border-color);
+        box-shadow: -18px 0 40px rgba(8, 20, 30, .28);
+        direction: rtl;
+        text-align: right;
+        transform: translateX(105%);
+        visibility: hidden;
+        transition: transform .28s ease, visibility 0s linear .28s;
+    }
+    html.fm-adm-js .fm-adm-drawer.is-open {
+        transform: translateX(0);
+        visibility: visible;
+        transition-delay: 0s;
+    }
+    .fm-adm-drawer__head {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-height: 62px;
+        padding: max(10px, env(safe-area-inset-top, 0px)) 14px 10px;
+        background: var(--fm-surface);
+        border-bottom: 1px solid var(--border-color);
+    }
+    .fm-adm-drawer__head b { display: flex; align-items: center; gap: 9px; color: var(--fm-text); font-size: 15.5px; font-weight: 800; }
+    .fm-adm-drawer__head b .fa-solid { color: var(--fm-primary-700); }
+    .fm-adm-drawer__close {
+        display: inline-grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        background: var(--fm-surface-alt);
+        color: var(--fm-text);
+        font-size: 17px;
+        cursor: pointer;
+    }
+    .fm-adm-drawer__label { margin: 0; padding: 14px 18px 6px; color: var(--fm-text-soft); font-size: 12px; font-weight: 800; }
+    .fm-adm-drawer__quick { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 12px; }
+    .fm-adm-drawer__quick a {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 46px;
+        padding: 8px 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        background: var(--fm-surface-alt);
+        color: var(--fm-text) !important;
+        font-size: 12.5px;
+        font-weight: 700;
+        line-height: 1.5;
+        text-decoration: none;
+    }
+    .fm-adm-drawer__quick a .fa-solid { flex: 0 0 16px; color: var(--fm-primary-700); text-align: center; }
+    .fm-adm-drawer__apps { padding: 0 12px; }
+    .fm-adm-drawer__app { margin: 0 0 6px; border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; }
+    .fm-adm-drawer__app summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 46px;
+        padding: 10px 14px;
+        color: var(--fm-text);
+        font-size: 13.5px;
+        font-weight: 800;
+        list-style: none;
+        cursor: pointer;
+    }
+    .fm-adm-drawer__app summary::-webkit-details-marker { display: none; }
+    .fm-adm-drawer__app summary::after {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-inline-start: 2px solid currentColor;
+        border-bottom: 2px solid currentColor;
+        transform: rotate(-45deg);
+        transition: transform .2s ease;
+    }
+    .fm-adm-drawer__app[open] summary::after { transform: rotate(135deg); }
+    .fm-adm-drawer__app[open] summary { background: var(--fm-primary-50); color: var(--fm-primary-700); }
+    .fm-adm-drawer__app ul { margin: 0; padding: 4px 6px 6px; list-style: none; }
+    .fm-adm-drawer__app li { margin: 0; padding: 0; list-style: none; }
+    .fm-adm-drawer__app li a {
+        display: flex;
+        align-items: center;
+        min-height: 44px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        color: var(--fm-text) !important;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .fm-adm-drawer__app li a:hover,
+    .fm-adm-drawer__app li a[aria-current="page"] { background: var(--fm-primary-50); color: var(--fm-primary-700) !important; }
+    .fm-adm-drawer__app li a[aria-current="page"] { box-shadow: inset -3px 0 0 var(--fm-primary-500); font-weight: 800; }
+    .fm-adm-drawer__foot { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding: 16px 12px 0; }
+    .fm-adm-drawer__foot a {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--fm-primary-50);
+        color: var(--fm-primary-700) !important;
+        font-size: 12.5px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .fm-adm-drawer :is(a, button, summary):focus-visible { outline: 3px solid rgba(70, 169, 174, .5); outline-offset: 2px; }
+
+    /* فیلترهای فهرست‌ها (#changelist-filter) به‌صورت کشو؛ دکمه و دکمهٔ بستن را
+       static/js/fm-admin.js اضافه می‌کند. */
+    html.fm-adm-js .fm-adm-filter-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 44px;
+        margin: 0 0 12px;
+        padding: 0 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        background: var(--fm-surface);
+        color: var(--fm-text);
+        font-family: var(--fm-font);
+        font-size: 13.5px;
+        font-weight: 800;
+        cursor: pointer;
+    }
+    html.fm-adm-js .fm-adm-filter-toggle .fa-solid { color: var(--fm-primary-700); }
+    .fm-adm-filter-toggle__on { padding: 1px 9px; border-radius: 999px; background: #dc2626; color: #fff; font-size: 11.5px; }
+    html.fm-adm-js #content #changelist-filter {
+        box-sizing: border-box;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1200;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-content: start;
+        width: min(320px, 86vw);
+        height: 100vh;
+        height: 100dvh;
+        margin: 0;
+        padding: 0 0 calc(16px + env(safe-area-inset-bottom, 0px));
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        background: var(--fm-surface);
+        border: 0;
+        border-left: 1px solid var(--border-color);
+        border-radius: 0;
+        box-shadow: -18px 0 40px rgba(8, 20, 30, .28);
+        transform: translateX(105%);
+        visibility: hidden;
+        transition: transform .28s ease, visibility 0s linear .28s;
+    }
+    html.fm-adm-js #content #changelist-filter.is-open {
+        transform: translateX(0);
+        visibility: visible;
+        transition-delay: 0s;
+    }
+    html.fm-adm-js #content #changelist-filter > * { grid-column: 1 / -1; }
+    html.fm-adm-js #content #changelist-filter > h2 {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        grid-row: 1;
+        display: flex;
+        align-items: center;
+        box-sizing: border-box;
+        width: auto;
+        min-height: 62px;
+        margin: 0 0 6px;
+        padding: env(safe-area-inset-top, 0px) 16px 0;
+        background: var(--fm-surface);
+        border-bottom: 1px solid var(--border-color);
+        font-size: 15.5px;
+    }
+    html.fm-adm-js #content #changelist-filter > .fm-adm-filter-close {
+        position: sticky;
+        top: 10px;
+        z-index: 2;
+        display: inline-grid;
+        grid-row: 1;
+        grid-column: 2;
+        place-items: center;
+        align-self: start;
+        width: 42px;
+        height: 42px;
+        margin: 10px 0 0 12px;
+        padding: 0;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        background: var(--fm-surface-alt);
+        color: var(--fm-text);
+        font-size: 17px;
+        cursor: pointer;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fm-adm-drawer, .fm-adm-backdrop, #changelist-filter { transition-duration: .01ms !important; }
+}

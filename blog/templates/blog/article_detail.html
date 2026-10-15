@@ -24,6 +24,8 @@
 
         <div class="container space-bottom-30">
             <div class="row">
+                {# موبایل و تبلت: مقاله اول می‌آید و دسته‌ها/آخرین مقالات در کشوی همبرگری هستند #}
+                {% include 'includes/side_drawer_toggle.html' with target='fm-blog-side' label='دسته‌بندی‌ها و آخرین مقالات' hint='موضوع‌های وبلاگ را مرور کنید' %}
                 <div class="single_blog_content col-12 col-lg-9 order-2 order-lg-1">
                     <article class="fm-panel fm-article">
                         <h1 class="fm-article__title">{{ article.title }}</h1>
@@ -79,7 +81,8 @@
                     {% html_blocks 'article_bottom' %}
                 </div>
 
-                <aside class="col-12 col-lg-3 order-1 order-lg-2">
+                <aside class="col-12 col-lg-3 order-1 order-lg-2 fm-side" id="fm-blog-side" data-fm-drawer data-fm-drawer-media="(max-width: 991.98px)" aria-labelledby="fm-blog-side-title">
+                    {% include 'includes/side_drawer_head.html' with target='fm-blog-side' title='دسته‌بندی‌های وبلاگ' icon='fa-folder-open' %}
                     <div class="sidebar_blog">
                         <div class="fm-panel fm-aside-nav">
                             <div class="fm-panel__head">

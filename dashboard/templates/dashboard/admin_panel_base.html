@@ -28,7 +28,7 @@
     {% block panel_head %}{% endblock %}
 </head>
 <body class="ap-shell">
-<aside class="ap-sidebar" aria-label="منوی مدیریت">
+<aside class="ap-sidebar" id="ap-sidebar" aria-label="منوی مدیریت" data-ap-sidebar>
     <div class="ap-brand{% if not site_brand.has_favicon and site_brand.logo_url %} ap-brand--logo{% endif %}">
         {% if site_brand.has_favicon %}
             <span class="ap-brand__mark ap-brand__mark--image" aria-hidden="true"><img src="{{ site_brand.touch_icon_url }}" alt="" width="42" height="42" decoding="async"></span>
@@ -41,6 +41,10 @@
             <b class="ap-brand__title">{{ site_brand.name }}</b>
             <small class="ap-brand__sub">مرکز کنترل فروشگاه</small>
         </span>
+        {# فقط در موبایل/تبلت (کشوی منو): بستن از داخل خود منو #}
+        <button class="ap-sidebar__close" type="button" data-ap-close-nav aria-label="بستن منو">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
     </div>
 
     <nav class="ap-nav">
@@ -150,7 +154,8 @@
 
 <div class="ap-main">
     <header class="ap-topbar">
-        <button class="ap-btn ap-btn--ghost ap-burger" type="button" data-ap-open-nav aria-label="باز کردن منو">
+        <button class="ap-btn ap-btn--ghost ap-burger" type="button" data-ap-open-nav aria-controls="ap-sidebar"
+                aria-expanded="false" aria-haspopup="dialog" aria-label="منوی مدیریت">
             <i class="fa-solid fa-bars" aria-hidden="true"></i>
         </button>
         <div class="ap-topbar__title">

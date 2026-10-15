@@ -1,0 +1,633 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   کشوهای موبایل — منوی همبرگری تازه + منوی کناری صفحه‌ها (۱۴۰۵/۰۷)
+   ───────────────────────────────────────────────────────────────────────
+   ۱) اصلاح ریشه‌ای sticky و قفل اسکرول
+   ۲) منوی همبرگری اصلی (هدر موبایل، زیر ۱۰۷۸px)
+   ۳) منوی کناری صفحه‌ها به‌صورت کشو (فروشگاه، حساب کاربری، وبلاگ، صفحات
+      راهنما — زیر ۹۹۲px) و دکمهٔ همبرگری بالای محتوا
+   رنگ‌ها فقط از توکن‌های fm-design-system می‌آیند تا حالت شب خودکار درست
+   باشد؛ قاعدهٔ توکن‌ها: primary-700 رنگ «متن» است و action-bg رنگ «زمینهٔ
+   دکمه»، هیچ‌وقت جابه‌جا نشوند.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+    --fm-mobile-header-h: 102px;
+    --fm-drawer-w: min(340px, 88vw);
+    --fm-drawer-speed: .28s;
+    /* متن قرمز «خروج از حساب»: توکن danger روز (#d94848) روی سفید ۴٫۲ بود. */
+    --fm-danger-text: #c62828;
+}
+[data-theme="dark"] { --fm-danger-text: var(--fm-danger); }
+
+/* ───────────── ۱) اصلاح‌های ریشه‌ای ───────────── */
+
+/* html و body هر دو overflow-x:hidden داشتند؛ body با آن «ظرف اسکرول» می‌شد
+   و هیچ position:sticky ای در فروشگاه کار نمی‌کرد (خلاصهٔ سبد خرید، نوار
+   فیلتر). clip همان برش افقی را بدون ساختن ظرف اسکرول انجام می‌دهد؛
+   مرورگرهای قدیمی همان hidden قبلی را نگه می‌دارند. */
+@supports (overflow-x: clip) {
+    html, body { overflow-x: clip; }
+    /* قفل اسکرول فقط روی viewport؛ اگر body هم hidden شود دوباره ظرف اسکرول
+       می‌شود و نوار چسبان پشت پس‌زمینهٔ تیره جابه‌جا می‌پرد. */
+    html.nav-open body,
+    html.fm-drawer-open body,
+    html.cart-drawer-open body { overflow-x: clip !important; overflow-y: visible !important; }
+}
+
+html.fm-drawer-open { overflow: hidden !important; overscroll-behavior: none; }
+
+/* با کارکردن sticky، خلاصهٔ سبد/پرداخت در عرض ۹۹۲ تا ۱۰۷۷ (که هدر ثابت
+   موبایل هنوز نمایش داده می‌شود) نباید زیر آن هدر برود. */
+@media (min-width: 992px) and (max-width: 1077.98px) {
+    .fm-cart__aside, .fm-checkout__aside { top: calc(var(--fm-mobile-header-h) + 16px); }
+}
+
+/* تا وقتی کشو باز است یا در حال بسته‌شدن است، والدهای محتوا نباید لایه
+   (stacking context) یا containing block بسازند؛ وگرنه کشوی ثابت داخل صفحه
+   زیر هدر ثابت می‌رود یا نسبت به .container جابه‌جا می‌شود. */
+html.fm-drawer-active .wrapper.default { z-index: auto; }
+html.fm-drawer-active main .container,
+html.fm-drawer-active main .container-fluid { animation: none; }
+
+.fm-drawer-backdrop {
+    position: fixed;
+    /* اندازهٔ صریح به‌جای inset:0 — پس‌زمینهٔ منوی اصلی داخل هدر ثابت است و
+       هدر در حالت شب backdrop-filter دارد که containing block می‌سازد؛ با
+       inset:0 پس‌زمینه فقط ۱۰۱ پیکسلِ خود هدر را می‌پوشاند. هدر در گوشهٔ
+       بالا-راست صفحه است، پس این اندازه‌ها همیشه کل صفحه را می‌پوشانند. */
+    top: 0;
+    right: 0;
+    bottom: auto;
+    left: auto;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 1040;   /* JS آن را دقیقاً یک پله زیر کشوی باز تنظیم می‌کند */
+    background: rgba(9, 18, 26, .52);
+    opacity: 0;
+    transition: opacity var(--fm-drawer-speed) var(--fm-ease);
+    -webkit-tap-highlight-color: transparent;
+}
+.fm-drawer-backdrop.is-visible { opacity: 1; }
+
+/* ───────────── ۲) منوی همبرگری اصلی ───────────── */
+@media (max-width: 1077.98px) {
+    .sidebar-collapse nav.header-responsive .navbar-collapse {
+        display: block !important;
+        width: var(--fm-drawer-w) !important;
+        padding: 0 0 calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+        background: var(--fm-surface) !important;
+        /* منوی بسته بیرون از صفحه بود ولی visibility نداشت؛ کلید Tab از
+           بالای صفحه ۱۸ بار روی لینک‌های نامرئی آن می‌رفت. */
+        visibility: hidden;
+        transition: transform var(--fm-drawer-speed) var(--fm-ease), visibility 0s linear var(--fm-drawer-speed) !important;
+    }
+    html.nav-open .sidebar-collapse nav.header-responsive .navbar-collapse {
+        visibility: visible;
+        transition: transform var(--fm-drawer-speed) var(--fm-ease), visibility 0s linear 0s !important;
+    }
+
+    /* مربع «+» قالب قدیمی برای منوی <a> بود؛ کنار فلش دکمهٔ امروزی یک
+       کادر خالی و نامرتب می‌کشید. */
+    nav.header-responsive ul > li.sub-menu::before { content: none; display: none; }
+
+    .fm-mnav__head {
+        min-height: 64px;
+        padding: 10px 14px 10px 12px;
+        padding-top: max(10px, env(safe-area-inset-top, 0px));
+        box-shadow: 0 1px 0 var(--fm-border-soft);
+    }
+    .fm-mnav__close {
+        width: 42px;
+        height: 42px;
+        border: 1px solid var(--fm-border);
+        border-radius: 12px;
+        background: var(--fm-surface-alt);
+        color: var(--fm-text);
+        transition: background-color .18s var(--fm-ease), color .18s var(--fm-ease);
+    }
+    .fm-mnav__close:hover { background: var(--fm-primary-50); color: var(--fm-primary-700); }
+
+    /* کارت حساب کاربری */
+    .fm-mnav__account { padding: 14px 14px 12px; border-bottom: 0; }
+    nav.header-responsive .fm-mnav__account a.fm-mnav__user {
+        gap: 12px;
+        padding: 12px !important;
+        border: 1px solid var(--fm-primary-100);
+        border-radius: 16px;
+        background: var(--fm-primary-50);
+    }
+    .fm-mnav__user > span:not(.fm-mnav__avatar) { flex: 1 1 auto; min-width: 0; }
+    .fm-mnav__user b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--fm-text); }
+    .fm-mnav__user small { display: block; color: var(--fm-primary-700); font-weight: 700; }
+    .fm-mnav__avatar {
+        width: 46px;
+        height: 46px;
+        flex: 0 0 46px;
+        background: var(--fm-surface);
+        border: 2px solid var(--fm-primary-200);
+        font-size: 18px;
+    }
+    .fm-mnav__go { color: var(--fm-primary-700); font-size: 13px; }
+    .fm-mnav__quick { gap: 8px; margin-top: 10px; }
+    /* قاعدهٔ قدیمی «nav.header-responsive a {display:block; background:#fff}» از
+       flex کاشی‌ها قوی‌تر بود و آیکن و متن بالای کاشی می‌چسبیدند. */
+    nav.header-responsive .fm-mnav__account .fm-mnav__quick a {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 8px;
+        min-height: 46px;
+        padding: 8px 10px !important;
+        border-radius: 12px;
+        background: var(--fm-surface);
+        font-size: 13px;
+    }
+    .fm-mnav__quick a .fa { width: 18px; color: var(--fm-primary-700); text-align: center; }
+    .fm-mnav__quick a span:first-of-type { flex: 1 1 auto; }
+    nav.header-responsive .fm-mnav__account a.fm-mnav__staff {
+        display: flex;
+        background: transparent;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+        padding: 9px 12px;
+        border: 1px dashed var(--fm-primary-300);
+        border-radius: 12px;
+        color: var(--fm-primary-700) !important;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none !important;
+    }
+    .fm-mnav__welcome { margin: 0 0 12px; color: var(--fm-text-soft); font-size: 13px; line-height: 1.9; }
+    .fm-mnav__auth .fm-btn { min-height: 46px; border-radius: 12px; font-weight: 800; }
+    /* «.navbar a:not(.btn)» قالب قدیمی متن این دو دکمه را #61bec3 می‌کرد:
+       «ورود» ۲٫۵ و «ثبت‌نام» ۲٫۲ کنتراست داشتند. */
+    nav.header-responsive .fm-mnav__auth a.fm-btn--primary { color: var(--fm-on-action) !important; }
+    nav.header-responsive .fm-mnav__auth a.fm-btn--ghost { color: var(--fm-primary-700) !important; }
+
+    /* بخش‌بندی فهرست — قالب قدیمی ul منوی موبایل را float و p را inline-block
+       می‌کرد؛ با چند فهرست پشت سر هم، عنوان بخش‌ها کنار هم می‌افتادند. */
+    nav.header-responsive .navbar-nav.default.fm-mnav__list { float: none; clear: both; width: auto; }
+    .fm-mnav__foot { clear: both; }
+    nav.header-responsive .fm-mnav__label {
+        display: block;
+        float: none;
+        width: auto;
+    }
+    .fm-mnav__label {
+        margin: 0;
+        padding: 16px 20px 6px;
+        color: var(--fm-text-soft);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0;
+        direction: rtl;
+        text-align: right;
+    }
+    nav.header-responsive .navbar-nav.default.fm-mnav__list { padding: 0 10px; }
+    nav.header-responsive .navbar-nav.default.fm-mnav__list > li { border-bottom: 0; }
+    nav.header-responsive .navbar-nav.default.fm-mnav__list > li > a,
+    nav.header-responsive .navbar-nav.default.fm-mnav__list .mobile-menu-toggle {
+        min-height: 46px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        font-size: 14.5px;
+    }
+    nav.header-responsive .navbar-nav.default.fm-mnav__list > li > a.is-active {
+        box-shadow: inset -3px 0 0 var(--fm-primary-500);
+    }
+    .fm-mnav__icon {
+        display: inline-grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        margin-inline-end: 10px;
+        border-radius: 10px;
+        background: var(--fm-surface-alt);
+        color: var(--fm-primary-700);
+        font-size: 14px;
+    }
+    nav.header-responsive .navbar-nav.default.fm-mnav__list a.is-active .fm-mnav__icon,
+    nav.header-responsive .navbar-nav.default.fm-mnav__list a:hover .fm-mnav__icon { background: var(--fm-surface); }
+    .fm-mnav__chev {
+        display: inline-grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--fm-surface-alt);
+        color: var(--fm-text-soft);
+        font-size: 12px;
+        transition: transform .2s var(--fm-ease), background-color .2s var(--fm-ease);
+    }
+    /* قاعدهٔ قدیمی همهٔ آیکن‌های دکمهٔ دسته‌ها را ۱۸۰ درجه می‌چرخاند؛ فقط فلش بچرخد. */
+    .navbar-nav.default .sub-menu.open > .mobile-menu-toggle .fm-mnav__icon { transform: none; }
+    .navbar-nav.default .sub-menu.open > .mobile-menu-toggle .fm-mnav__chev {
+        background: var(--fm-primary-50);
+        color: var(--fm-primary-700);
+    }
+    nav.header-responsive .navbar-nav.default .sub-menu > ul.fm-mobile-cats {
+        margin: 4px 0 8px;
+        padding: 6px;
+        border-radius: 14px;
+    }
+    nav.header-responsive .navbar-nav.default .sub-menu > ul.fm-mobile-cats li a { border-radius: 10px; }
+
+    /* پایین منو: حالت شب، پشتیبانی، شبکه‌های اجتماعی، خروج */
+    .fm-mnav__foot {
+        margin: 14px 14px 0;
+        padding-top: 12px;
+        border-top: 1px solid var(--fm-border-soft);
+        direction: rtl;
+        text-align: right;
+    }
+    .fm-mnav__row,
+    nav.header-responsive .fm-mnav__foot a.fm-mnav__row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        min-height: 48px;
+        margin: 0 0 8px;
+        padding: 8px 12px;
+        border: 1px solid var(--fm-border);
+        border-radius: 14px;
+        background: var(--fm-surface-alt);
+        color: var(--fm-text) !important;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        text-align: right;
+        text-decoration: none !important;
+        cursor: pointer;
+    }
+    .fm-mnav__row > .fa { width: 20px; color: var(--fm-primary-700); text-align: center; }
+    .fm-mnav__row > span:not(.fm-switch) { flex: 1 1 auto; min-width: 0; }
+    .fm-mnav__row small { display: block; color: var(--fm-text-soft); font-size: 12px; font-weight: 600; direction: ltr; text-align: right; }
+    .fm-mnav__row:focus-visible { outline: none; box-shadow: var(--fm-ring); }
+
+    .fm-switch {
+        position: relative;
+        flex: 0 0 auto;
+        width: 44px;
+        height: 24px;
+        border-radius: 999px;
+        background: var(--fm-neutral-300);
+        transition: background-color .2s var(--fm-ease);
+    }
+    .fm-switch::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
+        transition: transform .2s var(--fm-ease);
+    }
+    [data-theme="dark"] .fm-switch { background: var(--fm-primary-500); }
+    [data-theme="dark"] .fm-switch::after { transform: translateX(-20px); }
+
+    nav.header-responsive .fm-mnav__foot .fm-social--menu { padding: 6px 0 4px; }
+    nav.header-responsive .fm-mnav__foot .fm-mnav__logout button {
+        color: var(--fm-danger-text);
+        min-height: 46px;
+        margin-top: 6px;
+        padding: 10px 12px;
+        border-radius: 12px;
+    }
+    nav.header-responsive .fm-mnav__foot .fm-mnav__logout button:hover { background: var(--fm-danger-bg); }
+    .fm-mnav__logout .fm-mnav__icon { background: var(--fm-danger-bg); color: var(--fm-danger-text); }
+    nav.header-responsive .fm-mnav__foot .fm-mnav__logout button > span { display: inline-flex; align-items: center; white-space: nowrap; }
+}
+
+@media (max-width: 359.98px) {
+    nav.header-responsive .fm-mnav__account .fm-mnav__quick a { gap: 6px; padding: 8px !important; font-size: 12px; white-space: nowrap; }
+    .fm-mnav__quick a .fa { width: 14px; }
+}
+
+/* ───────────── ۳) منوی کناری صفحه‌ها به‌صورت کشو ───────────── */
+.fm-side-toggle-wrap,
+.fm-side__head { display: none; }
+
+/* «حذف فیلترها» (فقط وقتی فیلتری فعال است) زیر دکمهٔ اعمال در ستون دسکتاپ */
+.fm-side__reset {
+    display: block;
+    margin: 12px auto 0;
+    color: var(--fm-text-soft) !important;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: underline;
+}
+
+@media (max-width: 991.98px) {
+    /* بدون JS (کلاس fm-js از اسکریپت <head>) ستون کناری مثل قبل در صفحه می‌ماند. */
+    .fm-js .fm-side-toggle-wrap {
+        display: block;
+        margin-bottom: 16px;
+    }
+    .fm-js .fm-side-toggle-wrap--sticky {
+        position: sticky;
+        top: calc(var(--fm-mobile-header-h) + 8px);
+        z-index: 40;
+    }
+
+    .fm-side-toggle {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        min-height: 58px;
+        margin: 0;
+        padding: 8px 12px;
+        border: 1px solid var(--fm-border);
+        border-radius: 16px;
+        background: var(--fm-surface);
+        box-shadow: var(--fm-shadow-sm);
+        color: var(--fm-text);
+        font: inherit;
+        text-align: right;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: border-color .18s var(--fm-ease), box-shadow .18s var(--fm-ease);
+    }
+    .fm-side-toggle:hover { border-color: var(--fm-primary-300); }
+    .fm-side-toggle:focus-visible { outline: none; box-shadow: var(--fm-ring), var(--fm-shadow-sm); }
+    .fm-side-toggle__burger {
+        display: inline-flex;
+        flex: 0 0 40px;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: var(--fm-action-bg);
+    }
+    .fm-side-toggle__burger span {
+        display: block;
+        width: 18px;
+        height: 2px;
+        border-radius: 2px;
+        background: var(--fm-on-action);
+    }
+    .fm-side-toggle__burger span:nth-child(2) { width: 13px; margin-inline-start: 5px; }
+    .fm-side-toggle__text { flex: 1 1 auto; min-width: 0; line-height: 1.5; }
+    .fm-side-toggle__text b { display: block; color: var(--fm-text); font-size: 14.5px; font-weight: 800; }
+    .fm-side-toggle__text small {
+        display: block;
+        overflow: hidden;
+        color: var(--fm-text-soft);
+        font-size: 12px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .fm-side-toggle__badge {
+        display: inline-grid;
+        place-items: center;
+        min-width: 24px;
+        height: 24px;
+        padding: 0 7px;
+        border-radius: 999px;
+        background: #dc2626;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 800;
+    }
+    .fm-side-toggle__chev { color: var(--fm-text-soft); font-size: 13px; }
+
+    /* خود ستون کناری در این عرض کشوی ثابتِ سمت راست است. */
+    .fm-js .fm-side {
+        position: fixed !important;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: auto;
+        z-index: 1042;
+        display: block;
+        flex: none !important;
+        width: var(--fm-drawer-w) !important;
+        max-width: none !important;
+        height: 100vh;
+        height: 100dvh;
+        margin: 0 !important;
+        padding: 0 0 calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        background: var(--fm-bg);
+        border-left: 1px solid var(--fm-border);
+        box-shadow: var(--fm-shadow-lg);
+        text-align: right;
+        transform: translate3d(105%, 0, 0);
+        visibility: hidden;
+        transition: transform var(--fm-drawer-speed) var(--fm-ease), visibility 0s linear var(--fm-drawer-speed);
+    }
+    .fm-js .fm-side.is-open {
+        transform: translate3d(0, 0, 0);
+        visibility: visible;
+        transition-delay: 0s;
+    }
+    .fm-js .fm-side > :not(.fm-side__head) { margin: 12px; }
+    .fm-js .fm-side > form { margin-bottom: 0; }
+
+    .fm-js .fm-side__head {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 64px;
+        padding: 10px 16px 10px 12px;
+        padding-top: max(10px, env(safe-area-inset-top, 0px));
+        background: var(--fm-surface);
+        border-bottom: 1px solid var(--fm-border-soft);
+        direction: rtl;
+    }
+    .fm-side__title {
+        display: flex;
+        flex: 1 1 auto;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        margin: 0;
+        color: var(--fm-text);
+        font-size: 16px;
+        font-weight: 800;
+        line-height: 1.5;
+    }
+    .fm-side__title > .fa {
+        display: inline-grid;
+        flex: 0 0 36px;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 11px;
+        background: var(--fm-primary-50);
+        color: var(--fm-primary-700);
+        font-size: 15px;
+    }
+    .fm-side__close {
+        display: inline-grid;
+        flex: 0 0 42px;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        border: 1px solid var(--fm-border);
+        border-radius: 12px;
+        background: var(--fm-surface-alt);
+        color: var(--fm-text);
+        font-size: 17px;
+        cursor: pointer;
+    }
+    .fm-side__close:hover { background: var(--fm-primary-50); color: var(--fm-primary-700); }
+    .fm-side__close:focus-visible { outline: none; box-shadow: var(--fm-ring); }
+
+    /* سربرگ کشوی حساب کاربری: آواتار و نام */
+    .fm-side__avatar {
+        display: inline-grid;
+        flex: 0 0 46px;
+        place-items: center;
+        width: 46px;
+        height: 46px;
+        overflow: hidden;
+        border: 2px solid var(--fm-primary-200);
+        border-radius: 50%;
+        background: var(--fm-primary-50);
+        color: var(--fm-primary-700);
+    }
+    .fm-side__avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .fm-side__who { flex: 1 1 auto; min-width: 0; line-height: 1.5; }
+    .fm-side__who b {
+        display: block;
+        overflow: hidden;
+        color: var(--fm-text);
+        font-size: 15px;
+        font-weight: 800;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .fm-side__who small { display: block; color: var(--fm-text-soft); font-size: 12px; }
+
+    /* فیلترهای فروشگاه داخل کشو */
+    .fm-js .fm-side.sidebar-page .box {
+        margin: 0 0 12px;
+        overflow: hidden;
+        border: 1px solid var(--fm-border);
+        border-radius: 14px;
+        background: var(--fm-surface);
+        box-shadow: none;
+    }
+    /* دکمهٔ «اعمال فیلتر» همیشه پایین کشو در دسترس است. */
+    .fm-js .fm-side.sidebar-page { padding-bottom: 0 !important; }
+    .fm-js .fm-side .fm-side__actions {
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 -12px;
+        padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+        background: var(--fm-surface);
+        border-top: 1px solid var(--fm-border);
+        box-shadow: 0 -8px 20px rgba(23, 42, 52, .06);
+    }
+    .fm-js .fm-side .fm-side__actions .view_more {
+        flex: 1 1 auto;
+        width: auto;
+        max-width: none;
+        min-height: 46px;
+        margin: 0 !important;
+        line-height: 1.4;
+    }
+    .fm-js .fm-side .fm-side__actions .fm-side__reset {
+        display: inline-flex;
+        flex: 0 0 auto;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        margin: 0;
+        padding: 0 14px;
+        border: 1px solid var(--fm-border);
+        border-radius: 12px;
+        background: var(--fm-surface-alt);
+        color: var(--fm-text) !important;
+        text-decoration: none;
+    }
+
+    /* منوی حساب کاربری داخل کشو */
+    .fm-js .profile-page-aside.fm-side .profile-card-1 { display: none; }
+    .fm-js .profile-page-aside.fm-side .profile-menu {
+        display: block;
+        margin: 12px;
+        padding: 6px;
+        border: 1px solid var(--fm-border);
+        border-radius: 16px;
+        background: var(--fm-surface);
+        box-shadow: none;
+    }
+    .fm-js .profile-page-aside.fm-side .profile-menu-items { margin: 0; padding: 0; line-height: 1.6; }
+    .fm-js .profile-page-aside.fm-side .profile-menu-items li a,
+    .fm-js .profile-page-aside.fm-side .profile-menu-items li button.dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 48px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        color: var(--fm-text);
+        font-size: 14.5px;
+        font-weight: 650;
+        line-height: 1.6;
+        white-space: normal;
+    }
+    .fm-js .profile-page-aside.fm-side .profile-menu-items li a i,
+    .fm-js .profile-page-aside.fm-side .profile-menu-items li button.dropdown-item i {
+        position: static;
+        display: inline-grid;
+        flex: 0 0 32px;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        background: var(--fm-surface-alt);
+        /* آیکن‌ها کلاس colormain دارند (متن گرادیانی با background-clip:text)؛
+           بدون این سه خط، زمینهٔ کاشی هم به شکل آیکن بریده می‌شد. */
+        -webkit-background-clip: border-box;
+        background-clip: border-box;
+        -webkit-text-fill-color: currentColor;
+        color: var(--fm-primary-700) !important;
+        font-size: 14px;
+    }
+    .fm-js .profile-page-aside.fm-side .profile-menu-items li a.active,
+    .fm-js .profile-page-aside.fm-side .profile-menu-items li a:hover {
+        background: var(--fm-primary-50);
+        color: var(--fm-primary-700);
+    }
+    .fm-js .profile-page-aside.fm-side .profile-menu-items li a.active { box-shadow: inset -3px 0 0 var(--fm-primary-500); }
+    .fm-js .profile-page-aside.fm-side .profile-menu-items li button.dropdown-item { color: var(--fm-danger-text); }
+    .fm-js .profile-page-aside.fm-side .profile-menu-items li button.dropdown-item i { color: var(--fm-danger-text) !important; background: var(--fm-danger-bg); }
+
+    /* ویجت‌های وبلاگ و صفحات راهنما داخل کشو */
+    .fm-js .fm-side > .sidebar_blog { border-radius: 16px; overflow: hidden; }
+    .fm-js .fm-side .widget_blog,
+    .fm-js .fm-side .fm-panel {
+        border-radius: 14px;
+        box-shadow: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fm-drawer-backdrop,
+    .fm-js .fm-side,
+    .sidebar-collapse nav.header-responsive .navbar-collapse { transition-duration: .01ms !important; }
+}

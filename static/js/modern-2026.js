@@ -12,7 +12,8 @@
         document.documentElement.setAttribute('data-theme', theme);
         if (themeMeta) themeMeta.setAttribute('content', theme === 'dark' ? '#0f1720' : '#ffffff');
         // وضعیت دکمه برای صفحه‌خوان‌ها (روشن/خاموش بودن حالت شب) و راهنمای کوتاه
-        document.querySelectorAll('.theme-toggle').forEach(function (btn) {
+        // .theme-toggle: دکمه‌های سربرگ؛ data-fm-theme-toggle: ردیف «حالت شب» منوی موبایل
+        document.querySelectorAll('.theme-toggle, [data-fm-theme-toggle]').forEach(function (btn) {
             btn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
             btn.setAttribute('title', theme === 'dark' ? 'رفتن به حالت روز' : 'رفتن به حالت شب');
         });
@@ -26,7 +27,7 @@
     applyTheme(saved === 'dark' ? 'dark' : 'light');
 
     document.addEventListener('click', function (e) {
-        var btn = e.target.closest('.theme-toggle');
+        var btn = e.target.closest('.theme-toggle, [data-fm-theme-toggle]');
         if (!btn) return;
         e.preventDefault();
         var current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';

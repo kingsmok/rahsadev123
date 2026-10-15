@@ -96,6 +96,21 @@ def _price_range(qs):
     return qs.aggregate(min=Min('price'), max=Max('price'))
 
 
+def _active_filter_count(request, prices, selected_types, selected_brands, instant_only):
+    """تعداد فیلترهای فعال برای نشان روی دکمهٔ «فیلتر محصولات» در موبایل.
+
+    اسلایدر قیمت همیشه min_price/max_price را می‌فرستد؛ قیمت فقط وقتی فیلتر
+    فعال حساب می‌شود که بازه واقعاً از کمینه/بیشینهٔ فروشگاه تنگ‌تر شده باشد.
+    """
+    count = len(selected_types) + len(selected_brands) + (1 if instant_only == '1' else 0)
+    low = _positive_decimal(request.GET.get('min_price'))
+    high = _positive_decimal(request.GET.get('max_price'))
+    if (low is not None and prices['min'] is not None and low > prices['min']) or \
+            (high is not None and prices['max'] is not None and high < prices['max']):
+        count += 1
+    return count
+
+
 def _product_cards(queryset):
     """Fetch the relations shown by reusable product-card templates in bulk."""
     return queryset.select_related('digital_asset').prefetch_related('brand')
@@ -175,6 +190,7 @@ def product_list(request):
         'actual_max_price': prices['max'],
         'instant_only': instant_only,
         'querystring': querystring,
+        'active_filters': _active_filter_count(request, prices, selected_types, selected_brands, instant_only),
     }
     return render(request, 'product/product_list.html', context)
 
@@ -204,6 +220,7 @@ def category_product_list(request, slug):
         'actual_max_price': prices['max'],
         'instant_only': instant_only,
         'querystring': querystring,
+        'active_filters': _active_filter_count(request, prices, selected_types, selected_brands, instant_only),
     }
     return render(request, 'product/category_product_list.html', context)
 
@@ -230,6 +247,7 @@ def brand_product_list(request, slug):
         'actual_max_price': prices['max'],
         'instant_only': instant_only,
         'querystring': querystring,
+        'active_filters': _active_filter_count(request, prices, selected_types, selected_brands, instant_only),
     }
     return render(request, 'product/brand_product_list.html', context)
 
@@ -262,6 +280,7 @@ def discount_product_list(request):
         'actual_max_price': prices['max'],
         'instant_only': instant_only,
         'querystring': querystring,
+        'active_filters': _active_filter_count(request, prices, selected_types, selected_brands, instant_only),
     }
     return render(request, 'product/discount_product_list.html', context)
 
@@ -310,6 +329,7 @@ def product_search(request):
         'actual_max_price': prices['max'],
         'instant_only': instant_only,
         'querystring': querystring,
+        'active_filters': _active_filter_count(request, prices, selected_types, selected_brands, instant_only),
     }
     return render(request, 'product/product_list.html', context)
 

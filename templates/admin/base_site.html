@@ -25,6 +25,8 @@
     {# بدون این لینک‌ها مرورگر /favicon.ico را می‌خواست و در ادمین همیشه آیکن قدیمی را نشان می‌داد. #}
     <link rel="icon" type="image/png" href="{{ site_brand.favicon_url }}">
     <link rel="apple-touch-icon" href="{{ site_brand.touch_icon_url }}">
+    {# منوی کشویی موبایل فقط با JS فعال می‌شود؛ بدون JS لینک‌ها مثل قبل در سربرگ می‌مانند. #}
+    <script>document.documentElement.classList.add('fm-adm-js');</script>
     <script src="{% asset 'js/fm-admin.js' %}" defer></script>
 {% endblock %}
 
@@ -123,15 +125,9 @@
 
 {% block nav-global %}
     {% if user.is_authenticated %}
-        <a href="{% url 'admin_home' %}"><i class="fa-solid fa-gauge-high" aria-hidden="true"></i> پنل مدیریت</a>
-        <a href="{% url 'admin_health' %}"><i class="fa-solid fa-stethoscope" aria-hidden="true"></i> سلامت فروشگاه</a>
-        <a href="{% url 'admin:product_product_add' %}"><i class="fa-solid fa-plus" aria-hidden="true"></i> محصول جدید</a>
-        <a href="{% url 'admin:blog_article_add' %}"><i class="fa-solid fa-newspaper" aria-hidden="true"></i> مقاله جدید</a>
-        <a href="{% url 'admin:cart_coupon_add' %}"><i class="fa-solid fa-percent" aria-hidden="true"></i> کد تخفیف</a>
-        <a href="{% url 'admin:core_redirect_changelist' %}"><i class="fa-solid fa-arrow-turn-down fa-rotate-90" aria-hidden="true"></i> ریدایرکت‌ها</a>
-        <a href="{% url 'admin:product_productcomment_changelist' %}?status__exact=pending"><i class="fa-solid fa-comments" aria-hidden="true"></i> دیدگاه‌های در انتظار</a>
-        <a href="{% url 'admin:notifications_emailsettings_changelist' %}"><i class="fa-solid fa-envelope" aria-hidden="true"></i> ایمیل (SMTP)</a>
-        <a href="{% url 'admin:notifications_smssettings_changelist' %}"><i class="fa-solid fa-comment-sms" aria-hidden="true"></i> پیامک</a>
+        {% include "admin/includes/quick_links.html" with link_class="fm-adm-quick-link" %}
+        {# موبایل (زیر ۷۶۸px): دکمهٔ همبرگری + کشوی منو با دسترسی سریع و همهٔ بخش‌ها #}
+        {% include "admin/includes/mobile_drawer.html" %}
     {% endif %}
 {% endblock %}
 

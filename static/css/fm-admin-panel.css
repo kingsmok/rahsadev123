@@ -664,6 +664,7 @@ table.ap-table { width: 100%; border-collapse: collapse; min-width: 520px; backg
 
 .ap-burger { display: none; }
 .ap-scrim { display: none; }
+.ap-sidebar__close { display: none; }
 
 @media (max-width: 1080px) {
     .ap-grid--2 { grid-template-columns: minmax(0, 1fr); }
@@ -709,6 +710,27 @@ table.ap-table { width: 100%; border-collapse: collapse; min-width: 520px; backg
         z-index: 35;
     }
     body.ap-nav-open .ap-scrim { opacity: 1; pointer-events: auto; }
+    /* منوی باز: صفحهٔ پشت اسکرول نمی‌شود (مثل منوی همبرگری فروشگاه). */
+    body.ap-nav-open { overflow: hidden; }
+    .ap-sidebar { overscroll-behavior: contain; }
+    /* دکمهٔ بستن داخل نوار برند؛ تراشهٔ سفید مثل نشان برند (کنتراست آیکن ۵٫۶). */
+    .ap-sidebar__close {
+        display: inline-grid;
+        place-items: center;
+        flex: 0 0 40px;
+        width: 40px;
+        height: 40px;
+        margin-inline-start: auto;
+        padding: 0;
+        border: 0;
+        border-radius: 12px;
+        background: #ffffff;
+        color: #2d6e74;
+        font-size: 16px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+    }
+    .ap-sidebar__close:hover { background: #eefafa; }
     .ap-burger { display: inline-flex; }
     .ap-content { padding: 18px 15px 32px; }
     .ap-topbar { padding: 12px 15px; }

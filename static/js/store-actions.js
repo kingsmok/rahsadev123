@@ -112,12 +112,10 @@
         return document.querySelectorAll('.js-cart-drawer-toggle');
     }
 
+    // منوی همبرگری و منوی کناری صفحه‌ها (static/js/fm-drawers.js) با باز شدن
+    // سبد خرید بسته می‌شوند؛ فوکوس را خود سبد خرید در دست می‌گیرد.
     function closeMobileNavigation() {
-        var navigation = document.getElementById('navigation');
-        document.documentElement.classList.remove('nav-open');
-        if (navigation && navigation.classList.contains('show') && window.jQuery && window.jQuery.fn.collapse) {
-            window.jQuery(navigation).collapse('hide');
-        }
+        if (window.FMDrawers) window.FMDrawers.close({immediate: true, restoreFocus: false});
     }
 
     // The drawer is rendered with the page; after an AJAX add it would keep
@@ -150,7 +148,7 @@
         if (event.persisted && config.isAuthenticated) refreshCartDrawer();
     });
 
-    function setCartDrawer(open, trigger) {
+    function setCartDrawer(open, trigger, restoreFocus) {
         if (!drawer) return;
         if (open) {
             closeMobileNavigation();
@@ -170,7 +168,7 @@
             document.documentElement.classList.remove('cart-drawer-open');
             drawer.setAttribute('aria-hidden', 'true');
             cartTriggers().forEach(function (item) { item.setAttribute('aria-expanded', 'false'); });
-            if (lastCartTrigger && typeof lastCartTrigger.focus === 'function' && document.contains(lastCartTrigger)) {
+            if (restoreFocus !== false && lastCartTrigger && typeof lastCartTrigger.focus === 'function' && document.contains(lastCartTrigger)) {
                 lastCartTrigger.focus();
             }
         }
@@ -179,6 +177,11 @@
     function cartDrawerIsOpen() {
         return document.documentElement.classList.contains('cart-drawer-open');
     }
+
+    // کشوهای موبایل پیش از باز شدن، سبد خرید باز را با این تابع می‌بندند.
+    window.FMCloseCartDrawer = function (restoreFocus) {
+        if (cartDrawerIsOpen()) setCartDrawer(false, null, restoreFocus);
+    };
 
     function trapCartDrawerFocus(event) {
         if (!cartDrawerIsOpen() || event.key !== 'Tab' || !drawer) return;

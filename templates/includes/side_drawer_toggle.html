@@ -1,0 +1,33 @@
+{% load custom_filters %}{% comment %}
+دکمهٔ همبرگری «منوی کناری» برای موبایل و تبلت (زیر ۹۹۲px).
+ستون کناری صفحه (فیلترهای فروشگاه، منوی حساب کاربری، دسته‌های وبلاگ، صفحات راهنما)
+در این عرض یک کشوی کناری است و این دکمه آن را باز می‌کند؛ در دسکتاپ پنهان است.
+باید داخل همان .row قرار بگیرد که ستون کناری در آن است.
+
+پارامترها:
+  target   id کشو (همان ستون کناری با data-fm-drawer) — الزامی
+  label    عنوان دکمه — الزامی
+  hint     توضیح کوتاه زیر عنوان (اختیاری)
+  results  تعداد نتایج؛ به‌جای hint به‌صورت «۱۴ فایل» نمایش داده می‌شود (اختیاری)
+  count    عدد نشان قرمز، مثلاً تعداد فیلترهای فعال (اختیاری؛ صفر نمایش داده نمی‌شود)
+  sticky   با اسکرول زیر هدر ثابت می‌ماند (فهرست‌های بلند مثل فروشگاه)
+  extra_class  کلاس اضافه برای ستون دکمه (مثلاً order-0)
+{% endcomment %}
+<div class="col-12 fm-side-toggle-wrap{% if sticky %} fm-side-toggle-wrap--sticky{% endif %}{% if extra_class %} {{ extra_class }}{% endif %}">
+    <button type="button" class="fm-side-toggle" data-fm-drawer-open="{{ target }}"
+            aria-controls="{{ target }}" aria-expanded="false" aria-haspopup="dialog">
+        <span class="fm-side-toggle__burger" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span class="fm-side-toggle__text">
+            <b>{{ label }}</b>
+            {% if results is not None and results != '' %}
+                <small>{{ results|persian_digits }} فایل</small>
+            {% elif hint %}
+                <small>{{ hint }}</small>
+            {% endif %}
+        </span>
+        {% if count %}
+            <span class="fm-side-toggle__badge">{{ count|persian_digits }}<span class="fm-sr-only"> فیلتر فعال</span></span>
+        {% endif %}
+        <i class="fa fa-chevron-left fm-side-toggle__chev" aria-hidden="true"></i>
+    </button>
+</div>

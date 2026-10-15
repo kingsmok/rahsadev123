@@ -40,6 +40,24 @@ def persian_digits(value):
     return value.translate(str.maketrans('0123456789', '۰۱۲۳۴۵۶۷۸۹'))
 
 
+_TO_LATIN_DIGITS = str.maketrans('۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩', '01234567890123456789')
+
+
+@register.filter
+def tel_href(value):
+    """شماره تلفن تنظیمات سایت ← لینک «tel:» قابل لمس در موبایل.
+
+    شماره ممکن است با ارقام فارسی، فاصله یا خط تیره ذخیره شده باشد
+    («۰۲۱-۹۱۰۰ ۸۰۸۰»)؛ شماره‌گیر گوشی فقط ارقام لاتین را می‌فهمد. اگر
+    رقمی نماند رشتهٔ خالی برمی‌گردد تا قالب لینک را نسازد.
+    """
+    raw = str(value or '').translate(_TO_LATIN_DIGITS).strip()
+    digits = ''.join(char for char in raw if char in '0123456789')
+    if not digits:
+        return ''
+    return 'tel:' + ('+' if raw.startswith('+') else '') + digits
+
+
 from core.admin_utils import PERSIAN_MONTHS  # فهرست مرکزی نام ماه‌ها
 
 
