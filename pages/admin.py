@@ -23,7 +23,7 @@ class StaticPageAdmin(RawHtmlAdminMixin, admin.ModelAdmin):
         }),
         ('محتوا (ویرایشگر متنی)', {'fields': ('content',)}),
         ('کد HTML سفارشی (با پیش‌نمایش زنده)', {
-            'description': 'HTML، CSS (<style>) و JS (<script>) که عیناً در صفحه اجرا می‌شود. '
+            'description': 'HTML، CSS (تگ style) و JS (تگ script) که عیناً در صفحه اجرا می‌شود. '
                            'فقط مدیر کل یا دارندهٔ مجوز «ویرایش کد HTML خام» می‌تواند آن را تغییر دهد.',
             'fields': ('custom_html_mode', 'custom_html'),
         }),

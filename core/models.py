@@ -80,6 +80,11 @@ class SiteSettings(models.Model):
     logo = models.ImageField(upload_to='settings/', null=True, blank=True, verbose_name='لوگو (اختیاری)',
                              help_text='در هدر فروشگاه، Django Admin و پنل مدیریت نمایش داده می‌شود. '
                                        'اگر خالی باشد لوگوی متنی (حرف اول نام سایت) نمایش داده می‌شود.')
+    logo_dark = models.ImageField(
+        upload_to='settings/', null=True, blank=True, verbose_name='لوگوی حالت شب (اختیاری)',
+        help_text='نسخهٔ روشنِ لوگو برای هدر تیره در حالت شب (مثلاً متن سفید با پس‌زمینهٔ شفاف). '
+                  'اگر خالی باشد، در حالت شب همان لوگوی اصلی روی یک کادر روشن نمایش داده می‌شود تا خوانا بماند.',
+    )
     favicon = models.ImageField(upload_to='settings/', null=True, blank=True,
                                 verbose_name='آیکن تب مرورگر (فاوآیکن)',
                                 help_text='آیکن کوچک بالای تب مرورگر، آیکن نصب اپ (PWA) و آیکن صفحهٔ اصلی آیفون. '
@@ -331,7 +336,8 @@ class HtmlBlock(models.Model):
     title = models.CharField(max_length=120, verbose_name='عنوان (فقط برای مدیریت)')
     placement = models.CharField(max_length=30, choices=PLACEMENTS, verbose_name='محل نمایش')
     html = models.TextField(verbose_name='کد HTML',
-                            help_text='کد HTML، CSS (<style>) یا JS (<script>) که عیناً اجرا می‌شود.')
+                            # بدون < >: راهنمای ادمین HTML خام است (ر.ک. core.custom_html.CUSTOM_HTML_HELP)
+                            help_text='کد HTML، CSS (تگ style) یا JS (تگ script) که عیناً اجرا می‌شود.')
     full_width = models.BooleanField(default=False, verbose_name='تمام‌عرض (بدون کادر وسط‌چین)')
     is_active = models.BooleanField(default=True, verbose_name='فعال')
     order = models.PositiveIntegerField(default=0, verbose_name='ترتیب')

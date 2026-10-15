@@ -89,8 +89,10 @@
     <link href="{% asset 'css/fm-accessibility.css' %}" rel="stylesheet"/>
     <!-- قابلیت‌های ۲۰۲۶/۱۰: آیکن‌های هدر، مگامنو، منوی موبایل، اشتراک‌گذاری، شبکه‌های اجتماعی، بنرها -->
     <link href="{% asset 'css/fm-features.css' %}" rel="stylesheet"/>
-    <!-- ممیزی نهایی واکنش‌گرایی و containment؛ باید آخرین لایهٔ مشترک بماند. -->
+    <!-- ممیزی نهایی واکنش‌گرایی و containment؛ آخرین لایهٔ مشترکِ حالت روز. -->
     <link href="{% asset 'css/fm-ui-audit.css' %}" rel="stylesheet"/>
+    <!-- اصلاحات ممیزی حالت شب؛ فقط زیر [data-theme="dark"] اعمال می‌شود. -->
+    <link href="{% asset 'css/fm-dark.css' %}" rel="stylesheet"/>
 </head>
 
 <body class="index-page sidebar-collapse">
@@ -139,7 +141,8 @@
             <div class="fm-mnav__head">
                 <a href="{% url 'core:home' %}" class="text-logo fm-mnav__logo">
                     {% if site_brand.logo_url %}
-                        <img src="{{ site_brand.logo_url }}" alt="{{ site_name }}" class="site-logo site-logo--mobile">
+                        <img src="{{ site_brand.logo_url }}" alt="{{ site_name }}" class="site-logo site-logo--mobile{% if site_brand.logo_dark_url %} site-logo--has-dark{% endif %}">
+                        {% if site_brand.logo_dark_url %}<img src="{{ site_brand.logo_dark_url }}" alt="{{ site_name }}" class="site-logo site-logo--mobile site-logo--dark" loading="lazy">{% endif %}
                     {% else %}
                         <span class="brand-mark" aria-hidden="true">{{ site_brand.initial }}</span>
                         <span>{{ site_name }}</span>
@@ -218,7 +221,8 @@
                     <div class="logo-area default">
                         <a href="{% url 'core:home' %}" class="text-logo">
                             {% if site_brand.logo_url %}
-                                <img src="{{ site_brand.logo_url }}" alt="{{ site_name }}" class="site-logo site-logo--desktop">
+                                <img src="{{ site_brand.logo_url }}" alt="{{ site_name }}" class="site-logo site-logo--desktop{% if site_brand.logo_dark_url %} site-logo--has-dark{% endif %}">
+                                {% if site_brand.logo_dark_url %}<img src="{{ site_brand.logo_dark_url }}" alt="{{ site_name }}" class="site-logo site-logo--desktop site-logo--dark" loading="lazy">{% endif %}
                             {% else %}
                                 <span class="brand-mark" aria-hidden="true">{{ site_brand.initial }}</span>
                                 <span>{{ site_name }}<small>{{ site_settings.site_slogan|default:'فایل | نرم‌افزار | محصولات مجازی' }}</small></span>

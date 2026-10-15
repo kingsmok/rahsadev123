@@ -116,8 +116,10 @@
                                                     <li class="list-group-item">نسخه:
                                                         {{ products.digital_info.version }}</li>
                                                 {% endif %}
-                                                <li class="list-group-item">حجم فایل:
-                                                    {{ products.digital_info.file_size_display }}</li>
+                                                {% if products.digital_info.file_size %}
+                                                    <li class="list-group-item">حجم فایل:
+                                                        {{ products.digital_info.file_size_display }}</li>
+                                                {% endif %}
                                             {% endif %}
                                             {% if products.operating_system %}
                                                 <li class="list-group-item"> سیستم عامل
@@ -334,8 +336,10 @@
                                                             <li class="list-group-item">نسخه:
                                                                 {{ products.digital_info.version }}</li>
                                                         {% endif %}
-                                                        <li class="list-group-item">حجم فایل:
-                                                            {{ products.digital_info.file_size_display }}</li>
+                                                        {% if products.digital_info.file_size %}
+                                                            <li class="list-group-item">حجم فایل:
+                                                                {{ products.digital_info.file_size_display }}</li>
+                                                        {% endif %}
                                                         <li class="list-group-item">تعداد دانلود:
                                                             {{ products.digital_info.download_count }}</li>
                                                     {% endif %}

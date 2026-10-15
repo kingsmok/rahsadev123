@@ -94,6 +94,15 @@
     --ap-head-line: rgba(232, 238, 244, .07);
     --ap-btn-second: #1d4e52;
     --ap-btn-second-fg: #e7eef4;
+    /* رنگ‌های «متن» روی کارت تیره باید روشن باشند: #2d6e74 فقط ۲٫۹ و رنگ‌های
+       وضعیتِ روز ۳٫۱ تا ۳٫۹ کنتراست داشتند. */
+    --ap-primary-strong: #8fd8dd;
+    --ap-muted: #9fb2c1;
+    --ap-success: #3fcf8e;
+    --ap-warning: #e9b949;
+    --ap-danger: #f47c7c;
+    --ap-info: #6cb6ec;
+    --ap-purple: #b3a6f5;
     --ap-shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 26px rgba(0, 0, 0, .28);
     --ap-shadow-hover: 0 2px 8px rgba(0, 0, 0, .35), 0 18px 36px rgba(0, 0, 0, .35);
 }
@@ -758,3 +767,13 @@ table.ap-table { width: 100%; border-collapse: collapse; min-width: 520px; backg
     border-radius: 3px;
     flex: 0 0 9px;
 }
+
+
+/* ───────────────────────── حالت شب: سطوحِ دارای متن سفید ─────────────────────────
+   --ap-primary (#46a9ae) برای متن سفید روشن است (۲٫۸)؛ در شب دکمه‌ها، نوار برند و
+   رتبهٔ اول فیروزه‌ای تیره‌تر می‌گیرند تا متن سفید خوانا بماند (۵٫۹). */
+[data-theme='dark'] .ap-brand { background: linear-gradient(160deg, #1f6f74 0%, #18565a 100%); }
+[data-theme='dark'] .ap-range a.is-active,
+[data-theme='dark'] .ap-btn--primary,
+[data-theme='dark'] .ap-rank li:nth-child(1) .ap-rank__no { background: #1f6f74; }
+[data-theme='dark'] .ap-btn--primary:hover { background: #2a6a70; color: #ffffff; }

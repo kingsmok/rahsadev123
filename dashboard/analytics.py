@@ -22,7 +22,7 @@ from cart.models import Coupon, Order, OrderItem
 from core.models import ContactUs, NewsletterSubscriber, Redirect
 from downloads.models import DownloadToken
 from payments.models import PaymentTransaction
-from product.models import PRODUCT_TYPES, Product, ProductCategory, ProductComment
+from product.models import PRODUCT_TYPES, Product, ProductCategory, ProductComment, missing_file_q
 from services.models import PortfolioItem, ServicePackage, ServiceRequest
 
 # بازه‌های قابل انتخاب در داشبورد: (تعداد روز، برچسب فارسی)
@@ -252,7 +252,7 @@ def low_stock_products(limit=6):
 def products_without_asset(limit=6):
     """محصولات منتشرشده‌ای که هنوز فایل قابل دانلود ندارند."""
     return list(
-        Product.objects.filter(status='published', digital_asset__isnull=True)
+        Product.objects.filter(missing_file_q(), status='published')
         .order_by('-created_at')[:limit]
     )
 

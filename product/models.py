@@ -1,9 +1,12 @@
 import logging
+import os
+from urllib.parse import unquote, urlsplit
 
 from django.db import models
 from core.thumbnails import admin_thumbnail
 from django.contrib.auth.models import User
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator, URLValidator
 from django_ckeditor_5.fields import CKEditor5Field
 
 from accounts.roles import vendor_choices
@@ -238,16 +241,53 @@ class Product(CustomHtmlMixin, models.Model):
         return self.title
 
 
+def _extension_of(name):
+    """'ZIP' for 'theme-v2.zip'; '' when the name has no sensible extension."""
+    base = os.path.basename(name or '')
+    if '.' not in base:
+        return ''
+    extension = base.rsplit('.', 1)[-1]
+    return extension.upper() if extension.isalnum() and len(extension) <= 6 else ''
+
+
 class DigitalAsset(models.Model):
+    """The file a buyer downloads: uploaded to private storage or a download link.
+
+    Either way the buyer only reaches it through ``/downloads/<token>/``, which
+    checks the order, the expiry and the download limit first; a link is never
+    printed in a page.  Links suit large files kept on a download server or host.
+    """
+
+    SOURCE_UPLOAD = 'upload'
+    SOURCE_LINK = 'link'
+    SOURCES = (
+        (SOURCE_UPLOAD, 'آپلود فایل روی سایت'),
+        (SOURCE_LINK, 'لینک دانلود (فایل روی سرور دانلود یا هاست دیگر)'),
+    )
+
     product = models.OneToOneField(Product, related_name='digital_asset', on_delete=models.CASCADE, verbose_name='محصول')
+    source = models.CharField(
+        max_length=10, choices=SOURCES, default=SOURCE_UPLOAD, verbose_name='نحوهٔ تحویل فایل',
+        help_text='فایل را روی سایت آپلود کنید یا لینک دانلود آن را بگذارید. در هر دو حالت خریدار '
+                  'فقط بعد از پرداخت و از مسیر امن «دانلودهای من» به فایل می‌رسد.',
+    )
     file = models.FileField(
         upload_to='digital-products/',
         storage=PrivateDigitalStorage(),
+        blank=True,
         verbose_name='فایل محصول',
+        help_text='برای حالت «آپلود فایل». فایل در پوشهٔ خصوصی ذخیره می‌شود و آدرس عمومی ندارد.',
+    )
+    external_url = models.URLField(
+        max_length=1000, blank=True, validators=[URLValidator(schemes=['http', 'https'])],
+        verbose_name='لینک دانلود',
+        help_text='برای حالت «لینک دانلود»: لینک مستقیم فایل (مثلاً https://dl.example.com/theme.zip). '
+                  'این لینک در صفحه‌ها نمایش داده نمی‌شود و خریدار هنگام دانلود به آن هدایت می‌شود.',
     )
     preview_file = models.FileField(upload_to='digital-previews/', null=True, blank=True, verbose_name='فایل پیش‌نمایش')
     file_size = models.PositiveBigIntegerField(default=0, editable=False, verbose_name='حجم فایل')
-    file_type = models.CharField(max_length=80, blank=True, verbose_name='فرمت فایل')
+    file_type = models.CharField(max_length=80, blank=True, verbose_name='فرمت فایل',
+                                 help_text='اگر خالی بماند از پسوند فایل یا لینک خوانده می‌شود (مثلاً ZIP).')
     version = models.CharField(max_length=30, blank=True, verbose_name='نسخه')
     changelog = models.TextField(blank=True, verbose_name='تغییرات نسخه', help_text='هر خط یک مورد از تغییرات نسخه')
     download_count = models.PositiveIntegerField(default=0, editable=False, verbose_name='تعداد دانلود')
@@ -257,8 +297,25 @@ class DigitalAsset(models.Model):
         verbose_name = 'فایل دیجیتال'
         verbose_name_plural = 'فایل‌های دیجیتال'
 
+    @property
+    def is_link(self):
+        return self.source == self.SOURCE_LINK
+
+    def clean(self):
+        super().clean()
+        if self.is_link:
+            if not self.external_url:
+                raise ValidationError({'external_url': 'برای «لینک دانلود»، آدرس لینک فایل را وارد کنید.'})
+        elif not self.file:
+            raise ValidationError({'file': 'برای «آپلود فایل»، فایل محصول را انتخاب کنید '
+                                           '(یا نحوهٔ تحویل را «لینک دانلود» بگذارید).'})
+
     def save(self, *args, **kwargs):
-        if self.file:
+        if self.is_link:
+            # The size of a linked file is whatever the admin entered (or unknown).
+            if not self.file_type:
+                self.file_type = _extension_of(unquote(urlsplit(self.external_url).path))
+        elif self.file:
             try:
                 self.file_size = self.file.size
             except (OSError, ValueError):
@@ -266,8 +323,20 @@ class DigitalAsset(models.Model):
                 # from storage); the size is metadata, not a hard requirement.
                 logger.warning('حجم فایل دیجیتال خوانده نشد: %s', self.file.name, exc_info=True)
             if not self.file_type:
-                self.file_type = self.file.name.rsplit('.', 1)[-1].upper() if '.' in self.file.name else ''
+                self.file_type = _extension_of(self.file.name)
         super().save(*args, **kwargs)
+
+    def is_deliverable(self):
+        """True when a buyer can actually receive something right now."""
+        if self.is_link:
+            return bool(self.external_url)
+        if not self.file:
+            return False
+        try:
+            # PrivateDigitalStorage also finds files still in the legacy media folder.
+            return self.file.storage.exists(self.file.name)
+        except (OSError, ValueError):
+            return False
 
     @property
     def file_size_display(self):
@@ -282,6 +351,15 @@ class DigitalAsset(models.Model):
 
     def __str__(self):
         return self.product.title
+
+
+def missing_file_q():
+    """Products a buyer would get nothing for: no file row, or an empty upload/link."""
+    return (
+        models.Q(digital_asset__isnull=True)
+        | models.Q(digital_asset__source=DigitalAsset.SOURCE_UPLOAD, digital_asset__file='')
+        | models.Q(digital_asset__source=DigitalAsset.SOURCE_LINK, digital_asset__external_url='')
+    )
 
 
 class ProductImage(models.Model):

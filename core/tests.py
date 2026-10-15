@@ -825,7 +825,7 @@ class SiteBrandingTests(TestCase):
         data = {
             key: '' if value is None else value
             for key, value in model_to_dict(self.site).items()
-            if key not in ('id', 'logo', 'favicon')
+            if key not in ('id', 'logo', 'logo_dark', 'favicon')
         }
         data['replace_old_name'] = 'on'
         data.update(overrides)

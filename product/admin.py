@@ -10,9 +10,72 @@ from core.admin_utils import EnhancedAdminMixin, to_jalali
 from jalali_date.admin import ModelAdminJalaliMixin
 
 
+class DigitalAssetForm(forms.ModelForm):
+    """«آپلود فایل» یا «لینک دانلود»؛ فقط فیلدهای همان حالت نمایش داده می‌شوند (fm-digital-asset.js)."""
+
+    link_size_mb = forms.DecimalField(
+        label='حجم فایل (مگابایت)', required=False, min_value=0, max_digits=12, decimal_places=2,
+        help_text='اختیاری، برای حالت «لینک دانلود»: برای نمایش حجم در صفحهٔ محصول و «دانلودهای من». '
+                  'حجم فایل آپلودشده خودکار محاسبه می‌شود.',
+    )
+
+    class Meta:
+        model = models.DigitalAsset
+        fields = ('source', 'file', 'external_url', 'link_size_mb', 'file_type', 'version', 'changelog', 'preview_file')
+        widgets = {
+            'source': forms.RadioSelect(attrs={'class': 'fm-asset-source'}),
+            'external_url': forms.URLInput(attrs={'dir': 'ltr', 'placeholder': 'https://dl.example.com/files/product.zip',
+                                                  'style': 'width: 100%; max-width: 560px'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance = self.instance
+        if instance.pk and instance.is_link and instance.file_size:
+            self.initial.setdefault('link_size_mb', round(instance.file_size / (1024 * 1024), 2))
+
+    def save(self, commit=True):
+        asset = super().save(commit=False)
+        if asset.is_link:
+            size_mb = self.cleaned_data.get('link_size_mb')
+            asset.file_size = int(size_mb * 1024 * 1024) if size_mb else 0
+        if commit:
+            asset.save()
+            self.save_m2m()
+        return asset
+
+
 class DigitalAssetInline(admin.StackedInline):
     model = models.DigitalAsset
-    extra = 0
+    form = DigitalAssetForm
+    # فرم از همان ابتدا دیده شود؛ محصول بدون فایل هم قابل ذخیره است (فرم خالی نادیده گرفته می‌شود).
+    extra = 1
+    max_num = 1
+    can_delete = True
+    verbose_name = 'فایل محصول (آپلود یا لینک دانلود)'
+    verbose_name_plural = 'فایل محصول (آپلود یا لینک دانلود)'
+    readonly_fields = ('delivery_status',)
+    fieldsets = (
+        (None, {'fields': ('source', 'file', 'external_url', 'link_size_mb', 'delivery_status')}),
+        ('مشخصات فایل', {'fields': ('file_type', 'version', 'changelog', 'preview_file')}),
+    )
+
+    @property
+    def media(self):
+        from core.assets import asset_url
+
+        return super().media + forms.Media(js=(asset_url('js/fm-digital-asset.js'),))
+
+    @admin.display(description='وضعیت تحویل')
+    def delivery_status(self, obj):
+        if not obj or not obj.pk:
+            return 'پس از ذخیره نمایش داده می‌شود.'
+        if obj.is_deliverable():
+            label = 'لینک دانلود تنظیم شده است' if obj.is_link else 'فایل روی سایت موجود است'
+            return format_html('<span class="fm-status fm-status--ok">✓ {}</span> — {} دانلود تا کنون',
+                               label, obj.download_count)
+        return format_html('<span class="fm-status fm-status--bad">✗ {}</span>',
+                           'فایل در دسترس نیست؛ دوباره آپلود کنید یا لینک را بررسی کنید.')
 
 
 class ProductImageAdmin(admin.StackedInline):

@@ -19,7 +19,7 @@ from core.csv_safety import csv_safe
 from core.models import Redirect
 from downloads.models import DownloadToken
 from payments.models import GatewaySettings, PaymentTransaction
-from product.models import Product
+from product.models import Product, missing_file_q
 from services.models import PortfolioItem, ServicePackage, ServiceRequest
 
 from . import analytics
@@ -143,7 +143,7 @@ def admin_health(request):
     """بررسی سریع سلامت فروشگاه: داده‌های ناقص و کارهای نیمه‌تمام."""
     context = {
         'products_without_asset': Product.objects.filter(
-            status='published', digital_asset__isnull=True
+            missing_file_q(), status='published'
         ).order_by('-created_at'),
         'products_without_image': Product.objects.filter(
             status='published', image=''

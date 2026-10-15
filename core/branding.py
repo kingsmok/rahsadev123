@@ -132,6 +132,7 @@ class Brand:
             str(settings_obj.pk),
             stamp.isoformat() if stamp else '',
             getattr(_stored_file(settings_obj, 'logo'), 'name', ''),
+            getattr(_stored_file(settings_obj, 'logo_dark'), 'name', ''),
             getattr(_stored_file(settings_obj, 'favicon'), 'name', ''),
             self.name,
         ))
@@ -149,6 +150,12 @@ class Brand:
     def logo_url(self):
         logo = _stored_file(self.settings, 'logo')
         return _with_version(logo.url, self.version) if logo else ''
+
+    @cached_property
+    def logo_dark_url(self):
+        """Light-on-dark variant shown in dark mode; only meaningful with a main logo."""
+        logo = _stored_file(self.settings, 'logo_dark')
+        return _with_version(logo.url, self.version) if logo and self.logo_url else ''
 
     @cached_property
     def icon_source(self):

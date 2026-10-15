@@ -229,11 +229,14 @@ _FALLBACK_500 = """<!DOCTYPE html>
 <html lang="fa" dir="rtl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex, follow"><title>خطای سرور</title>
+<script>try{if(localStorage.getItem('fm-theme')==='dark'){document.documentElement.setAttribute('data-theme','dark')}}catch(e){}</script>
 <style>body{font-family:Tahoma,Arial,sans-serif;background:#f6f8fa;color:#22333f;
 display:grid;place-items:center;min-height:100vh;margin:0;text-align:center;padding:24px}
 h1{font-size:22px;margin:0 0 12px}p{color:#5d7285;line-height:2;margin:0 0 20px}
-a{display:inline-block;background:#46a9ae;color:#fff;text-decoration:none;
-padding:11px 28px;border-radius:999px;font-weight:bold}</style></head>
+a{display:inline-block;background:#2d6e74;color:#fff;text-decoration:none;
+padding:11px 28px;border-radius:999px;font-weight:bold}
+[data-theme=dark]{color-scheme:dark}[data-theme=dark] body{background:#0f1720;color:#e8eef4}
+[data-theme=dark] p{color:#9db0c0}</style></head>
 <body><div><h1>خطایی در سرور رخ داد</h1>
 <p>مشکل از سمت ماست و تیم فنی در جریان قرار گرفت.<br>لطفاً چند دقیقه بعد دوباره تلاش کنید.</p>
 <a href="/">بازگشت به صفحه اصلی</a></div></body></html>"""

@@ -11,6 +11,11 @@
     function applyTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         if (themeMeta) themeMeta.setAttribute('content', theme === 'dark' ? '#0f1720' : '#ffffff');
+        // وضعیت دکمه برای صفحه‌خوان‌ها (روشن/خاموش بودن حالت شب) و راهنمای کوتاه
+        document.querySelectorAll('.theme-toggle').forEach(function (btn) {
+            btn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+            btn.setAttribute('title', theme === 'dark' ? 'رفتن به حالت روز' : 'رفتن به حالت شب');
+        });
     }
 
     // مقدار اولیه در <head> ست شده (ضد فلش)؛ حالت روشن پیش‌فرض محصول است.

@@ -66,6 +66,9 @@
     --adm-search-bg: #f1f9fa;               /* فیلد جست‌وجوی داشبورد */
     --adm-underline: #61bec3;               /* زیرخط عنوان کارت‌ها */
     --adm-btn-second: #cfebed;              /* دکمهٔ ثانوی masai */
+    --adm-btn-second-fg: #000000;
+    --adm-accent-fg: #0f766e;               /* متن/آیکن فیروزه‌ای (زنگوله، نقش‌ها) */
+    --adm-action-bg: var(--fm-primary-500); /* دکمه‌های فیروزه‌ای قالب (برو، کارت معرفی) */
     --adm-btn-error: #d14545;               /* دکمهٔ خطا masai */
     --adm-btn-error-hover: #eddccf;
     --adm-icon-blue: #2d66ce;
@@ -142,6 +145,13 @@ html[data-theme='dark'], html.fm-auto-dark {
     --adm-search-bg: rgba(92, 195, 201, .09);
     --adm-underline: var(--fm-primary-400);
     --adm-btn-second: #1d4e52;
+    --adm-btn-second-fg: #e8eef4;           /* متن مشکی روی #1d4e52 فقط ۲٫۳ بود */
+    --adm-accent-fg: #5eead4;               /* #0f766e روی زمینهٔ تیره ۲٫۷ تا ۳٫۴ بود */
+    /* دکمه‌های فیروزه‌ای: primary-500 در شب روشن (#5cc3c9) است و متن سفید ۲٫۱ می‌شد */
+    --adm-action-bg: #1f6f74;
+    --button-bg: #1f6f74;
+    --default-button-bg: #1f6f74;
+    --object-tools-bg: #1f6f74;
     --adm-icon-blue: #6fa1f0;
     --adm-icon-green: #4fd39b;
     --adm-icon-pink: #e56bb5;
@@ -275,7 +285,7 @@ body {
 /* دکمهٔ خروج — همان btn-second-masai داشبورد */
 #logout-form button {
     background: var(--adm-btn-second);
-    color: #000;
+    color: var(--adm-btn-second-fg);
     border: 0;
     border-radius: 999px;
     padding: 6px 15px;
@@ -604,7 +614,7 @@ html.fm-auto-dark .fm-admin-hero { border-color: var(--fm-border); }
 .fm-admin-hero p { margin: 0 0 10px; font-size: 12.8px; color: var(--body-medium-color); line-height: 2; }
 .fm-admin-hero .button {
     display: inline-block;
-    background: var(--fm-primary-500);
+    background: var(--adm-action-bg);
     color: #fff;
     border-radius: 999px;
     padding: 9px 18px;
@@ -836,7 +846,7 @@ html.fm-auto-dark #content #changelist .results tbody tr:hover th { background: 
 #content #changelist .actions input[type='submit'] {
     border: 0;
     border-radius: 999px;
-    background: var(--fm-primary-500);
+    background: var(--adm-action-bg);
     color: #fff;
     font-family: var(--fm-font);
     font-weight: 700;
@@ -968,17 +978,21 @@ input:focus, textarea:focus, select:focus {
 /* اصلی masai: فیروزه‌ای/سفید ← هاور کم‌رنگ/سیاه */
 #content .submit-row input.default,
 #content .submit-row a.default {
-    background: var(--fm-primary-500);
+    background: var(--adm-action-bg);
     color: #fff;
 }
 #content .submit-row input.default:hover,
-#content .submit-row a.default:hover { background: var(--adm-btn-second); color: #000; }
+#content .submit-row a.default:hover { background: var(--adm-btn-second); color: var(--adm-btn-second-fg); }
 /* ثانوی masai */
 #content .submit-row input:not(.default):not(.deletelink),
 #content .submit-row a:not(.default):not(.deletelink) {
     background: var(--adm-btn-second);
-    color: #000;
+    color: var(--adm-btn-second-fg);
 }
+html[data-theme='dark'] #content .submit-row input:not(.default):not(.deletelink):hover,
+html[data-theme='dark'] #content .submit-row a:not(.default):not(.deletelink):hover,
+html.fm-auto-dark #content .submit-row input:not(.default):not(.deletelink):hover,
+html.fm-auto-dark #content .submit-row a:not(.default):not(.deletelink):hover { background: #2a6a70; }
 #content .submit-row input:not(.default):not(.deletelink):hover,
 #content .submit-row a:not(.default):not(.deletelink):hover { background: #5bbac0; color: #fff; }
 /* خطر masai */
@@ -1119,16 +1133,16 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .fm-bell__toggle:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .fm-bell.has-new .fm-bell__toggle { animation: fm-bell-ring .6s ease 3; }
 @keyframes fm-bell-ring { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(14deg); } 75% { transform: rotate(-14deg); } }
-.fm-bell__count { position: absolute; top: -6px; inset-inline-start: -6px; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 999px; background: #ef4444; color: #fff; font-size: 11px; font-weight: 700; line-height: 19px; text-align: center; box-shadow: 0 0 0 2px var(--header-bg, #0f766e); }
+.fm-bell__count { position: absolute; top: -6px; inset-inline-start: -6px; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 999px; background: #dc2626; color: #fff; font-size: 11px; font-weight: 700; line-height: 19px; text-align: center; box-shadow: 0 0 0 2px var(--header-bg, #0f766e); }
 .fm-bell__panel { position: absolute; top: calc(100% + 10px); inset-inline-end: 0; z-index: 1000; width: min(380px, 92vw); background: var(--body-bg, #fff); color: var(--body-fg, #1f2937); border: 1px solid var(--hairline-color, #e5e7eb); border-radius: 14px; box-shadow: 0 18px 40px rgba(15, 23, 42, .18); text-align: start; overflow: hidden; }
 .fm-bell__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--hairline-color, #e5e7eb); }
 .fm-bell__head form { margin: 0; display: inline; }
-#user-tools .fm-bell__mark { background: transparent; border: 0; color: #0f766e; cursor: pointer; font: inherit; font-size: 12px; padding: 0; text-decoration: none; }
+#user-tools .fm-bell__mark { background: transparent; border: 0; color: var(--adm-accent-fg, #0f766e); cursor: pointer; font: inherit; font-size: 12px; padding: 0; text-decoration: none; }
 #user-tools .fm-bell__mark:disabled { opacity: .45; cursor: default; }
 .fm-bell__list { list-style: none; margin: 0; padding: 0; max-height: 360px; overflow: auto; }
 .fm-bell__item a { display: flex; gap: 10px; align-items: flex-start; padding: 10px 14px; color: inherit !important; text-decoration: none !important; border-bottom: 1px solid var(--hairline-color, #f1f5f9); }
 .fm-bell__item a:hover { background: rgba(15, 118, 110, .07); }
-.fm-bell__item i { margin-top: 3px; width: 18px; text-align: center; color: #0f766e; }
+.fm-bell__item i { margin-top: 3px; width: 18px; text-align: center; color: var(--adm-accent-fg, #0f766e); }
 .fm-bell__item--success i { color: #059669; }
 .fm-bell__item--warning i { color: #d97706; }
 .fm-bell__item--danger i { color: #dc2626; }
@@ -1138,12 +1152,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .fm-bell__title { white-space: normal; line-height: 1.6; }
 .fm-bell__text small { opacity: .7; font-size: 11px; }
 .fm-bell__empty { padding: 18px 14px; text-align: center; opacity: .7; }
-#user-tools .fm-bell__all { display: block; padding: 10px 14px; text-align: center; font-weight: 600; color: #0f766e !important; text-decoration: none; }
-.fm-notif-dot { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: rgba(15, 118, 110, .1); color: #0f766e; }
+#user-tools .fm-bell__all { display: block; padding: 10px 14px; text-align: center; font-weight: 600; color: var(--adm-accent-fg, #0f766e) !important; text-decoration: none; }
+.fm-notif-dot { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: rgba(15, 118, 110, .1); color: var(--adm-accent-fg, #0f766e); }
 .fm-notif-dot--success { background: rgba(5, 150, 105, .12); color: #059669; }
 .fm-notif-dot--warning { background: rgba(217, 119, 6, .12); color: #d97706; }
 .fm-notif-dot--danger { background: rgba(220, 38, 38, .12); color: #dc2626; }
-.fm-role { display: inline-block; padding: 2px 8px; border-radius: 999px; background: rgba(15, 118, 110, .1); color: #0f766e; font-size: 12px; }
+.fm-role { display: inline-block; padding: 2px 8px; border-radius: 999px; background: rgba(15, 118, 110, .1); color: var(--adm-accent-fg, #0f766e); font-size: 12px; }
 
 /* فهرست‌های کشویی فرم‌ها: ارتفاع ثابت 30px ادمین جنگو با padding این قالب
    متن گزینه را از پایین می‌برید (مثلاً «نوع بنر» و «ارتفاع نمایش» خوانا نبودند). */
@@ -1166,3 +1180,79 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 }
 #user-tools .fm-bell__toggle:hover { background: var(--fm-primary-100, #d5efef); }
 #content .field-custom_html .help, #content .field-html .help { white-space: normal; max-width: none; }
+
+/* ---------------------------------------------------------------- فایل محصول: آپلود یا لینک */
+.field-source div[id$="-source"] { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; }
+.field-source div[id$="-source"] > div { margin: 0; }
+.field-source div[id$="-source"] label {
+    display: inline-flex; align-items: center; gap: 8px; margin: 0; padding: 9px 14px;
+    border: 1px solid var(--border-color, #d5e2e5); border-radius: 12px; background: var(--body-bg, #fff);
+    font-weight: 700; cursor: pointer; width: auto;
+}
+.field-source div[id$="-source"] label:has(input:checked) { border-color: #0f766e; box-shadow: 0 0 0 3px rgba(15, 118, 110, .15); }
+.field-source div[id$="-source"] input[type="radio"] { margin: 0; }
+
+/* ---------------------------------------------------------------- دکمه داخل جدول‌ها
+   «#content .module td a» رنگ لینک را به دکمه‌های داخل جدول هم می‌داد
+   (مثلاً «بررسی» در فهرست اعلان‌ها): متن فیروزه‌ای روی دکمهٔ فیروزه‌ای. */
+#content .module td a.button,
+#content .module th a.button { color: var(--button-fg); }
+
+/* ---------------------------------------------------------------- ویرایشگر CKEditor در حالت شب
+   ویرایشگر رنگ‌های خودش را از متغیرهای --ck-* می‌گیرد و همیشه سفید می‌ماند؛ در حالت شب
+   عنوان‌های متن (رنگ متوسطِ جنگو) روی همان زمینهٔ سفید تقریباً نامرئی بودند. */
+html[data-theme='dark'] .ck,
+html.fm-auto-dark .ck {
+    --ck-color-base-background: #15202a;
+    --ck-color-base-foreground: #1d2a36;
+    --ck-color-base-border: #33475a;
+    --ck-color-base-text: #e8eef4;
+    --ck-color-text: #e8eef4;
+    --ck-color-focus-border: #4fb8bf;
+    --ck-color-shadow-inner: rgba(0, 0, 0, .35);
+    --ck-color-shadow-drop: rgba(0, 0, 0, .35);
+    --ck-color-toolbar-background: #1d2a36;
+    --ck-color-toolbar-border: #33475a;
+    --ck-color-button-default-hover-background: #27394a;
+    --ck-color-button-default-active-background: #2d4150;
+    --ck-color-button-on-background: #1d4e52;
+    --ck-color-button-on-hover-background: #27595e;
+    --ck-color-button-on-color: #e8eef4;
+    --ck-color-split-button-hover-background: #27394a;
+    --ck-color-split-button-hover-border: #3a4c5c;
+    --ck-color-dropdown-panel-background: #1d2a36;
+    --ck-color-dropdown-panel-border: #33475a;
+    --ck-color-panel-background: #1d2a36;
+    --ck-color-panel-border: #33475a;
+    --ck-color-input-background: #0f1720;
+    --ck-color-input-border: #3a4c5c;
+    --ck-color-input-text: #e8eef4;
+    --ck-color-labeled-field-label-background: #1d2a36;
+    --ck-color-list-background: #1d2a36;
+    --ck-color-list-button-hover-background: #27394a;
+    --ck-color-list-button-on-background: #1d4e52;
+    --ck-color-list-button-on-text: #ffffff;
+    --ck-color-tooltip-background: #0b1219;
+    --ck-color-tooltip-text: #e8eef4;
+    --ck-color-image-caption-background: #1d2a36;
+    --ck-color-image-caption-text: #c3d1dc;
+    --ck-color-widget-blurred-border: #3a4c5c;
+    --ck-color-widget-hover-border: #4fb8bf;
+}
+html[data-theme='dark'] .ck.ck-editor__editable,
+html.fm-auto-dark .ck.ck-editor__editable { color: #e8eef4; }
+html[data-theme='dark'] .ck-content :is(h1, h2, h3, h4, h5, h6),
+html.fm-auto-dark .ck-content :is(h1, h2, h3, h4, h5, h6) { color: #f1f5f9; }
+html[data-theme='dark'] .ck-content a,
+html.fm-auto-dark .ck-content a { color: #8fd8dd; }
+html[data-theme='dark'] .ck .ck-icon,
+html.fm-auto-dark .ck .ck-icon { color: #e8eef4; }
+/* فیلتر منوی کناری جنگو در حالت «خودکار» + سیستم تیره: placeholder خاکستریِ پیش‌فرض ۲٫۹ بود */
+html[data-theme='dark'] #nav-filter::placeholder,
+html.fm-auto-dark #nav-filter::placeholder { color: #8ba0b2; opacity: 1; }
+/* لینک دانلود: فونت FD ارقام لاتین آدرس را فارسی نشان می‌داد (۱۲۷.۰.۰.۱) */
+.field-external_url input { font-family: var(--font-family-monospace); direction: ltr; text-align: left; }
+/* وضعیت تحویل فایل محصول (رنگ‌ها با حالت شب می‌چرخند) */
+.fm-status { font-weight: 700; }
+.fm-status--ok { color: var(--adm-accent-fg, #0f766e); }
+.fm-status--bad { color: var(--error-fg, #b91c1c); }

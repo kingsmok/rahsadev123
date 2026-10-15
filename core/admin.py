@@ -48,7 +48,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
         ('هویت سایت', {
             'description': 'نام، لوگو و آیکن تب این بخش در همهٔ قسمت‌ها اعمال می‌شود: فروشگاه، پنل کاربری، '
                            'Django Admin، پنل مدیریت، صفحهٔ آفلاین، نصب اپ (PWA) و ایمیل‌ها.',
-            'fields': ('site_name', 'replace_old_name', 'site_slogan', 'logo', 'favicon', 'brand_preview',
+            'fields': ('site_name', 'replace_old_name', 'site_slogan', 'logo', 'logo_dark', 'favicon', 'brand_preview',
                        'products_per_page')
         }),
         ('محتوای متنی', {
@@ -192,6 +192,16 @@ class SiteSettingsAdmin(admin.ModelAdmin):
                         brand.logo_url, box)
             if brand.logo_url else format_html('<span>{}</span>', 'لوگوی متنی «%s»' % brand.name)
         )
+        if brand.logo_dark_url:
+            night = format_html(
+                '<img src="{}" alt="لوگوی حالت شب" style="vertical-align:middle;border-radius:6px;background:#0f1720;'
+                'max-height:56px;max-width:220px;padding:4px 8px">', brand.logo_dark_url)
+        elif brand.logo_url:
+            night = format_html('<span class="help">{}</span>', 'لوگوی اصلی روی کادر روشن (لوگوی حالت شب آپلود نشده)')
+        else:
+            night = ''
+        if night:
+            logo = format_html('{} <span style="margin-inline-start:12px">حالت شب: {}</span>', logo, night)
         return format_html(
             '<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:center">'
             '<span>تب مرورگر: <img src="{}" alt="" width="16" height="16" style="{}"> '
