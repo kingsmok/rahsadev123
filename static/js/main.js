@@ -14,16 +14,22 @@
     }
 
     $(function () {
+        // Slide duration comes from «ویترین‌های صفحهٔ اصلی» in the admin.
+        var bidDelay = (parseInt($('#bid-s').attr('data-autoplay-seconds'), 10) || 5) * 1000;
+        var bidCount = $('#bid-s > .item').length;
         initCarousel('#bid-s', {
-            rtl: true, items: 1, autoplay: true, autoplayTimeout: 5000,
-            loop: true, dots: false,
+            rtl: true, items: 1, autoplay: bidCount > 1, autoplayTimeout: bidDelay,
+            autoplayHoverPause: true, loop: bidCount > 1, dots: false,
+            nav: bidCount > 1,
+            navText: ['<span aria-hidden="true">›</span><span class="fm-sr-only">قبلی</span>', '<span aria-hidden="true">‹</span><span class="fm-sr-only">بعدی</span>'],
             onInitialized: startProgressBar,
             onTranslate: resetProgressBar,
             onTranslated: startProgressBar
         });
 
         function startProgressBar() {
-            $('.slide-progress').css({width: '100%', transition: 'width 5000ms'});
+            if (bidCount < 2) return;
+            $('.slide-progress').css({width: '100%', transition: 'width ' + bidDelay + 'ms linear'});
         }
 
         function resetProgressBar() {

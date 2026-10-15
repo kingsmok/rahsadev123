@@ -3,6 +3,7 @@ from django.db import OperationalError, ProgrammingError
 from core.branding import get_brand
 from product.models import ProductCategory, ProductBrand
 from cart.models import Cart, CartItem
+from core.social import social_links
 
 
 def shop_func(request):
@@ -17,19 +18,25 @@ def shop_func(request):
     cart = None
     cart_items = []
     cart_total = 0
+    wishlist_count = 0
     if request.user.is_authenticated:
         try:
-            cart = Cart.objects.filter(user=request.user).first()
+            cart = Cart.objects.filter(user=request.user).select_related('coupon').first()
             if cart:
                 # Keep one evaluated, joined collection for both the header and
                 # its total. Calling ``cart.total_price`` here issued another
                 # query and then one query per product on every rendered page.
                 cart_items = list(CartItem.objects.filter(cart=cart).select_related('product'))
                 cart_total = sum(item.total_price for item in cart_items)
+            from dashboard.models import Wishlist
+
+            wishlist_count = Wishlist.objects.filter(user=request.user).count()
         except (OperationalError, ProgrammingError):
             # A request must still render while migrations are being applied
             # and the cart tables do not exist yet.
             pass
+    # The drawer total must match the cart page: subtract the applied coupon.
+    cart_discount = min(cart.coupon_discount, cart_total) if (cart and cart.coupon_id) else 0
 
     return {
         'site_settings': site_settings,
@@ -41,6 +48,11 @@ def shop_func(request):
         'cart': cart,
         'cart_items': cart_items,
         'cart_total': cart_total,
+        'cart_count': len(cart_items),
+        'cart_discount': cart_discount,
+        'cart_payable': max(0, cart_total - cart_discount),
+        'wishlist_count': wishlist_count,
+        'social_links': social_links(site_settings),
     }
 
 

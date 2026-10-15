@@ -3,6 +3,9 @@ from core.thumbnails import admin_thumbnail
 from django.contrib.auth.models import User
 from django_ckeditor_5.fields import CKEditor5Field
 
+from accounts.roles import author_choices
+from core.custom_html import CustomHtmlMixin
+
 
 STATUS = (
     ('draft', 'پیش‌نویس'),
@@ -30,8 +33,10 @@ class Tag(models.Model):
     def __str__(self): return self.title
 
 
-class Article(models.Model):
-    author = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='نویسنده مقاله')
+class Article(CustomHtmlMixin, models.Model):
+    # فقط مدیران و کاربرانِ گروه «نویسندگان» (accounts.roles).
+    author = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to=author_choices,
+                               verbose_name='نویسنده مقاله')
     category = models.ManyToManyField(Category, related_name='articles', verbose_name='دسته بندی مربوطه')
     tags = models.ManyToManyField(Tag, blank=True, related_name='articles', verbose_name='برچسب‌ها')
     title = models.CharField(max_length=200, unique=True, verbose_name='عنوان مقاله')

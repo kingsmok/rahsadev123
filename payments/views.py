@@ -6,13 +6,16 @@ from django.db import transaction as db_transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import csrf_exempt
 
 from cart.coupons import revalidate_coupon
 from cart.models import Cart, Order, OrderItem
 from downloads.models import DownloadToken
 from dashboard.models import Notification
 from product.models import Product
-from .services import GATEWAYS
+from .gateways import CHECKOUT_REDIRECT_ORIGINS, _origin
+from .services import GATEWAY_CALLBACK_KEYS, GATEWAYS, MOBILE_REQUIRED_KEYS
 from .models import GatewaySettings, PaymentTransaction
 
 logger = logging.getLogger(__name__)
@@ -244,6 +247,38 @@ def _complete_free_order(request, order):
     return redirect('payments:successful_done', order_number=order.order_number)
 
 
+def _start_gateway(adapter, transaction, callback, customer):
+    """Pass customer details only to adapters whose ``start`` accepts them."""
+    import inspect
+
+    try:
+        params = inspect.signature(adapter.start).parameters
+    except (TypeError, ValueError):
+        params = {}
+    if 'customer' in params or any(p.kind is inspect.Parameter.VAR_KEYWORD for p in params.values()):
+        return adapter.start(transaction, callback, customer=customer)
+    return adapter.start(transaction, callback)
+
+
+def _customer_details(request):
+    """Mobile/e-mail for gateways that need them; a mobile typed on the payment
+    page is also saved to an empty profile phone for next time."""
+    from notifications.sms import normalize_mobile
+
+    profile = getattr(request.user, 'profile', None)
+    typed = normalize_mobile(request.POST.get('mobile', ''))
+    stored = normalize_mobile(getattr(profile, 'phone', '') or '')
+    mobile = typed or stored
+    if typed and profile is not None and not stored:
+        profile.phone = typed
+        profile.save(update_fields=['phone'])
+    return {
+        'mobile': mobile,
+        'email': request.user.email or getattr(profile, 'email', '') or '',
+        'full_name': request.user.get_full_name(),
+    }
+
+
 @login_required
 def start_payment(request, order_number):
     if request.method != 'POST':
@@ -319,13 +354,29 @@ def start_payment(request, order_number):
         messages.error(request, f'اطلاعات اتصال درگاه «{gateway_settings.title}» کامل نشده است.')
         return redirect('cart:shopping_payment')
 
+    customer = _customer_details(request)
+    if gateway in MOBILE_REQUIRED_KEYS and not customer['mobile']:
+        messages.error(request, 'برای پرداخت اقساطی، شماره موبایل معتبر (مثل 09121234567) را وارد کنید.')
+        return redirect('cart:shopping_payment')
+
     transaction = PaymentTransaction.objects.create(order=order, gateway=gateway, amount=order.final_price)
     try:
-        callback = request.build_absolute_uri(reverse('payments:callback'))
-        authority, url = GATEWAYS[gateway].start(transaction, callback)
+        if gateway in GATEWAY_CALLBACK_KEYS:
+            callback = request.build_absolute_uri(reverse('payments:gateway_callback', args=[gateway]))
+        else:
+            callback = request.build_absolute_uri(reverse('payments:callback'))
+        authority, url = _start_gateway(GATEWAYS[gateway], transaction, callback, customer)
         transaction.authority, transaction.status = authority, 'redirected'
         transaction.save(update_fields=['authority', 'status', 'updated_at'])
-        return redirect(url)
+        if _origin(url) in CHECKOUT_REDIRECT_ORIGINS:
+            return redirect(url)
+        # Payment page on an origin the CSP ``form-action`` does not list
+        # (Snapp Pay / Torob Pay hand out their page URL at runtime): continue
+        # with a navigation instead of a redirect of this form POST.
+        return render(request, 'payments/redirect_to_gateway.html', {
+            'gateway_url': url,
+            'gateway_title': gateway_settings.title,
+        })
     except Exception as exc:
         transaction.status, transaction.raw_response = 'failed', {'error': str(exc)}
         transaction.save(update_fields=['status', 'raw_response', 'updated_at'])
@@ -380,12 +431,95 @@ def callback(request):
             status='failed',
             raw_response={**(data or {}), 'error': str(exc), 'unfulfilled': True},
         )
+        _notify_unfulfilled(transaction)
         return render(
             request, 'payments/payment_unfulfilled.html',
             {'transaction': transaction}, status=409,
         )
 
     return redirect('payments:successful_done', order_number=order.order_number)
+
+
+@csrf_exempt
+@never_cache
+def gateway_callback(request, gateway):
+    """بازگشت از زرین‌پلاس، اسنپ‌پی و ترب‌پی.
+
+    اسنپ‌پی/ترب‌پی مشتری را با یک POST بین‌سایتی برمی‌گردانند؛ در آن درخواست
+    کوکی نشست (SameSite=Lax) فرستاده نمی‌شود، پس این ویو به ورود کاربر وابسته
+    نیست و CSRF هم ندارد. تراکنش با شناسهٔ یکتای خود فروشگاه (transactionId) یا
+    authority پیدا می‌شود و پرداخت فقط با تأیید سمت سرور از API درگاه نهایی
+    می‌شود؛ تکرار بازگشت هم بی‌اثر است.
+    """
+    if gateway not in GATEWAY_CALLBACK_KEYS:
+        return HttpResponse('درگاه نامعتبر است.', status=404)
+    data = request.POST if request.method == 'POST' else request.GET
+    if gateway == 'zarinplus':
+        authority = (data.get('authority') or request.GET.get('authority') or '').strip()
+        if not authority:
+            if (request.GET.get('status') or '').lower() == 'cancel':
+                messages.info(request, 'پرداخت با زرین‌پلاس لغو شد. می‌توانید روش دیگری را انتخاب کنید.')
+                return redirect('cart:shopping_payment')
+            return HttpResponse('شناسه پرداخت نامعتبر است.', status=400)
+        transaction = PaymentTransaction.objects.filter(gateway=gateway, authority=authority).select_related('order').first()
+        callback_data = {'authority': authority, 'status': request.GET.get('status', '')}
+    else:
+        reference = (data.get('transactionId') or '').strip()
+        if not reference:
+            return HttpResponse('شناسه پرداخت نامعتبر است.', status=400)
+        transaction = PaymentTransaction.objects.filter(gateway=gateway, reference_id=reference).select_related('order').first()
+        callback_data = {'state': data.get('state', ''), 'transactionId': reference}
+    if transaction is None:
+        return HttpResponse('تراکنش یافت نشد.', status=404)
+
+    order_number = transaction.order.order_number
+    if transaction.status == 'paid':
+        return redirect('payments:successful_done', order_number=order_number)
+    try:
+        valid, details = GATEWAYS[gateway].verify(transaction, callback_data)
+    except Exception as exc:
+        logger.exception('خطا در تأیید پرداخت %s از درگاه %s', transaction.pk, gateway)
+        valid, details = False, {'error': str(exc)}
+    if not valid:
+        transaction.status, transaction.raw_response = 'failed', details
+        transaction.save(update_fields=['status', 'raw_response', 'updated_at'])
+        messages.error(
+            request,
+            'پرداخت انجام نشد یا لغو شد. اگر مبلغی کسر شده باشد، طبق قوانین درگاه بازگردانده می‌شود؛ '
+            f'در صورت نیاز کد پیگیری «{order_number}» را به پشتیبانی اعلام کنید.',
+        )
+        return redirect('cart:shopping_payment')
+
+    try:
+        order = _complete(transaction, details.get('ref_id', ''), details)
+    except FulfilmentError as exc:
+        logger.error(
+            'Payment %s for order %s was verified but could not be fulfilled: %s',
+            transaction.pk, transaction.order_id, exc, exc_info=True,
+        )
+        PaymentTransaction.objects.filter(pk=transaction.pk).update(
+            status='failed',
+            raw_response={**(details or {}), 'error': str(exc), 'unfulfilled': True},
+        )
+        _notify_unfulfilled(transaction)
+        return render(request, 'payments/payment_unfulfilled.html', {'transaction': transaction}, status=409)
+    return redirect('payments:successful_done', order_number=order.order_number)
+
+
+def _notify_unfulfilled(transaction):
+    try:
+        from notifications.services import admin_change_url, notify
+
+        notify(
+            'payment_problem',
+            f'پرداخت موفق سفارش {transaction.order.order_number} قابل تحویل نبود',
+            'مبلغ از مشتری کسر شده ولی سفارش تکمیل نشد؛ تراکنش را بررسی و در صورت نیاز مبلغ را بازگردانید.',
+            url=admin_change_url(transaction),
+            level='danger',
+            dedupe_key=f'unfulfilled:{transaction.pk}',
+        )
+    except Exception:
+        logger.exception('ثبت اعلان پرداخت تحویل‌نشده انجام نشد.')
 
 
 @login_required

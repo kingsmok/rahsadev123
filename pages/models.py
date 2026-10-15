@@ -3,16 +3,33 @@ import logging
 from django.db import models
 from django_ckeditor_5.fields import CKEditor5Field
 
+from core.custom_html import CustomHtmlMixin
+
 logger = logging.getLogger(__name__)
 
 
-class StaticPage(models.Model):
+class StaticPage(CustomHtmlMixin, models.Model):
+    LAYOUTS = (
+        ('sidebar', 'استاندارد — محتوا همراه منوی کناری صفحات راهنما'),
+        ('wide', 'تمام‌عرض — محتوا در یک کادر پهن، بدون منوی کناری'),
+        ('narrow', 'متن باریک — مناسب مطالب طولانی و خوانا'),
+        ('landing', 'لندینگ — بدون سربرگ و کادر؛ مناسب صفحه‌های ساخته‌شده با کد HTML'),
+    )
+
     title=models.CharField(max_length=200, verbose_name='عنوان')
-    slug=models.SlugField(max_length=220, unique=True, allow_unicode=True)
+    slug=models.SlugField(max_length=220, unique=True, allow_unicode=True, verbose_name='نامک')
     summary=models.CharField(max_length=160, blank=True, verbose_name='توضیحات سئو')
-    content=CKEditor5Field(config_name='default', verbose_name='محتوا')
-    is_published=models.BooleanField(default=True)
-    updated_at=models.DateTimeField(auto_now=True)
+    layout = models.CharField(max_length=20, choices=LAYOUTS, default='sidebar', verbose_name='چیدمان صفحه')
+    show_page_head = models.BooleanField(default=True, verbose_name='نمایش سربرگ (عنوان و مسیر صفحه)',
+                                         help_text='در چیدمان «لندینگ» سربرگ نمایش داده نمی‌شود.')
+    # در صفحه‌های ساخته‌شده فقط با کد HTML، محتوای ویرایشگر می‌تواند خالی بماند.
+    content=CKEditor5Field(config_name='default', blank=True, verbose_name='محتوا')
+    is_published=models.BooleanField(default=True, verbose_name='منتشر شده')
+    updated_at=models.DateTimeField(auto_now=True, verbose_name='آخرین به‌روزرسانی')
+
+    @property
+    def displays_page_head(self):
+        return self.show_page_head and self.layout != 'landing'
 
     def save(self, *args, **kwargs):
         """ریدایرکت خودکار ۳۰۱ هنگام تغییر نامک صفحه (حفظ اعتبار سئو)."""

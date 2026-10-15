@@ -1,121 +1,146 @@
 {% extends 'base.html' %}
-{% block title %}روش پرداخت{% endblock %}
+{% block title %}روش پرداخت | {{ site_name }}{% endblock %}
 {% load static %}
 {% load custom_filters %}
-{% load jalali_tags %}
 
 {% block content %}
-    <main class="cart-page default">
-        {% include 'includes/page_head.html' with title='پرداخت سفارش' subtitle='درگاه پرداخت را انتخاب کنید و خرید را کامل کنید.' parent='سبد خرید' parent_url='/cart/' %}
+    <main class="cart-page default fm-checkout" data-cart-page>
+        {% include 'includes/page_head.html' with title='پرداخت سفارش' subtitle='روش پرداخت را انتخاب کنید و خرید را کامل کنید.' parent='سبد خرید' parent_url='/cart/' %}
         <div class="container">
-            <div class="row">
-                <div class="col-12 text-center">
-                    <ul class="order-steps">
-                        <li>
-                            <a href="{% url 'cart:cart' %}">
-                                <span>سبدخرید</span>
-                            </a>
-                        </li>
-                        <li class="active">
-                            <a href="{% url 'cart:shopping_payment' %}" class="active active2">
-                                <span>روش پرداخت</span>
-                            </a>
-                        </li>
-                        <li>
-                            <span class="disabled" aria-disabled="true">پایان خرید و دانلود</span>
-                        </li>
-                    </ul>
+            <ol class="fm-steps" aria-label="مراحل خرید">
+                <li class="is-done"><a href="{% url 'cart:cart' %}"><span class="fm-steps__dot"><i class="fa fa-check" aria-hidden="true"></i></span> سبد خرید</a></li>
+                <li class="is-current" aria-current="step"><span class="fm-steps__dot">۲</span> روش پرداخت</li>
+                <li><span class="fm-steps__dot">۳</span> دانلود فایل‌ها</li>
+            </ol>
+
+            {% if unavailable_items %}
+                <div class="alert alert-danger fm-checkout__alert" role="alert">
+                    <i class="fa fa-circle-exclamation" aria-hidden="true"></i>
+                    برخی فایل‌های سبد دیگر قابل خرید نیستند. لطفاً ابتدا آن‌ها را از <a href="{% url 'cart:cart' %}">سبد خرید</a> حذف کنید.
                 </div>
+            {% endif %}
+            {% if misconfigured_gateways %}
+                <div class="alert alert-warning fm-checkout__alert" role="status">
+                    <i class="fa fa-triangle-exclamation" aria-hidden="true"></i>
+                    (فقط برای مدیر) این درگاه‌ها فعال‌اند ولی اطلاعات اتصالشان کامل نیست و مشتری نمی‌تواند با آن‌ها پرداخت کند:
+                    {% for gateway in misconfigured_gateways %}<b>{{ gateway.title }}</b>{% if not forloop.last %}، {% endif %}{% endfor %}.
+                </div>
+            {% endif %}
 
-                <div class="cart-page-content col-xl-12 col-lg-12 col-md-12">
-                    <header class="card-header">
-                        <h3 class="card-title"><span>انتخاب روش پرداخت</span></h3>
-                    </header>
-                    <div class="row cart_details">
-                        <div class="cart-page-content col-xl-8 col-lg-7 col-md-7">
-                            <!-- Digital delivery notice -->
-                            <div class="digital-note">
-                                <h5><i class="fa fa-cloud-arrow-down" aria-hidden="true"></i> تحویل آنی محصولات دیجیتال</h5>
-                                <ul>
-                                    <li>بلافاصله پس از پرداخت موفق، لینک دانلود فایل‌ها در همین صفحه و پنل کاربری شما فعال می‌شود.</li>
-                                    <li>برای هر فایل، لینک دانلود اختصاصی تا ۷ روز و تا ۵ بار دانلود در دسترس شماست.</li>
-                                    <li>فاکتور رسمی خرید در بخش «سفارشات» پنل کاربری قابل مشاهده است.</li>
-                                </ul>
-                            </div>
-
-                            <h4 class="payment-title">فایل‌های سفارش</h4>
-                            <ul class="list-group order-files mb-4">
-                                {% for item in cart_items %}
-                                    <li>
-                                        <i class="fa fa-file-zipper colormain" aria-hidden="true"></i>
-                                        {{ item.product.title }}
-                                        <span class="pull-left">{{ item.total_price|format_price }} تومان</span>
-                                    </li>
+            <div class="fm-checkout__grid">
+                <section class="fm-checkout__main" aria-labelledby="payment-methods-title">
+                    <div class="fm-card">
+                        <h2 class="fm-card__title" id="payment-methods-title"><i class="fa fa-credit-card" aria-hidden="true"></i> انتخاب روش پرداخت</h2>
+                        {% if enabled_gateways %}
+                            <div class="fm-paymethods" role="radiogroup" aria-labelledby="payment-methods-title">
+                                {% for gateway in enabled_gateways %}
+                                    <label class="fm-paymethod{% if not gateway.selectable %} is-disabled{% endif %}" for="gateway_{{ gateway.key }}">
+                                        <input {% if gateway.key == default_gateway %}checked{% endif %} {% if not gateway.selectable %}disabled{% endif %}
+                                               type="radio" name="gateway" value="{{ gateway.key }}" id="gateway_{{ gateway.key }}"
+                                               form="payment-start-form" required data-needs-mobile="{{ gateway.needs_mobile|yesno:'1,0' }}">
+                                        <span class="fm-paymethod__logo"><img src="{% static gateway.logo_static_path %}" alt="لوگوی {{ gateway.get_key_display }}" loading="lazy"></span>
+                                        <span class="fm-paymethod__body">
+                                            <span class="fm-paymethod__title">
+                                                {{ gateway.title }}
+                                                {% if gateway.is_installment %}<span class="fm-badge fm-badge--accent">اقساطی</span>{% else %}<span class="fm-badge">پرداخت مستقیم</span>{% endif %}
+                                            </span>
+                                            <span class="fm-paymethod__desc">{% if gateway.offer_title %}{{ gateway.offer_title }}{% else %}{{ gateway.display_description }}{% endif %}</span>
+                                            {% if gateway.offer_description %}<span class="fm-paymethod__note">{{ gateway.offer_description }}</span>{% endif %}
+                                            {% if not gateway.is_configured %}<span class="fm-paymethod__note fm-text-danger">این روش پرداخت موقتاً در دسترس نیست.</span>
+                                            {% elif not gateway.eligible %}<span class="fm-paymethod__note fm-text-danger">این روش برای مبلغ این سفارش در دسترس نیست.</span>{% endif %}
+                                        </span>
+                                        <span class="fm-paymethod__check" aria-hidden="true"><i class="fa fa-check"></i></span>
+                                    </label>
                                 {% endfor %}
-                            </ul>
-
-                            <!-- Payment Options -->
-                            <h4 class="payment-title">روش پرداخت</h4>
-                            {% if enabled_gateways %}
-                                <div class="plans">
-                                    {% for gateway in enabled_gateways %}
-                                        <label class="plan basic-plan" for="gateway_{{ gateway.key }}">
-                                            <input {% if forloop.first %}checked{% endif %} type="radio" name="gateway" value="{{ gateway.key }}" id="gateway_{{ gateway.key }}" form="payment-start-form" required>
-                                            <div class="plan-content">
-                                                <img loading="lazy" src="{% static 'img/ico/png-10.png' %}" alt=""/>
-                                                <div class="plan-details">
-                                                    <span>{{ gateway.title }}</span>
-                                                    <p>{{ gateway.description|default:'پرداخت امن از طریق کارت‌های عضو شتاب' }}</p>
-                                                </div>
-                                            </div>
-                                        </label>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <div class="alert alert-warning">
-                                    در حال حاضر هیچ درگاه پرداختی فعال نیست. لطفاً بعداً مراجعه کنید یا با پشتیبانی در تماس باشید.
+                            </div>
+                            {% if not default_gateway and final_price > 0 %}
+                                <div class="alert alert-warning fm-checkout__alert" role="status">
+                                    در حال حاضر امکان پرداخت آنلاین فراهم نیست. لطفاً کمی بعد دوباره تلاش کنید یا با پشتیبانی در تماس باشید.
                                 </div>
                             {% endif %}
-                        </div>
-                        <div class="cart-page-aside col-xl-4 col-lg-5 col-md-5 divider_details">
-                            <table class="table table_details">
-                                <tbody>
-                                <tr>
-                                    <td>قیمت کل سفارش:</td>
-                                    <td>{{ total_price|format_price }} <span>تومان</span></td>
-                                </tr>
-                                <tr>
-                                    <td>تخفیف:</td>
-                                    <td id="coupon-discount">
-                                        {% if cart and cart.coupon and cart_items %}
-                                            {{ cart.coupon_discount|format_price }} <span>تومان</span>
-                                        {% else %}
-                                            0 <span>تومان</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>هزینه ارسال:</td>
-                                    <td id="shipping-cost">رایگان (دانلود آنی)</td>
-                                </tr>
-                                <tr class="all">
-                                    <td>قیمت قابل پرداخت:</td>
-                                    <td>{{ final_price|format_price }} <span>تومان</span></td>
-                                </tr>
-                                <tr>
-                                    <td colspan="2">
-                                        <form id="payment-start-form" method="post" action="{% url 'payments:start' 'new' %}">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn big_btn btn-main-masai" {% if not enabled_gateways %}disabled{% endif %}>اتصال به درگاه و پرداخت</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                            {% if has_installment_gateway %}
+                                <div class="fm-field fm-paymethod-mobile" data-mobile-field {% if customer_mobile %}hidden{% endif %}>
+                                    <label for="checkout-mobile">شماره موبایل برای خرید اقساطی</label>
+                                    <input type="tel" id="checkout-mobile" name="mobile" form="payment-start-form" class="fm-input" dir="ltr"
+                                           inputmode="tel" autocomplete="tel" placeholder="09121234567" value="{{ customer_mobile }}">
+                                    <small>درگاه اقساطی حساب اعتباری شما را با همین شماره پیدا می‌کند. شماره در پروفایل شما ذخیره می‌شود.</small>
+                                </div>
+                                {% if customer_mobile %}
+                                    <p class="fm-paymethod-mobile-note" data-mobile-note hidden>
+                                        <i class="fa fa-mobile-screen" aria-hidden="true"></i> خرید اقساطی با شمارهٔ <bdi dir="ltr">{{ customer_mobile }}</bdi> انجام می‌شود.
+                                        <button type="button" class="fm-link-btn" data-change-mobile>تغییر شماره</button>
+                                    </p>
+                                {% endif %}
+                            {% endif %}
+                        {% else %}
+                            <div class="alert alert-warning">
+                                در حال حاضر هیچ درگاه پرداختی فعال نیست. لطفاً بعداً مراجعه کنید یا با پشتیبانی در تماس باشید.
+                            </div>
+                        {% endif %}
                     </div>
-                </div>
+
+                    <div class="fm-card">
+                        <h2 class="fm-card__title"><i class="fa fa-file-zipper" aria-hidden="true"></i> فایل‌های سفارش</h2>
+                        <ul class="fm-order-lines">
+                            {% for item in cart_items %}
+                                <li>
+                                    <span class="fm-order-lines__thumb">{% if item.product.image %}<img src="{{ item.product.image.url }}" alt="" loading="lazy">{% else %}<img src="{% static 'img/product_image_not_found.jpg' %}" alt="" loading="lazy">{% endif %}</span>
+                                    <span class="fm-order-lines__title">{{ item.product.title }}</span>
+                                    <span class="fm-order-lines__price">{{ item.total_price|format_price }} <small>تومان</small></span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <ul class="fm-checkout__notes">
+                            <li><i class="fa fa-bolt" aria-hidden="true"></i> بلافاصله پس از پرداخت موفق، لینک دانلود در همین صفحه و پنل کاربری فعال می‌شود.</li>
+                            <li><i class="fa fa-download" aria-hidden="true"></i> برای هر فایل، لینک اختصاصی تا ۷ روز و تا ۵ بار دانلود در دسترس است.</li>
+                            <li><i class="fa fa-receipt" aria-hidden="true"></i> فاکتور خرید در بخش «سفارش‌ها»ی پنل کاربری قابل مشاهده است.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <aside class="fm-checkout__aside" aria-label="خلاصهٔ پرداخت">
+                    <div class="fm-card fm-summary">
+                        <h2 class="fm-card__title">خلاصهٔ سفارش</h2>
+                        <dl class="fm-summary__rows">
+                            <div><dt>جمع فایل‌ها</dt><dd>{{ total_price|format_price }} <small>تومان</small></dd></div>
+                            <div id="coupon-discount"><dt>تخفیف</dt><dd>{% if cart and cart.coupon and cart_items %}{{ cart.coupon_discount|format_price }}{% else %}0{% endif %} <small>تومان</small></dd></div>
+                            <div><dt>هزینهٔ ارسال</dt><dd>رایگان (دانلود آنی)</dd></div>
+                            <div class="fm-summary__total"><dt>قابل پرداخت</dt><dd>{{ final_price|format_price }} <small>تومان</small></dd></div>
+                        </dl>
+                        <form id="payment-start-form" method="post" action="{% url 'payments:start' 'new' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="fm-btn fm-btn--primary fm-btn--block fm-btn--lg" {% if unavailable_items or final_price > 0 and not default_gateway %}disabled{% endif %}>
+                                {% if final_price > 0 %}<i class="fa fa-lock" aria-hidden="true"></i> اتصال به درگاه و پرداخت{% else %}<i class="fa fa-download" aria-hidden="true"></i> ثبت سفارش رایگان و دانلود{% endif %}
+                            </button>
+                        </form>
+                        <p class="fm-summary__secure"><i class="fa fa-shield-halved" aria-hidden="true"></i> پرداخت از طریق درگاه‌های امن دارای مجوز شاپرک انجام می‌شود.</p>
+                        <a class="fm-summary__back" href="{% url 'cart:cart' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> بازگشت به سبد خرید</a>
+                    </div>
+                </aside>
             </div>
         </div>
     </main>
+    <script>
+        (function () {
+            var field = document.querySelector('[data-mobile-field]');
+            var note = document.querySelector('[data-mobile-note]');
+            var radios = document.querySelectorAll('input[name="gateway"]');
+            var hasMobile = {{ customer_mobile|yesno:'true,false' }};
+            var forceField = false;
+            function sync() {
+                var selected = document.querySelector('input[name="gateway"]:checked');
+                var needs = selected && selected.getAttribute('data-needs-mobile') === '1';
+                if (field) {
+                    field.hidden = !needs || (hasMobile && !forceField);
+                    var input = field.querySelector('input');
+                    if (input) input.required = !!needs && (!hasMobile || forceField);
+                }
+                if (note) note.hidden = !needs || forceField;
+            }
+            radios.forEach(function (radio) { radio.addEventListener('change', sync); });
+            var change = document.querySelector('[data-change-mobile]');
+            if (change) change.addEventListener('click', function () { forceField = true; sync(); var input = field && field.querySelector('input'); if (input) input.focus(); });
+            sync();
+        })();
+    </script>
 {% endblock %}

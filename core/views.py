@@ -23,36 +23,25 @@ def _storefront_products(queryset):
 
 
 def home(request):
-    # Banners
-    main_sliders = Banner.objects.filter(banner_type='main_slider', status='published').order_by('-created_at')[:3]
-    small_banners = Banner.objects.filter(banner_type='small_banner', status='published').order_by('-created_at')[:4]
-    large_banners = Banner.objects.filter(banner_type='large_banner', status='published').order_by('-created_at')[:2]
-    single_banner = Banner.objects.filter(banner_type='single_banner', status='published').order_by('-created_at').first()
+    from product.showcase import showcase_products
+
+    # Banners (ترتیب و اندازه از پنل مدیریت ← بنرها)
+    published_banners = Banner.objects.filter(status='published').order_by('order', '-created_at')
+    main_sliders = published_banners.filter(banner_type='main_slider')[:5]
+    small_banners = published_banners.filter(banner_type='small_banner')[:8]
+    large_banners = published_banners.filter(banner_type='large_banner')[:4]
+    single_banner = published_banners.filter(banner_type='single_banner').first()
 
     popular_brands = ProductBrand.objects.all().order_by('-views')[:10]
-    popular_products = _storefront_products(
-        Product.objects.filter(status='published').order_by('-views')[:9]
-    )
-    latest_products = _storefront_products(
-        Product.objects.filter(status='published', old_price=None).order_by('-created_at')[:4]
-    )
+    # ویترین‌ها از «محصولات ← ویترین‌های صفحهٔ اصلی» قابل تنظیم‌اند؛ پیش‌فرض‌ها
+    # همان رفتار قبلی صفحه را حفظ می‌کنند.
+    offers_showcase, popular_products = showcase_products('home_offers', 'popular', 9)
+    side_showcase, latest_products = showcase_products('home_side', 'latest', 6)
+    discounts_showcase, discounted_products = showcase_products('home_discounts', 'discounted', 8)
+    bestsellers_showcase, best_selling_products = showcase_products('home_bestsellers', 'best_selling', 7)
     latest_articles = Article.objects.filter(status='published').select_related(
         'author', 'author__profile'
     ).order_by('-created_at')[:5]
-    discounted_products = _storefront_products(
-        Product.objects.filter(
-            status='published',
-            old_price__isnull=False,
-            old_price__gt=models.F('price')
-        ).annotate(
-            discount=models.ExpressionWrapper(
-                (models.F('old_price') - models.F('price')) * 100 / models.F('old_price'),
-                output_field=models.IntegerField())
-        ).filter(discount__gt=0).order_by('-discount')[:8]
-    )
-    best_selling_products = _storefront_products(
-        Product.objects.filter(status='published').order_by('-sales_count')[:7]
-    )
     service_packages = ServicePackage.objects.filter(is_active=True)[:3]
 
     context = {
@@ -68,6 +57,11 @@ def home(request):
         'discounted_products': discounted_products,
         'best_selling_products': best_selling_products,
         'service_packages': service_packages,
+
+        'offers_showcase': offers_showcase,
+        'side_showcase': side_showcase,
+        'discounts_showcase': discounts_showcase,
+        'bestsellers_showcase': bestsellers_showcase,
     }
     return render(request, 'core/home.html', context)
 

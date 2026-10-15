@@ -1,5 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+
+from core.decorators import login_required_json
 from accounts.models import Profile
 from cart.models import Order, CartItem, Cart
 from product.models import Product, ProductComment
@@ -277,7 +279,7 @@ def wishlist_products(request):
     return render(request, 'dashboard/wishlist_products.html', context)
 
 
-@login_required
+@login_required_json
 @require_POST
 def add_to_wishlist(request, product_id):
     product = get_object_or_404(Product, pk=product_id)
@@ -291,22 +293,25 @@ def add_to_wishlist(request, product_id):
         status = 'info'
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return JsonResponse({'status': status, 'message': message})
+        return JsonResponse({'status': status, 'message': message,
+                             'wishlist_count': Wishlist.objects.filter(user=request.user).count()})
     return redirect('product:product_list')
 
 
-@login_required
+@login_required_json
 @require_POST
 def remove_from_wishlist(request, product_id):
     product = get_object_or_404(Product, pk=product_id)
-    wishlist_item = get_object_or_404(Wishlist, user=request.user, product=product)
-    wishlist_item.delete()
+    # Removing something that is no longer there is the desired end state
+    # (double click / second tab), not a 404 for the customer.
+    Wishlist.objects.filter(user=request.user, product=product).delete()
 
     message = "محصول از لیست علاقه‌ مندی‌ ها حذف شد."
     status = 'success'
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return JsonResponse({'status': status, 'message': message})
+        return JsonResponse({'status': status, 'message': message,
+                             'wishlist_count': Wishlist.objects.filter(user=request.user).count()})
     return redirect('dashboard:wishlist_products')
 
 

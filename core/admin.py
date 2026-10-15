@@ -10,7 +10,9 @@ from . import models
 from .admin_utils import EnhancedAdminMixin
 from jalali_date import datetime2jalali
 
+from core.admin_code import CodeEditorWidget
 from core.admin_utils import to_jalali
+from core.custom_html import can_edit_raw_html
 from core.branding import DEFAULT_SITE_NAME, NAME_BEARING_FIELDS, Brand, replace_name
 from jalali_date.admin import ModelAdminJalaliMixin
 
@@ -56,7 +58,13 @@ class SiteSettingsAdmin(admin.ModelAdmin):
             'fields': ('address', 'phone1', 'phone2', 'email1', 'email2')
         }),
         ('شبکه‌های اجتماعی', {
-            'fields': ('instagram_link', 'telegram_link', 'whatsapp_link', 'twitter_link', 'youtube_link', 'linkedin_link')
+            'description': 'هر شبکه‌ای که لینکش پر شود در فوتر، صفحهٔ تماس و منوی موبایل با آیکن خودش نمایش داده می‌شود. '
+                           'می‌توانید آدرس کامل (https://…) یا شناسه با @ وارد کنید.',
+            'fields': ('instagram_link', 'telegram_link', 'whatsapp_link', 'twitter_link', 'youtube_link', 'linkedin_link',
+                       'facebook_link', 'pinterest_link', 'github_link')
+        }),
+        ('شبکه‌های اجتماعی و پیام‌رسان‌های ایرانی', {
+            'fields': ('aparat_link', 'eitaa_link', 'rubika_link', 'bale_link', 'soroush_link', 'igap_link', 'virgool_link')
         }),
         ('نمادهای اعتماد', {
             'fields': ('enamad_link', 'samandehi_link')
@@ -195,21 +203,73 @@ class SiteSettingsAdmin(admin.ModelAdmin):
         )
 
 
+class BannerAdminForm(forms.ModelForm):
+    class Meta:
+        model = models.Banner
+        fields = '__all__'
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+        }
+
+
 @admin.register(models.Banner)
 class BannerAdmin(admin.ModelAdmin):
-    list_display = ['title', 'banner_image', 'banner_type', 'status', 'get_created_at_jalali']
-    list_filter = ['banner_type', 'status']
-    list_editable = ['status']
+    form = BannerAdminForm
+    list_display = ['title', 'banner_image', 'banner_type', 'display_size', 'width', 'order', 'status', 'get_created_at_jalali']
+    list_filter = ['banner_type', 'status', 'display_size']
+    list_editable = ['order', 'status']
+    search_fields = ['title', 'subtitle', 'description']
+    readonly_fields = ['preview']
+    fieldsets = (
+        (None, {'fields': ('title', 'banner_type', 'status', 'order')}),
+        ('تصویر و لینک', {
+            'description': 'اندازهٔ پیشنهادی: اسلایدر ۱۹۲۰×۶۰۰، بنر بزرگ ۸۰۰×۳۰۰، بنر کوچک ۴۰۰×۲۵۰ و بنر تک ۱۶۰۰×۲۵۰ پیکسل.',
+            'fields': ('image', 'mobile_image', 'url', 'open_in_new_tab', 'preview'),
+        }),
+        ('اندازهٔ نمایش', {'fields': ('display_size', 'width')}),
+        ('متن روی بنر', {
+            'fields': ('show_text', 'subtitle', 'description', 'button_text', 'text_position', 'text_theme'),
+        }),
+    )
 
-    def short_title(self, obj):
-        if len(obj.title) > 20:
-            return obj.title[:20] + '...'
-        return obj.title
-    short_title.short_description = 'عنوان محصول'
+    @admin.display(description='پیش‌نمایش')
+    def preview(self, obj):
+        if not obj or not obj.image:
+            return 'پس از ذخیره، پیش‌نمایش تصویر نمایش داده می‌شود.'
+        return format_html('<img src="{}" alt="" style="max-width:420px;max-height:180px;border-radius:10px;object-fit:cover">',
+                           obj.image.url)
 
     @admin.display(description='تاریخ ایجاد', ordering='created_at')
     def get_created_at_jalali(self, obj):
         return to_jalali(obj.created_at, '%a, %d %b %Y')
+
+
+class HtmlBlockAdminForm(forms.ModelForm):
+    class Meta:
+        model = models.HtmlBlock
+        fields = '__all__'
+        widgets = {'html': CodeEditorWidget()}
+
+
+@admin.register(models.HtmlBlock)
+class HtmlBlockAdmin(admin.ModelAdmin):
+    """بلوک‌های کد HTML؛ فقط برای مدیر کل یا دارندهٔ مجوز «ویرایش کد HTML خام»."""
+
+    form = HtmlBlockAdminForm
+    list_display = ['title', 'placement', 'is_active', 'order', 'full_width', 'updated_at']
+    list_filter = ['placement', 'is_active']
+    list_editable = ['is_active', 'order']
+    search_fields = ['title', 'html']
+    fieldsets = (
+        (None, {'fields': ('title', 'placement', 'is_active', 'order', 'full_width')}),
+        ('کد HTML (با پیش‌نمایش زنده)', {'fields': ('html',)}),
+    )
+
+    def has_add_permission(self, request):
+        return can_edit_raw_html(request.user) and super().has_add_permission(request)
+
+    def has_change_permission(self, request, obj=None):
+        return can_edit_raw_html(request.user) and super().has_change_permission(request, obj)
 
 
 @admin.register(models.ContactUs)

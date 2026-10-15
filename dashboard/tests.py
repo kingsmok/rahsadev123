@@ -530,6 +530,10 @@ class CustomerPageQueryTests(TestCase):
     def test_query_count_does_not_grow_with_rows(self):
         urls = ('/dashboard/downloads/', '/dashboard/cart_summary/')
         self._add(self.products[:1])
+        # Warm per-process caches first (e.g. the header mega menu is cached
+        # until a product or category changes); only per-row queries matter.
+        for url in urls:
+            self._queries(url)
         baseline = [self._queries(url) for url in urls]
         self._add(self.products[1:6])
         self.assertEqual([self._queries(url) for url in urls], baseline)

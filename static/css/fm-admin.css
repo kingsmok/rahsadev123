@@ -1111,3 +1111,58 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     #header, #nav-sidebar, #footer, .object-tools, ul.messagelist { display: none !important; }
     .module, #changelist { box-shadow: none; border: 1px solid #ddd; }
 }
+
+/* ── زنگولهٔ اعلان‌های مدیریت (notifications/admin_bell.html) ── */
+#user-tools .fm-bell { position: relative; display: inline-block; margin-inline-end: 10px; vertical-align: middle; }
+.fm-bell__toggle { list-style: none; cursor: pointer; position: relative; display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,.12); color: inherit; }
+.fm-bell__toggle::-webkit-details-marker { display: none; }
+.fm-bell__toggle:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.fm-bell.has-new .fm-bell__toggle { animation: fm-bell-ring .6s ease 3; }
+@keyframes fm-bell-ring { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(14deg); } 75% { transform: rotate(-14deg); } }
+.fm-bell__count { position: absolute; top: -6px; inset-inline-start: -6px; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 999px; background: #ef4444; color: #fff; font-size: 11px; font-weight: 700; line-height: 19px; text-align: center; box-shadow: 0 0 0 2px var(--header-bg, #0f766e); }
+.fm-bell__panel { position: absolute; top: calc(100% + 10px); inset-inline-end: 0; z-index: 1000; width: min(380px, 92vw); background: var(--body-bg, #fff); color: var(--body-fg, #1f2937); border: 1px solid var(--hairline-color, #e5e7eb); border-radius: 14px; box-shadow: 0 18px 40px rgba(15, 23, 42, .18); text-align: start; overflow: hidden; }
+.fm-bell__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--hairline-color, #e5e7eb); }
+.fm-bell__head form { margin: 0; display: inline; }
+#user-tools .fm-bell__mark { background: transparent; border: 0; color: #0f766e; cursor: pointer; font: inherit; font-size: 12px; padding: 0; text-decoration: none; }
+#user-tools .fm-bell__mark:disabled { opacity: .45; cursor: default; }
+.fm-bell__list { list-style: none; margin: 0; padding: 0; max-height: 360px; overflow: auto; }
+.fm-bell__item a { display: flex; gap: 10px; align-items: flex-start; padding: 10px 14px; color: inherit !important; text-decoration: none !important; border-bottom: 1px solid var(--hairline-color, #f1f5f9); }
+.fm-bell__item a:hover { background: rgba(15, 118, 110, .07); }
+.fm-bell__item i { margin-top: 3px; width: 18px; text-align: center; color: #0f766e; }
+.fm-bell__item--success i { color: #059669; }
+.fm-bell__item--warning i { color: #d97706; }
+.fm-bell__item--danger i { color: #dc2626; }
+.fm-bell__item.is-unread { background: rgba(15, 118, 110, .06); }
+.fm-bell__item.is-unread .fm-bell__title { font-weight: 700; }
+.fm-bell__text { display: grid; gap: 2px; min-width: 0; }
+.fm-bell__title { white-space: normal; line-height: 1.6; }
+.fm-bell__text small { opacity: .7; font-size: 11px; }
+.fm-bell__empty { padding: 18px 14px; text-align: center; opacity: .7; }
+#user-tools .fm-bell__all { display: block; padding: 10px 14px; text-align: center; font-weight: 600; color: #0f766e !important; text-decoration: none; }
+.fm-notif-dot { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: rgba(15, 118, 110, .1); color: #0f766e; }
+.fm-notif-dot--success { background: rgba(5, 150, 105, .12); color: #059669; }
+.fm-notif-dot--warning { background: rgba(217, 119, 6, .12); color: #d97706; }
+.fm-notif-dot--danger { background: rgba(220, 38, 38, .12); color: #dc2626; }
+.fm-role { display: inline-block; padding: 2px 8px; border-radius: 999px; background: rgba(15, 118, 110, .1); color: #0f766e; font-size: 12px; }
+
+/* فهرست‌های کشویی فرم‌ها: ارتفاع ثابت 30px ادمین جنگو با padding این قالب
+   متن گزینه را از پایین می‌برید (مثلاً «نوع بنر» و «ارتفاع نمایش» خوانا نبودند). */
+#content .form-row select,
+#content .aligned select {
+    height: auto;
+    min-height: 40px;
+    line-height: 1.6;
+    min-width: min(260px, 100%);
+    max-width: 100%;
+}
+#content .form-row .related-widget-wrapper select { min-width: min(320px, 100%); }
+
+/* زنگوله روی هدر روشنِ ادمین هم دیده شود */
+#user-tools .fm-bell__toggle {
+    background: var(--fm-primary-50, #e9f7f7);
+    color: var(--fm-primary-700, #1f6f74);
+    border: 1px solid rgba(15, 118, 110, .22);
+    font-size: 15px;
+}
+#user-tools .fm-bell__toggle:hover { background: var(--fm-primary-100, #d5efef); }
+#content .field-custom_html .help, #content .field-html .help { white-space: normal; max-width: none; }

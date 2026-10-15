@@ -3,7 +3,7 @@
 {% block meta_description %}خرید و دانلود آنی فایل‌های نرم‌افزاری، قالب و افزونه وب سایت، اسکریپت آماده، فایل‌های طراحی و محصولات مجازی همراه با لایسنس رسمی و پشتیبانی فنی{% endblock %}
 {% load static %}
 {% load custom_filters %}
-{% load jalali_tags %}
+{% load jalali_tags site_extras %}
 
 {% block preload %}
     {# نخستین اسلاید بالای fold است؛ زودتر از تصاویر پایین صفحه دریافت شود. #}
@@ -24,21 +24,27 @@
         <div class="container-fluid">
             <div class="slider_main owl-carousel owl-theme">
                 {% for slider in main_sliders %}
-                    <div class="item">
-                        <a href="{{ slider.url }}" aria-label="مشاهده {{ slider.title }}">
-                            <img {% if forloop.first %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async" src="{{ slider.image.url }}" class="img-fluid imgslider" alt="{{ slider.title }}" onerror="this.hidden=true">
-                            <span class="slider_main__shade" aria-hidden="true"></span>
-                            <span class="slider_main__copy">
-                                <span class="slider_main__eyebrow">{{ site_name }}</span>
-                                <strong class="slider_main__title">{{ slider.title }}</strong>
-                                <span class="slider_main__description">دانلود آنی محصولات دیجیتال با لایسنس رسمی و پشتیبانی تخصصی</span>
-                                <span class="slider_main__cta">مشاهده جزئیات <span aria-hidden="true">←</span></span>
-                            </span>
-                        </a>
+                    <div class="item fm-banner fm-banner--slider {{ slider.css_modifiers }}">
+                        {% if slider.url %}<a href="{{ slider.url }}"{% if slider.open_in_new_tab %} target="_blank" rel="noopener"{% endif %} aria-label="مشاهده {{ slider.title }}">{% else %}<div class="fm-banner__link">{% endif %}
+                            <picture>
+                                {% if slider.mobile_image %}<source media="(max-width: 767px)" srcset="{{ slider.mobile_image.url }}">{% endif %}
+                                <img {% if forloop.first %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async" src="{{ slider.image.url }}" class="img-fluid imgslider" alt="{{ slider.title }}" onerror="this.hidden=true">
+                            </picture>
+                            {% if slider.has_overlay %}
+                                <span class="slider_main__shade" aria-hidden="true"></span>
+                                <span class="slider_main__copy">
+                                    <span class="slider_main__eyebrow">{{ slider.subtitle|default:site_name }}</span>
+                                    <strong class="slider_main__title">{{ slider.title }}</strong>
+                                    {% if slider.overlay_description %}<span class="slider_main__description">{{ slider.overlay_description }}</span>{% endif %}
+                                    {% if slider.overlay_button %}<span class="slider_main__cta">{{ slider.overlay_button }} <span aria-hidden="true">←</span></span>{% endif %}
+                                </span>
+                            {% endif %}
+                        {% if slider.url %}</a>{% else %}</div>{% endif %}
                     </div>
                 {% endfor %}
             </div>
         </div>
+        {% html_blocks 'home_top' %}
         <div class="container space-top-50 ">
             <div class="row space-bottom-30 promise-strip">
                 <div class="col-6 col-sm-4 col-md-2 contact-miniicon text-center">
@@ -79,9 +85,10 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-9 hidden-xs hidden-md">
+                <div class="{% if latest_products %}col-9{% else %}col-12{% endif %} hidden-xs hidden-md">
+                    {% if popular_products %}
                     <section id="offercarousel" class="carousel slide carousel-fade card border_all"
-                             data-ride="carousel">
+                             data-ride="carousel" {% if offers_showcase.title %}aria-label="{{ offers_showcase.title }}"{% endif %}>
                         <div class="row m-0">
 
                             <div class="carousel-inner p-0 col-12 col-lg-12">
@@ -164,14 +171,25 @@
                             </div>
                         </div>
                     </section>
+                    {% endif %}
                 </div>
+                {% if latest_products %}
                 <div class="col-3 hidden-xs hidden-md">
-                    <div class="widget-bid-s widget card border_all ">
-
-                        <div id="bid-s" class="owl-carousel owl-theme">
+                    <div class="widget-bid-s widget card border_all fm-bid">
+                        {% if side_showcase.title or side_showcase.ends_at %}
+                            <header class="fm-bid__head">
+                                {% if side_showcase.title %}<h2 class="fm-bid__title"><i class="fa fa-bolt" aria-hidden="true"></i> {{ side_showcase.title }}</h2>{% endif %}
+                                {% if side_showcase.ends_at %}
+                                    <span class="fm-countdown" data-fm-countdown="{{ side_showcase.ends_at|date:'c' }}" aria-label="زمان باقی‌مانده">
+                                        <i class="fa fa-clock" aria-hidden="true"></i> <span data-fm-countdown-text>—</span>
+                                    </span>
+                                {% endif %}
+                            </header>
+                        {% endif %}
+                        <div id="bid-s" class="owl-carousel owl-theme" data-autoplay-seconds="{{ side_showcase.autoplay_seconds|default:5 }}">
                             {% for product in latest_products %}
                                 <div class="item">
-                                    <a href="{% url 'product:product_detail' product.pid product.slug %}">
+                                    <a href="{% url 'product:product_detail' product.pid product.slug %}" class="fm-bid__media">
                                         {% if product.image %}
                                             <img loading="lazy" decoding="async" src="{{ product.image.url }}" class="w-100"
                                                  alt="{{ product.title|truncatewords:7 }}" onerror="this.hidden=true">
@@ -179,15 +197,16 @@
                                             <img loading="lazy" decoding="async" src="{% static 'img/product_image_not_found.jpg' %}" class="w-100"
                                                  alt="{{ product.title|truncatewords:7 }}" onerror="this.hidden=true">
                                         {% endif %}
+                                        {% if product.discount %}<span class="fm-bid__badge">%{{ product.discount }}</span>{% endif %}
                                         {% if not product.is_available %}
                                             <img loading="lazy" decoding="async" src="{% static 'img/img_icon.png' %}" class="type_icon" alt="">
                                         {% endif %}
-
                                     </a>
                                     <h3 class="product-title">
                                         <a href="{% url 'product:product_detail' product.pid product.slug %}">{{ product.title|truncatewords:7 }}</a>
                                     </h3>
                                     <div class="price">
+                                        {% if product.discount %}<del class="fm-bid__old">{{ product.old_price|format_price }}</del>{% endif %}
                                         <span class="amount">{{ product.price|format_price }}<span>تومان</span></span>
                                     </div>
                                 </div>
@@ -199,19 +218,13 @@
                     </div>
 
                 </div>
+                {% endif %}
                 <div class="col-12">
                     <div class="row banner-ads">
                         <div class="col-12">
                             <div class="row">
                                 {% for banner in small_banners %}
-                                    <div class="col-6 col-lg-3">
-                                        <div class="widget-banner card border_all">
-                                            <a href="{{ banner.url }}">
-                                                <img loading="lazy" decoding="async" class="img-fluid" src="{{ banner.image.url }}"
-                                                     alt="{{ banner.title }}" onerror="this.hidden=true">
-                                            </a>
-                                        </div>
-                                    </div>
+                                    {% include 'includes/banner.html' with banner=banner %}
                                 {% endfor %}
                             </div>
                         </div>
@@ -225,7 +238,7 @@
                                 <div class="widget widget-product card border_all bglight pad_time_prod" id="shegeft_1">
                                     <header class="card-header">
                                         <h3 class="card-title">
-                                            <span><i class="fa fa-tags colormain fm-section-title-icon"></i>تخفیف‌های ویژه فایل‌ها</span>
+                                            <span><i class="fa fa-tags colormain fm-section-title-icon"></i>{{ discounts_showcase.title|default:'تخفیف‌های ویژه فایل‌ها' }}</span>
                                         </h3>
                                     </header>
                                     <div class="product-carousel owl-carousel owl-theme">
@@ -281,25 +294,19 @@
                         <div class="col-12">
                             <div class="row">
                                 {% for banner in large_banners %}
-                                    <div class="col-12 col-lg-6">
-                                        <div class="widget-banner card border_all">
-                                            <a href="{{ banner.url }}">
-                                                <img loading="lazy" decoding="async" class="img-fluid" src="{{ banner.image.url }}"
-                                                     alt="{{ banner.title }}" onerror="this.hidden=true">
-                                            </a>
-                                        </div>
-                                    </div>
+                                    {% include 'includes/banner.html' with banner=banner %}
                                 {% endfor %}
                             </div>
                         </div>
                     </div>
+                    {% html_blocks 'home_middle' %}
                     {% if best_selling_products %}
                         <div class="row">
                             <div class="col-12">
                                 <div class="widget widget-product card border_all bglight">
                                     <header class="card-header">
                                         <h3 class="card-title">
-                                            <span><i class="fa fa-fire colormain fm-section-title-icon"></i>پرفروش‌ترین فایل‌ها</span>
+                                            <span><i class="fa fa-fire colormain fm-section-title-icon"></i>{{ bestsellers_showcase.title|default:'پرفروش‌ترین فایل‌ها' }}</span>
                                         </h3>
                                     </header>
                                     <div class="product-carousel owl-carousel owl-theme">
@@ -358,14 +365,7 @@
                 <div class="row banner-ads">
                     <div class="col-12">
                         <div class="row">
-                            <div class="col-12">
-                                <div class="widget widget-banner card border_all">
-                                    <a href="{{ single_banner.url }}">
-                                        <img loading="lazy" decoding="async" class="img-fluid" src="{{ single_banner.image.url }}"
-                                             alt="{{ single_banner.title }}" onerror="this.hidden=true">
-                                    </a>
-                                </div>
-                            </div>
+                            {% include 'includes/banner.html' with banner=single_banner %}
                         </div>
                     </div>
                 </div>
@@ -505,6 +505,7 @@
                 </div>
             </div>
         {% endif %}
+        {% html_blocks 'home_bottom' %}
     </main>
 {% endblock %}
 

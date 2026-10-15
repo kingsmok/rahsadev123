@@ -207,7 +207,7 @@ class Command(BaseCommand):
 
         print('════════ ۸) تنظیمات و درگاه‌ها از پنل ════════')
         gs = GatewaySettings.objects.get(key='zarinpal')
-        ok('درگاه‌ها seed شده', GatewaySettings.objects.count() == 3 and gs.is_enabled)
+        ok('درگاه‌ها seed شده', GatewaySettings.objects.count() == 4 and gs.is_enabled)
         r = admin.get(f'/admin/payments/gatewaysettings/{gs.id}/change/')
         ok('فرم تنظیم درگاه', r.status_code == 200)
         r = admin.get(f'/admin/core/sitesettings/{SiteSettings.objects.first().id}/change/')

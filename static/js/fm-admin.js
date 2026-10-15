@@ -62,3 +62,59 @@
         decorateStatusCells();
     }
 })();
+
+/* زنگولهٔ اعلان‌های مدیریت: هر ۶۰ ثانیه تعداد خوانده‌نشده‌ها به‌روز می‌شود و
+   برای اعلان تازه، عنوان تب هم تغییر می‌کند تا مدیر متوجه سفارش/درخواست جدید شود. */
+(function () {
+    'use strict';
+    var bell = document.querySelector('[data-fm-bell]');
+    if (!bell || !window.fetch) return;
+    var url = bell.getAttribute('data-feed-url');
+    var countNode = bell.querySelector('[data-fm-bell-count]');
+    var list = bell.querySelector('[data-fm-bell-list]');
+    var baseTitle = document.title;
+    var lastSeen = null;
+
+    function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, function (ch) {
+            return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[ch];
+        });
+    }
+
+    function render(data) {
+        var unread = data.unread || 0;
+        if (countNode) {
+            countNode.textContent = unread > 99 ? '99+' : String(unread);
+            countNode.hidden = unread <= 0;
+        }
+        document.title = unread > 0 ? '(' + unread + ') ' + baseTitle : baseTitle;
+        if (list && Array.isArray(data.items) && !bell.open) {
+            list.innerHTML = data.items.length ? data.items.map(function (item) {
+                return '<li class="fm-bell__item fm-bell__item--' + escapeHtml(item.level) + (item.is_read ? '' : ' is-unread') + '">' +
+                    '<a href="' + escapeHtml(item.open_url) + '"><i class="fa-solid ' + escapeHtml(item.icon) + '" aria-hidden="true"></i>' +
+                    '<span class="fm-bell__text"><span class="fm-bell__title">' + escapeHtml(item.title) + '</span>' +
+                    '<small>' + escapeHtml(item.kind) + ' · ' + escapeHtml(item.created) + '</small></span></a></li>';
+            }).join('') : '<li class="fm-bell__empty">هنوز اعلانی ثبت نشده است.</li>';
+        }
+        if (lastSeen !== null && data.latest_id > lastSeen) {
+            bell.classList.add('has-new');
+            window.setTimeout(function () { bell.classList.remove('has-new'); }, 4000);
+        }
+        lastSeen = data.latest_id || 0;
+    }
+
+    function poll() {
+        if (document.hidden) return;
+        fetch(url, {credentials: 'same-origin', headers: {'X-Requested-With': 'XMLHttpRequest'}})
+            .then(function (response) { return response.ok ? response.json() : null; })
+            .then(function (data) { if (data) render(data); })
+            .catch(function () {});
+    }
+
+    poll();
+    window.setInterval(poll, 60000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) poll(); });
+    document.addEventListener('click', function (event) {
+        if (bell.open && !bell.contains(event.target)) bell.open = false;
+    });
+})();

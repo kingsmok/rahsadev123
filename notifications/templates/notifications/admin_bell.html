@@ -1,0 +1,34 @@
+{% load jalali_tags %}
+{% if show_bell %}
+    <details class="fm-bell" data-fm-bell data-feed-url="{% url 'admin:notifications_adminnotification_feed' %}">
+        <summary class="fm-bell__toggle" aria-label="اعلان‌ها{% if unread_count %} — {{ unread_count }} خوانده‌نشده{% endif %}">
+            <i class="fa-solid fa-bell" aria-hidden="true"></i>
+            <span class="fm-bell__count" data-fm-bell-count {% if not unread_count %}hidden{% endif %}>{{ unread_count }}</span>
+        </summary>
+        <div class="fm-bell__panel" role="region" aria-label="آخرین اعلان‌ها">
+            <div class="fm-bell__head">
+                <strong>اعلان‌ها</strong>
+                <form method="post" action="{% url 'admin:notifications_adminnotification_mark_all_read' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="fm-bell__mark" {% if not unread_count %}disabled{% endif %}>همه خوانده شد</button>
+                </form>
+            </div>
+            <ul class="fm-bell__list" data-fm-bell-list>
+                {% for item in latest %}
+                    <li class="fm-bell__item fm-bell__item--{{ item.level }}{% if not item.is_read %} is-unread{% endif %}">
+                        <a href="{% url 'admin:notifications_adminnotification_open' item.pk %}">
+                            <i class="fa-solid {{ item.icon }}" aria-hidden="true"></i>
+                            <span class="fm-bell__text">
+                                <span class="fm-bell__title">{{ item.title }}</span>
+                                <small>{{ item.get_kind_display }} · {{ item.created_at|to_jalali:'%Y/%m/%d %H:%M' }}</small>
+                            </span>
+                        </a>
+                    </li>
+                {% empty %}
+                    <li class="fm-bell__empty">هنوز اعلانی ثبت نشده است.</li>
+                {% endfor %}
+            </ul>
+            <a class="fm-bell__all" href="{% url 'admin:notifications_adminnotification_changelist' %}">مشاهدهٔ همهٔ اعلان‌ها</a>
+        </div>
+    </details>
+{% endif %}

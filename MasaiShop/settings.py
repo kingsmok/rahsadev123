@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import sys
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -87,6 +88,18 @@ ZARINPAL_MERCHANT_ID = os.environ.get('ZARINPAL_MERCHANT_ID', '')
 SNAPPAY_CLIENT_ID = os.environ.get('SNAPPAY_CLIENT_ID', '')
 SNAPPAY_CLIENT_SECRET = os.environ.get('SNAPPAY_CLIENT_SECRET', '')
 TOROBPAY_MERCHANT_ID = os.environ.get('TOROBPAY_MERCHANT_ID', '')
+# درگاه‌های اقساطی (اعتبارنامه‌ها ترجیحاً از پنل مدیریت ← تنظیمات درگاه‌های پرداخت).
+SNAPPAY_USERNAME = os.environ.get('SNAPPAY_USERNAME', '')
+SNAPPAY_PASSWORD = os.environ.get('SNAPPAY_PASSWORD', '')
+SNAPPAY_BASE_URL = os.environ.get('SNAPPAY_BASE_URL', '')
+TOROBPAY_CLIENT_ID = os.environ.get('TOROBPAY_CLIENT_ID', '')
+TOROBPAY_CLIENT_SECRET = os.environ.get('TOROBPAY_CLIENT_SECRET', '')
+TOROBPAY_USERNAME = os.environ.get('TOROBPAY_USERNAME', '')
+TOROBPAY_PASSWORD = os.environ.get('TOROBPAY_PASSWORD', '')
+TOROBPAY_BASE_URL = os.environ.get('TOROBPAY_BASE_URL', '')
+ZARINPLUS_MERCHANT_TOKEN = os.environ.get('ZARINPLUS_MERCHANT_TOKEN', '')
+# آدرس عمومی سایت (مثلاً https://example.ir) برای لینک‌های داخل ایمیل اعلان‌ها.
+SITE_URL = os.environ.get('SITE_URL', '').rstrip('/')
 ZARINPAL_REQUEST_URL = os.environ.get('ZARINPAL_REQUEST_URL', 'https://api.zarinpal.com/pg/v4/payment/request.json')
 ZARINPAL_VERIFY_URL = os.environ.get('ZARINPAL_VERIFY_URL', 'https://api.zarinpal.com/pg/v4/payment/verify.json')
 ZARINPAL_START_URL = os.environ.get('ZARINPAL_START_URL', 'https://www.zarinpal.com/pg/StartPay/')
@@ -124,6 +137,7 @@ INSTALLED_APPS = [
     'downloads',
     'services',
     'pages',
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -318,11 +332,16 @@ LOGIN_URL = 'account:login'
 # در توسعه، ایمیل‌ها در کنسول چاپ می‌شوند تا جریان بازیابی رمز بدون هیچ
 # سرویس خارجی قابل آزمایش باشد. در تولید، EMAIL_BACKEND=smtp و مقادیر
 # EMAIL_HOST/USER/PASSWORD (از محیط، هرگز در کد) تنظیم می‌شوند.
-EMAIL_BACKEND = os.environ.get(
-    'EMAIL_BACKEND',
+_DEFAULT_EMAIL_BACKEND = (
     'django.core.mail.backends.console.EmailBackend' if DEBUG
-    else 'django.core.mail.backends.smtp.EmailBackend',
+    else 'django.core.mail.backends.smtp.EmailBackend'
 )
+# تنظیمات SMTP از پنل مدیریت («تنظیمات ایمیل (SMTP)») خوانده می‌شود؛ اگر آنجا
+# فعال نباشد، همان backend محیطی قبلی (EMAIL_BACKEND در .env) استفاده می‌شود.
+EMAIL_BACKEND = 'notifications.email_backend.ConfigurableEmailBackend'
+EMAIL_FALLBACK_BACKEND = os.environ.get('EMAIL_BACKEND', _DEFAULT_EMAIL_BACKEND)
+if EMAIL_FALLBACK_BACKEND == EMAIL_BACKEND:
+    EMAIL_FALLBACK_BACKEND = _DEFAULT_EMAIL_BACKEND
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
@@ -436,6 +455,13 @@ PUBLIC_WRITE_RATE_LIMITS = {
     'service_request': (5, 20),
     'newsletter': (10, 40),
 }
+
+# ارسال ایمیل/پیامک اعلان‌ها پس از commit و در یک thread پس‌زمینه انجام
+# می‌شود تا کاربر منتظر سرور SMTP یا پنل پیامک نماند.
+NOTIFICATIONS_ASYNC = os.environ.get('NOTIFICATIONS_ASYNC', '1').lower() in ('1', 'true', 'yes')
+if len(sys.argv) > 1 and sys.argv[1] == 'test':
+    # Deterministic tests: deliver in the test thread (no background thread).
+    NOTIFICATIONS_ASYNC = False
 
 
 # JALALI DATE Settings (optional)

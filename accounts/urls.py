@@ -7,6 +7,7 @@ app_name = 'account'
 urlpatterns = [
     path('', views.user_login, name='login'),
     path('register/', views.user_register, name='register'),
+    path('otp/', views.otp_login, name='otp_login'),
     path('logout/', views.user_logout, name='logout'),
     # بازیابی رمز عبور — ویوهای استاندارد جنگو با قالب‌های خودِ پروژه.
     path(

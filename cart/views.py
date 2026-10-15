@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.contrib import messages
@@ -8,6 +8,8 @@ from product.models import Product
 from django.db import transaction as db_transaction
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
+
+from core.decorators import login_required_json
 
 
 def _cart_summary(user, revalidate=False):
@@ -23,12 +25,23 @@ def _cart_summary(user, revalidate=False):
         revalidate_coupon(cart, items)
     total_price = sum(item.total_price for item in items)
     coupon_discount = cart.coupon_discount if cart else 0
+    # A product can be unpublished or run out of licences after it was added;
+    # the cart flags it instead of failing later at the gateway step.
+    unavailable = [item for item in items
+                   if item.product.status != 'published' or not item.product.is_available]
+    product_savings = sum(
+        (item.product.old_price - item.product.price) * item.quantity
+        for item in items
+        if item.product.old_price and item.product.old_price > item.product.price
+    )
     return {
         'cart': cart,
         'cart_items': items,
         'total_price': total_price,
         'coupon_discount': coupon_discount,
         'final_price': max(0, total_price - coupon_discount),
+        'unavailable_items': unavailable,
+        'product_savings': product_savings,
     }
 
 
@@ -38,16 +51,31 @@ def cart(request):
     # (مثلاً حذف آیتم در یک تب دیگر)؛ تخفیف را دوباره با جمع فعلی بسنجیم.
     summary = _cart_summary(request.user, revalidate=True)
 
+    from product.models import Product as _Product
+
+    in_cart = [item.product_id for item in summary['cart_items']]
+    suggestions = []
+    if summary['cart_items']:
+        # ``Product.category`` is a many-to-many field.
+        category_ids = _Product.category.through.objects.filter(product_id__in=in_cart).values('productcategory_id')
+        suggestions = list(
+            _Product.objects.filter(status='published', category__in=category_ids)
+            .exclude(pk__in=in_cart).distinct().order_by('-sales_count', '-created_at')[:4]
+        )
     context = {
         'cart': summary['cart'],
         'cart_items': summary['cart_items'],
         'total_price': summary['total_price'],
         'final_price': summary['final_price'],
+        'coupon_discount': summary['coupon_discount'],
+        'unavailable_items': summary['unavailable_items'],
+        'product_savings': summary['product_savings'],
+        'suggestions': suggestions,
     }
     return render(request, 'cart/cart.html', context)
 
 
-@login_required
+@login_required_json
 @never_cache
 def cart_drawer(request):
     """The cart drawer fragment, re-fetched by the storefront after an AJAX add.
@@ -59,30 +87,52 @@ def cart_drawer(request):
     return render(request, 'includes/cart_drawer.html')
 
 
-@login_required
+@login_required_json
 @require_POST
 def add_to_cart(request, product_id):
-    product = get_object_or_404(Product, pk=product_id, status='published')
+    product = Product.objects.filter(pk=product_id, status='published').first()
+    if product is None:
+        return JsonResponse({'success': False, 'message': 'این فایل دیگر در فروشگاه موجود نیست.'}, status=404)
     if not product.is_available:
         return JsonResponse({'success': False, 'message': 'این فایل در حال حاضر قابل خرید نیست.'}, status=400)
 
     cart, _ = Cart.objects.get_or_create(user=request.user)
     # محصولات دیجیتال کمّیت ندارند؛ هر فایل فقط یک‌بار به سبد اضافه می‌شود.
     _, created = CartItem.objects.get_or_create(cart=cart, product=product, defaults={'quantity': 1})
+    count = cart.items.count()
     if not created:
-        return JsonResponse({'success': False, 'message': 'این فایل از قبل در سبد خرید شما موجود است.'}, status=409)
+        # Not an error for the customer: the file *is* in the cart (a double
+        # click, or a second tab).  Report it as such so the UI can open the
+        # drawer instead of showing a red error.
+        return JsonResponse({
+            'success': True,
+            'already_in_cart': True,
+            'message': 'این فایل از قبل در سبد خرید شما موجود است.',
+            'cart_count': count,
+        })
 
     return JsonResponse({
         'success': True,
         'message': 'فایل با موفقیت به سبد خرید اضافه شد.',
-        'cart_count': cart.items.count(),
+        'cart_count': count,
     })
 
 
-@login_required
+@login_required_json
 @require_POST
 def remove_cart_item(request, item_id):
-    cart_item = get_object_or_404(CartItem, pk=item_id, cart__user=request.user)
+    cart_item = CartItem.objects.filter(pk=item_id, cart__user=request.user).select_related('cart').first()
+    if cart_item is None:
+        # Already removed (another tab, double click): the desired state holds.
+        cart = Cart.objects.filter(user=request.user).first()
+        remaining_items = list(cart.items.select_related('product')) if cart else []
+        return JsonResponse({
+            'success': True,
+            'already_removed': True,
+            'total_price': sum(item.total_price for item in remaining_items),
+            'final_price': cart.final_price if cart else 0,
+            'cart_count': len(remaining_items),
+        })
     cart = cart_item.cart
     cart_item.delete()
 
@@ -184,19 +234,38 @@ def shopping_payment(request):
         messages.warning(request, 'سبد خرید شما خالی است')
         return redirect('cart:cart')
 
+    from notifications.sms import normalize_mobile
     from payments.models import GatewaySettings
+    from payments.services import GATEWAYS, MOBILE_REQUIRED_KEYS
+
+    # درگاهِ پیاده‌سازی‌نشده هرگز به مشتری پیشنهاد نمی‌شود؛ درگاهِ فعالِ
+    # پیکربندی‌نشده در شروع پرداخت با پیام روشن رد می‌شود و اینجا می‌ماند تا
+    # مدیر متوجه ناقص‌بودن تنظیمات شود. چنین درگاهی (و درگاه اقساطی‌ای که برای
+    # این مبلغ طرح ندارد) برای مشتری غیرقابل‌انتخاب نمایش داده می‌شود تا کسی
+    # روی گزینه‌ای که پرداخت را شروع نمی‌کند کلیک نکند.
+    gateways = [gateway for gateway in GatewaySettings.objects.filter(is_enabled=True) if gateway.is_implemented]
+    for gateway in gateways:
+        gateway.needs_mobile = gateway.key in MOBILE_REQUIRED_KEYS
+        gateway.eligible, gateway.offer_title, gateway.offer_description = True, '', ''
+        adapter = GATEWAYS.get(gateway.key)
+        if gateway.is_configured and hasattr(adapter, 'eligibility') and gateway.key == 'snappay':
+            # اسنپ‌پی برای هر مبلغ، شرایط اقساط (مثلاً «۴ قسط بدون بهره») را برمی‌گرداند.
+            gateway.eligible, gateway.offer_title, gateway.offer_description = adapter.eligibility(summary['final_price'])
+        gateway.selectable = gateway.is_configured and gateway.eligible
+    selectable = [gateway for gateway in gateways if gateway.selectable]
+    misconfigured = [gateway for gateway in gateways if not gateway.is_configured] if request.user.is_staff else []
+    profile = getattr(request.user, 'profile', None)
     context = {
         'cart': summary['cart'],
         'cart_items': summary['cart_items'],
         'total_price': summary['total_price'],
         'final_price': summary['final_price'],
-        # درگاهِ پیاده‌سازی‌نشده (مثل اسنپ‌پی تا پیش از قرارداد) هرگز به مشتری
-        # پیشنهاد نمی‌شود؛ درگاهِ فعالِ پیکربندی‌نشده در شروع پرداخت با پیام
-        # روشن رد می‌شود و اینجا می‌ماند تا مدیر متوجه ناقص‌بودن تنظیمات شود.
-        'enabled_gateways': [
-            gateway for gateway in GatewaySettings.objects.filter(is_enabled=True)
-            if gateway.is_implemented
-        ],
+        'unavailable_items': summary['unavailable_items'],
+        'enabled_gateways': gateways,
+        'default_gateway': selectable[0].key if selectable else '',
+        'misconfigured_gateways': misconfigured,
+        'has_installment_gateway': any(g.is_installment for g in selectable),
+        'customer_mobile': normalize_mobile(getattr(profile, 'phone', '') or ''),
     }
     return render(request, 'cart/shopping_payment.html', context)
 

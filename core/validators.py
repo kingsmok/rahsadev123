@@ -43,3 +43,26 @@ def validate_image_size(value) -> None:
                 'limit': human_readable_size(MAX_IMAGE_UPLOAD_BYTES),
             },
         )
+
+
+def validate_site_link(value) -> None:
+    """A banner/menu link: an absolute http(s) URL or a site-relative path.
+
+    ``//evil.example`` is protocol-relative (an external host) and
+    ``javascript:`` would run script when clicked, so both are refused.
+    """
+    from django.core.exceptions import ValidationError
+    from django.core.validators import URLValidator
+
+    value = (value or '').strip()
+    if not value:
+        return
+    if value.startswith('/') and not value.startswith('//') and '\\' not in value:
+        return
+    try:
+        URLValidator(schemes=['http', 'https'])(value)
+    except ValidationError:
+        raise ValidationError(
+            'لینک باید آدرس کامل (https://…) یا مسیری داخلی که با / شروع می‌شود باشد.',
+            code='invalid_link',
+        )

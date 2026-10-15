@@ -1,5 +1,11 @@
+from django import forms
 from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.utils.html import format_html
+
 from . import models
+from accounts.roles import vendor_choices
+from core.admin_code import RawHtmlAdminMixin
 from core.admin_utils import EnhancedAdminMixin, to_jalali
 from jalali_date.admin import ModelAdminJalaliMixin
 
@@ -15,9 +21,18 @@ class ProductImageAdmin(admin.StackedInline):
 
 @admin.register(models.ProductCategory)
 class ProductCategoryAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
-    list_display = ['title', 'category_image', 'get_created_at_jalali']
+    list_display = ['title', 'category_image', 'icon', 'show_in_menu', 'menu_order', 'get_created_at_jalali']
+    list_editable = ['show_in_menu', 'menu_order']
     # برای autocomplete در فرم محصول
     search_fields = ['title']
+    prepopulated_fields = {'slug': ('title',)}
+    fieldsets = (
+        (None, {'fields': ('title', 'slug', 'image', 'icon')}),
+        ('منوی بزرگ «دسته‌بندی فایل‌ها»', {
+            'description': 'دسته‌ها با آیکن، توضیح کوتاه، تعداد فایل و پرفروش‌ترین محصولاتشان در منوی بزرگ هدر نمایش داده می‌شوند.',
+            'fields': ('short_description', 'show_in_menu', 'menu_order'),
+        }),
+    )
 
     @admin.display(description='تاریخ ایجاد', ordering='created_at')
     def get_created_at_jalali(self, obj):
@@ -35,8 +50,37 @@ class ProductBrandAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
         return to_jalali(obj.created_at, '%a, %d %b %Y')
 
 
+class _RoleRestrictedForm(forms.ModelForm):
+    """فهرست فروشنده/نویسنده فقط نقش‌های مجاز را دارد، ولی مقدار فعلی رکوردهای قدیمی معتبر می‌ماند."""
+
+    role_field = ''
+    role_choices = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        field = self.fields.get(self.role_field)
+        if field is None:
+            return
+        current = getattr(self.instance, f'{self.role_field}_id', None)
+        allowed = get_user_model().objects.filter(type(self).role_choices())
+        if current:
+            allowed = get_user_model().objects.filter(pk__in=allowed.values('pk')) | \
+                get_user_model().objects.filter(pk=current)
+        field.queryset = allowed.distinct().order_by('username')
+
+
+class ProductAdminForm(_RoleRestrictedForm):
+    role_field = 'vendor'
+    role_choices = staticmethod(vendor_choices)
+
+    class Meta:
+        model = models.Product
+        fields = '__all__'
+
+
 @admin.register(models.Product)
-class ProductAdmin(ModelAdminJalaliMixin, EnhancedAdminMixin, admin.ModelAdmin):
+class ProductAdmin(RawHtmlAdminMixin, ModelAdminJalaliMixin, EnhancedAdminMixin, admin.ModelAdmin):
+    form = ProductAdminForm
     list_display = ['pid', 'vendor', 'short_title', 'product_type', 'license_type', 'old_price', 'price', 'stock_count', 'sales_count', 'views', 'status', 'product_image', 'get_created_at_jalali']
     prepopulated_fields = {'slug': ('title',)}
     list_editable = ['old_price', 'price', 'stock_count', 'status']
@@ -65,6 +109,12 @@ class ProductAdmin(ModelAdminJalaliMixin, EnhancedAdminMixin, admin.ModelAdmin):
         }),
         ('سئو', {
             'fields': ('meta_title', 'meta_description', 'canonical_url')
+        }),
+        ('کد HTML سفارشی (با پیش‌نمایش زنده)', {
+            'classes': ('collapse',),
+            'description': 'برای جدول مقایسه، ویدئوی آپارات، دکمه‌های سفارشی و… در تب «توضیحات تکمیلی». '
+                           'فقط مدیر کل یا دارندهٔ مجوز «ویرایش کد HTML خام» می‌تواند آن را تغییر دهد.',
+            'fields': ('custom_html_mode', 'custom_html'),
         }),
         ('آمار و شناسه (فقط خواندنی)', {
             'classes': ('collapse',),
@@ -105,18 +155,51 @@ class ProductAdmin(ModelAdminJalaliMixin, EnhancedAdminMixin, admin.ModelAdmin):
 
 @admin.register(models.ProductComment)
 class ProductCommentAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
-    list_display = ['short_product_title', 'author', 'short_body', 'status', 'get_created_at_jalali']
+    """دیدگاه‌ها پیش‌فرض «در انتظار تأیید» ثبت می‌شوند و از اینجا تأیید یا رد می‌شوند."""
+
+    list_display = ['status_badge', 'short_product_title', 'author', 'short_body', 'status', 'get_created_at_jalali']
+    list_display_links = ['short_body']
     list_editable = ['status']
+    list_filter = ['status']
+    search_fields = ['body', 'author__username', 'product__title']
+    list_select_related = ['product', 'author']
+    autocomplete_fields = ['product']
+    raw_id_fields = ['author']
+    actions = ['approve', 'reject']
+    list_per_page = 50
+
+    @admin.action(description='تأیید و انتشار دیدگاه‌های انتخاب‌شده')
+    def approve(self, request, queryset):
+        updated = queryset.exclude(status='published').update(status='published')
+        self.message_user(request, f'{updated} دیدگاه تأیید و منتشر شد.')
+
+    @admin.action(description='رد (پیش‌نویس) دیدگاه‌های انتخاب‌شده')
+    def reject(self, request, queryset):
+        updated = queryset.exclude(status='draft').update(status='draft')
+        self.message_user(request, f'{updated} دیدگاه رد شد و نمایش داده نمی‌شود.')
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        pending = models.ProductComment.objects.filter(status='pending').count()
+        if pending:
+            extra_context['title'] = f'دیدگاه‌ها — {pending} مورد در انتظار تأیید'
+        return super().changelist_view(request, extra_context=extra_context)
+
+    @admin.display(description='')
+    def status_badge(self, obj):
+        colours = {'pending': '#d97706', 'published': '#059669', 'draft': '#6b7280'}
+        return format_html('<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:{}" title="{}"></span>',
+                           colours.get(obj.status, '#6b7280'), obj.get_status_display())
 
     def short_product_title(self, obj):
-        if len(obj.product.title) > 10:
-            return obj.product.title[:10] + '...'
+        if len(obj.product.title) > 30:
+            return obj.product.title[:30] + '...'
         return obj.product
     short_product_title.short_description = 'محصول مربوطه'
 
     def short_body(self, obj):
-        if len(obj.body) > 20:
-            return obj.body[:20] + '...'
+        if len(obj.body) > 60:
+            return obj.body[:60] + '...'
         return obj.body
     short_body.short_description = 'متن دیدگاه'
 
@@ -124,3 +207,30 @@ class ProductCommentAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
     def get_created_at_jalali(self, obj):
         return to_jalali(obj.created_at, '%a, %d %b %Y')
 
+
+class ProductShowcaseItemInline(admin.TabularInline):
+    model = models.ProductShowcaseItem
+    extra = 1
+    autocomplete_fields = ['product']
+    fields = ['product', 'order']
+    verbose_name = 'محصول'
+    verbose_name_plural = 'محصولات این بخش (فقط در حالت «انتخاب دستی»)'
+
+
+@admin.register(models.ProductShowcase)
+class ProductShowcaseAdmin(admin.ModelAdmin):
+    """ویترین‌های صفحهٔ اصلی؛ از جمله اسلایدر کوچک کنار «پیشنهادهای ویژه» (#bid-s)."""
+
+    list_display = ['placement', 'title', 'source', 'item_count', 'limit', 'is_active', 'ends_at']
+    list_editable = ['is_active']
+    inlines = [ProductShowcaseItemInline]
+    fieldsets = (
+        (None, {
+            'description': 'محل نمایش را انتخاب کنید و محصولات را دستی اضافه کنید یا یکی از حالت‌های خودکار را برگزینید.',
+            'fields': ('placement', 'title', 'source', 'limit', 'autoplay_seconds', 'ends_at', 'is_active'),
+        }),
+    )
+
+    @admin.display(description='تعداد محصول انتخاب‌شده')
+    def item_count(self, obj):
+        return obj.items.count()

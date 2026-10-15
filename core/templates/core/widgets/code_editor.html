@@ -1,0 +1,21 @@
+<div class="fm-code-editor" data-fm-code-editor data-preview-css='{{ widget.preview_css }}'>
+    <div class="fm-code-editor__toolbar" role="toolbar" aria-label="حالت ویرایشگر کد">
+        <div class="fm-code-editor__group">
+            <button type="button" class="fm-code-editor__btn" data-mode="code">کد</button>
+            <button type="button" class="fm-code-editor__btn is-active" data-mode="split">کد + پیش‌نمایش</button>
+            <button type="button" class="fm-code-editor__btn" data-mode="preview">فقط پیش‌نمایش</button>
+        </div>
+        <div class="fm-code-editor__group" aria-label="اندازهٔ پیش‌نمایش">
+            <button type="button" class="fm-code-editor__btn is-active" data-device="100%" title="دسکتاپ">دسکتاپ</button>
+            <button type="button" class="fm-code-editor__btn" data-device="768px" title="تبلت">تبلت</button>
+            <button type="button" class="fm-code-editor__btn" data-device="375px" title="موبایل">موبایل</button>
+        </div>
+        <span class="fm-code-editor__hint">پیش‌نمایش هنگام تایپ به‌روز می‌شود؛ اسکریپت‌ها در محیط ایزوله اجرا می‌شوند.</span>
+    </div>
+    <div class="fm-code-editor__panes">
+        <div class="fm-code-editor__code">{% include "django/forms/widgets/textarea.html" %}</div>
+        <div class="fm-code-editor__preview">
+            <iframe title="پیش‌نمایش زندهٔ کد HTML" sandbox="allow-scripts allow-popups" loading="lazy" data-fm-code-preview></iframe>
+        </div>
+    </div>
+</div>

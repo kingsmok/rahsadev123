@@ -358,11 +358,25 @@ def product_detail(request, pid, slug):
         throttle.record(request, identity)
 
         comment = ProductComment.objects.create(body=body, product=products, author=request.user)
-        return JsonResponse({'status': 'success', 'comment_id': comment.id})
+        return JsonResponse({
+            'status': 'success',
+            'comment_id': comment.id,
+            'moderation': comment.status == 'pending',
+            'message': 'دیدگاه شما ثبت شد و پس از تأیید مدیر برای همه نمایش داده می‌شود.',
+        })
 
     comments = products.product_comments.filter(status='published').select_related(
         'author', 'author__profile'
     ).order_by('-created_at')
+    # A pending comment used to vanish after submitting, so customers thought
+    # it was never saved and posted it again.  Its author sees it (marked as
+    # awaiting approval) until staff publish it.
+    own_pending_comments = []
+    if request.user.is_authenticated:
+        own_pending_comments = list(
+            products.product_comments.filter(status='pending', author=request.user)
+            .select_related('author', 'author__profile').order_by('-created_at')
+        )
 
     viewed_products = request.session.get('viewed_products', [])
     if products.id not in viewed_products:
@@ -395,6 +409,7 @@ def product_detail(request, pid, slug):
         'products': products,
         'product_image': product_image,
         'comments': comments,
+        'own_pending_comments': own_pending_comments,
         'is_in_wishlist': is_in_wishlist,
         'user_tokens': user_tokens,
         'already_purchased': already_purchased,

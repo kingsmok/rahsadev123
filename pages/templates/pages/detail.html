@@ -11,49 +11,79 @@
 {% endblock %}
 
 {% block content %}
-    <main class="static-page default">
-        {% include 'includes/page_head.html' with title=page.title subtitle=page.summary %}
+    {% comment %}چیدمان صفحه از پنل مدیریت ← صفحات انتخاب می‌شود: استاندارد (با منوی کناری)،
+       تمام‌عرض، متن باریک یا لندینگ (بدون سربرگ و کادر؛ مناسب صفحه‌های ساخته‌شده با کد HTML).
+       کد HTML سفارشی می‌تواند پیش/پس از محتوا یا جایگزین آن نمایش داده شود.{% endcomment %}
+    <main class="static-page default fm-page fm-page--{{ page.layout }}">
+        {% if not page.is_published %}
+            <div class="container"><div class="alert alert-warning fm-preview-note" role="status"><i class="fa fa-eye" aria-hidden="true"></i> پیش‌نمایش مدیر — این صفحه هنوز منتشر نشده و برای بازدیدکنندگان نمایش داده نمی‌شود.</div></div>
+        {% endif %}
+        {% if page.displays_page_head %}
+            {% include 'includes/page_head.html' with title=page.title subtitle=page.summary %}
+        {% else %}
+            <h1 class="fm-sr-only">{{ page.title }}</h1>
+        {% endif %}
 
-        <div class="container space-bottom-30">
-            <div class="row">
-                <div class="col-12 col-lg-9">
-                    <article class="fm-panel fm-prose">
-                        {{ page.content|safe }}
-                    </article>
-
-                    <p class="fm-page-updated">
-                        <i class="fa fa-clock-rotate-left" aria-hidden="true"></i>
-                        آخرین به‌روزرسانی این صفحه: {{ page.updated_at|date:"Y/m/d" }}
-                    </p>
-                </div>
-
-                <aside class="col-12 col-lg-3">
-                    <div class="fm-panel fm-aside-nav">
-                        <div class="fm-panel__head">
-                            <i class="fa fa-circle-info" aria-hidden="true"></i>
-                            <h2>صفحات راهنما</h2>
-                        </div>
-                        <ul>
-                            {% for p in other_pages %}
-                                <li>
-                                    <a href="{% url 'pages:detail' p.slug %}"
-                                       {% if p.slug == page.slug %}class="is-active" aria-current="page"{% endif %}>
-                                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                                        {{ p.title }}
-                                    </a>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-
-                    <div class="fm-panel fm-help-box">
-                        <div class="fm-help-box__icon"><i class="fa fa-headset" aria-hidden="true"></i></div>
-                        <h3>هنوز سوالی دارید؟</h3>
-                        <p>تیم پشتیبانی آماده پاسخ‌گویی به شماست.</p>
-                        <a href="{% url 'core:contact' %}" class="fm-btn fm-btn--primary">تماس با ما</a>
-                    </div>
-                </aside>
+        {% if page.layout == 'landing' %}
+            <div class="fm-page__landing">
+                {% if page.custom_html_before %}<div class="fm-custom-html">{{ page.custom_html|safe }}</div>{% endif %}
+                {% if page.custom_html_replaces_content %}
+                    <div class="fm-custom-html">{{ page.custom_html|safe }}</div>
+                {% elif page.content %}
+                    <div class="container"><div class="fm-prose">{{ page.content|safe }}</div></div>
+                {% endif %}
+                {% if page.custom_html_after %}<div class="fm-custom-html">{{ page.custom_html|safe }}</div>{% endif %}
             </div>
-        </div>
+        {% else %}
+            <div class="container space-bottom-30">
+                <div class="row{% if page.layout == 'narrow' %} justify-content-center{% endif %}">
+                    <div class="col-12{% if page.layout == 'sidebar' %} col-lg-9{% elif page.layout == 'narrow' %} col-lg-8{% endif %}">
+                        {% if page.custom_html_before %}<div class="fm-custom-html">{{ page.custom_html|safe }}</div>{% endif %}
+                        {% if page.custom_html_replaces_content %}
+                            <div class="fm-custom-html">{{ page.custom_html|safe }}</div>
+                        {% elif page.content %}
+                            <article class="fm-panel fm-prose">
+                                {{ page.content|safe }}
+                            </article>
+                        {% endif %}
+                        {% if page.custom_html_after %}<div class="fm-custom-html">{{ page.custom_html|safe }}</div>{% endif %}
+
+                        <p class="fm-page-updated">
+                            <i class="fa fa-clock-rotate-left" aria-hidden="true"></i>
+                            آخرین به‌روزرسانی این صفحه: {{ page.updated_at|date:"Y/m/d" }}
+                        </p>
+                    </div>
+
+                    {% if page.layout == 'sidebar' %}
+                        <aside class="col-12 col-lg-3">
+                            <div class="fm-panel fm-aside-nav">
+                                <div class="fm-panel__head">
+                                    <i class="fa fa-circle-info" aria-hidden="true"></i>
+                                    <h2>صفحات راهنما</h2>
+                                </div>
+                                <ul>
+                                    {% for p in other_pages %}
+                                        <li>
+                                            <a href="{% url 'pages:detail' p.slug %}"
+                                               {% if p.slug == page.slug %}class="is-active" aria-current="page"{% endif %}>
+                                                <i class="fa fa-angle-left" aria-hidden="true"></i>
+                                                {{ p.title }}
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+
+                            <div class="fm-panel fm-help-box">
+                                <div class="fm-help-box__icon"><i class="fa fa-headset" aria-hidden="true"></i></div>
+                                <h3>هنوز سوالی دارید؟</h3>
+                                <p>تیم پشتیبانی آماده پاسخ‌گویی به شماست.</p>
+                                <a href="{% url 'core:contact' %}" class="fm-btn fm-btn--primary">تماس با ما</a>
+                            </div>
+                        </aside>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
     </main>
 {% endblock %}

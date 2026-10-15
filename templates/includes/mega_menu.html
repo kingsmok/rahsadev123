@@ -1,0 +1,93 @@
+{% load static custom_filters %}
+{% if variant == 'mobile' %}
+    {# منوی موبایل: آکاردئون دسته‌ها با آیکن و تعداد فایل #}
+    <ul id="mobile-categories" class="fm-mobile-cats">
+        {% for category in mega_categories %}
+            <li>
+                <a href="{% url 'product:category_product_list' category.slug %}">
+                    <span class="fm-mobile-cats__icon" aria-hidden="true">{% if category.icon %}<i class="fa {{ category.icon }}"></i>{% else %}<i class="fa fa-folder"></i>{% endif %}</span>
+                    <span class="fm-mobile-cats__title">{{ category.title }}</span>
+                    {% if category.count %}<span class="fm-mobile-cats__count">{{ category.count }}</span>{% endif %}
+                </a>
+            </li>
+        {% endfor %}
+        <li class="fm-mobile-cats__all">
+            <a href="{% url 'product:product_list' %}"><span class="fm-mobile-cats__icon" aria-hidden="true"><i class="fa fa-grip"></i></span><span class="fm-mobile-cats__title">مشاهدهٔ همهٔ فایل‌ها</span></a>
+        </li>
+    </ul>
+{% else %}
+    {% comment %}مگامنوی «دسته‌بندی فایل‌ها»: ستون دسته‌ها (با آیکن و تعداد) + پیش‌نمایش
+       محبوب‌ترین فایل‌های دستهٔ انتخاب‌شده + ستون دسترسی سریع. همهٔ آیتم‌ها لینک
+       واقعی هستند؛ JS فقط پنل پیش‌نمایش را با hover/focus عوض می‌کند.{% endcomment %}
+    <div class="fm-mega" id="fm-mega-menu" data-fm-mega>
+        <div class="fm-mega__inner">
+            <ul class="fm-mega__cats" aria-label="دسته‌بندی‌ها">
+                {% for category in mega_categories %}
+                    <li class="fm-mega__cat{% if forloop.first %} is-active{% endif %}" data-fm-mega-cat="{{ category.id }}">
+                        <a href="{% url 'product:category_product_list' category.slug %}">
+                            <span class="fm-mega__cat-icon" aria-hidden="true">{% if category.icon %}<i class="fa {{ category.icon }}"></i>{% else %}<i class="fa fa-folder"></i>{% endif %}</span>
+                            <span class="fm-mega__cat-text">
+                                <span class="fm-mega__cat-title">{{ category.title }}</span>
+                                {% if category.description %}<small>{{ category.description }}</small>{% endif %}
+                            </span>
+                            <span class="fm-mega__cat-count" aria-label="{{ category.count }} فایل">{{ category.count }}</span>
+                        </a>
+                    </li>
+                {% empty %}
+                    <li class="fm-mega__empty">هنوز دسته‌بندی‌ای ثبت نشده است.</li>
+                {% endfor %}
+            </ul>
+            <div class="fm-mega__panes">
+                {% for category in mega_categories %}
+                    <section class="fm-mega__pane{% if forloop.first %} is-active{% endif %}" data-fm-mega-pane="{{ category.id }}" aria-label="محبوب‌های {{ category.title }}">
+                        <header class="fm-mega__pane-head">
+                            <div>
+                                <strong>{{ category.title }}</strong>
+                                <span>{% if category.description %}{{ category.description }}{% else %}{{ category.count }} فایل آمادهٔ دانلود{% endif %}</span>
+                            </div>
+                            <a class="fm-mega__see-all" href="{% url 'product:category_product_list' category.slug %}">مشاهدهٔ همه <i class="fa fa-arrow-left" aria-hidden="true"></i></a>
+                        </header>
+                        {% if category.products %}
+                            <ul class="fm-mega__products">
+                                {% for product in category.products %}
+                                    <li>
+                                        <a href="{% url 'product:product_detail' product.pid product.slug %}" class="fm-mega__product" tabindex="-1">
+                                            <span class="fm-mega__thumb">
+                                                <img loading="lazy" decoding="async" src="{% if product.image %}{{ product.image }}{% else %}{% static 'img/product_image_not_found.jpg' %}{% endif %}" alt="" onerror="this.hidden=true">
+                                                {% if product.discount %}<span class="fm-mega__badge">%{{ product.discount }}</span>{% endif %}
+                                            </span>
+                                            <span class="fm-mega__product-title">{{ product.title|truncatewords:7 }}</span>
+                                            <span class="fm-mega__price">
+                                                {% if product.old_price %}<del>{{ product.old_price|format_price }}</del>{% endif %}
+                                                {% if product.price %}<b>{{ product.price|format_price }} <small>تومان</small></b>{% else %}<b>رایگان</b>{% endif %}
+                                            </span>
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="fm-mega__pane-empty">به‌زودی فایل‌های این دسته اضافه می‌شود.</p>
+                        {% endif %}
+                    </section>
+                {% endfor %}
+            </div>
+            <aside class="fm-mega__promo" aria-label="دسترسی سریع">
+                <a class="fm-mega__promo-card fm-mega__promo-card--sale" href="{% url 'product:discount_product' %}">
+                    <i class="fa fa-percent" aria-hidden="true"></i>
+                    <strong>تخفیف‌های ویژه</strong>
+                    <span>فایل‌های تخفیف‌دار این هفته</span>
+                </a>
+                <a class="fm-mega__promo-card" href="{% url 'product:product_list' %}">
+                    <i class="fa fa-layer-group" aria-hidden="true"></i>
+                    <strong>همهٔ فایل‌ها</strong>
+                    <span>جدیدترین قالب‌ها، افزونه‌ها و اسکریپت‌ها</span>
+                </a>
+                <a class="fm-mega__promo-card" href="{% url 'services:services' %}">
+                    <i class="fa fa-laptop-code" aria-hidden="true"></i>
+                    <strong>طراحی سایت اختصاصی</strong>
+                    <span>مشاوره رایگان و ثبت سفارش</span>
+                </a>
+            </aside>
+        </div>
+    </div>
+{% endif %}

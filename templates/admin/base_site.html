@@ -1,5 +1,5 @@
 {% extends "admin/base.html" %}
-{% load i18n static %}
+{% load i18n static notification_tags %}
 
 {% comment %}نام برند در عنوان تب، سربرگ و فوتر ادمین از «تنظیمات سایت» می‌آید
    (site_title/site_header در MasaiShop/admin_branding.py و site_brand از
@@ -104,6 +104,7 @@
 {% endblock %}
 
 {% block userlinks %}
+    {% admin_notification_bell %}
     <a class="fm-panel-link" href="{% url 'admin_home' %}">
         <i class="fa-solid fa-chart-pie" aria-hidden="true"></i> داشبورد تحلیل فروش
     </a>
@@ -128,6 +129,9 @@
         <a href="{% url 'admin:blog_article_add' %}"><i class="fa-solid fa-newspaper" aria-hidden="true"></i> مقاله جدید</a>
         <a href="{% url 'admin:cart_coupon_add' %}"><i class="fa-solid fa-percent" aria-hidden="true"></i> کد تخفیف</a>
         <a href="{% url 'admin:core_redirect_changelist' %}"><i class="fa-solid fa-arrow-turn-down fa-rotate-90" aria-hidden="true"></i> ریدایرکت‌ها</a>
+        <a href="{% url 'admin:product_productcomment_changelist' %}?status__exact=pending"><i class="fa-solid fa-comments" aria-hidden="true"></i> دیدگاه‌های در انتظار</a>
+        <a href="{% url 'admin:notifications_emailsettings_changelist' %}"><i class="fa-solid fa-envelope" aria-hidden="true"></i> ایمیل (SMTP)</a>
+        <a href="{% url 'admin:notifications_smssettings_changelist' %}"><i class="fa-solid fa-comment-sms" aria-hidden="true"></i> پیامک</a>
     {% endif %}
 {% endblock %}
 

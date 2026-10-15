@@ -3,7 +3,11 @@ import logging
 from django.db import models
 from core.thumbnails import admin_thumbnail
 from django.contrib.auth.models import User
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django_ckeditor_5.fields import CKEditor5Field
+
+from accounts.roles import vendor_choices
+from core.custom_html import CustomHtmlMixin
 from shortuuid.django_fields import ShortUUIDField
 
 from .storage import PrivateDigitalStorage
@@ -39,6 +43,12 @@ class ProductCategory(models.Model):
     slug = models.SlugField(max_length=100, unique=True, verbose_name='نامک')
     image = models.ImageField(upload_to='images/products/categories', null=True, blank=True, verbose_name='تصویر دسته بندی')
     icon = models.CharField(max_length=100, blank=True, help_text='نام آیکون Font Awesome مثلاً fa-wordpress', verbose_name='آیکون')
+    # منوی بزرگ «دسته‌بندی فایل‌ها» (مگامنو)
+    short_description = models.CharField(max_length=140, blank=True, verbose_name='توضیح کوتاه در منو',
+                                         help_text='یک خط زیر نام دسته در منوی بزرگ؛ اختیاری.')
+    show_in_menu = models.BooleanField(default=True, verbose_name='نمایش در منوی دسته‌بندی‌ها')
+    menu_order = models.PositiveIntegerField(default=0, verbose_name='ترتیب در منو',
+                                             help_text='عدد کوچک‌تر بالاتر نمایش داده می‌شود.')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
 
     def save(self, *args, **kwargs):
@@ -69,7 +79,7 @@ class ProductCategory(models.Model):
     class Meta:
         verbose_name = 'دسته بندی'
         verbose_name_plural = 'دسته بندی ها'
-        ordering = ['title']
+        ordering = ['menu_order', 'title']
 
     def category_image(self):
         return admin_thumbnail(self.image, self.title)
@@ -123,9 +133,12 @@ class ProductBrand(models.Model):
         return self.title
 
 
-class Product(models.Model):
+class Product(CustomHtmlMixin, models.Model):
     pid = ShortUUIDField(unique=True, length=10, max_length=20, alphabet="abcdefgh12345", verbose_name="شناسه محصول")
-    vendor = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='فروشنده')
+    # فقط مدیران و کاربرانِ گروه «فروشندگان» قابل انتخاب‌اند (accounts.roles)؛
+    # قبلاً فهرست همهٔ کاربران سایت در این فیلد نمایش داده می‌شد.
+    vendor = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to=vendor_choices,
+                               verbose_name='فروشنده')
     category = models.ManyToManyField(ProductCategory, related_name='categories', verbose_name='دسته بندی مربوطه')
     title = models.CharField(max_length=300, unique=True, verbose_name='عنوان محصول')
     slug = models.SlugField(max_length=300, unique=True, allow_unicode=True, verbose_name='نامک')
@@ -303,3 +316,71 @@ class ProductComment(models.Model):
 
     def __str__(self):
         return self.product.title
+
+
+class ProductShowcase(models.Model):
+    """ویترین‌های محصولِ صفحهٔ اصلی؛ مدیر محصولات هر بخش را انتخاب می‌کند.
+
+    قبلاً اسلایدر کوچک کنار «پیشنهادهای ویژه» (#bid-s) فقط چهار محصولِ
+    جدیدِ *بدون قیمت قبلی* را نشان می‌داد؛ وقتی همهٔ محصولات تخفیف داشتند،
+    آن بخش خالی می‌ماند و راهی برای انتخاب محصول در آن نبود.
+    """
+
+    PLACEMENTS = (
+        ('home_offers', 'صفحهٔ اصلی — اسلایدر بزرگ «پیشنهادهای ویژه»'),
+        ('home_side', 'صفحهٔ اصلی — اسلایدر کوچک کنار پیشنهادها'),
+        ('home_discounts', 'صفحهٔ اصلی — ردیف تخفیف‌های ویژه'),
+        ('home_bestsellers', 'صفحهٔ اصلی — ردیف پرفروش‌ترین‌ها'),
+    )
+    SOURCES = (
+        ('manual', 'انتخاب دستی (محصولات جدول زیر)'),
+        ('latest', 'خودکار: جدیدترین محصولات'),
+        ('popular', 'خودکار: پربازدیدترین محصولات'),
+        ('best_selling', 'خودکار: پرفروش‌ترین محصولات'),
+        ('discounted', 'خودکار: بیشترین درصد تخفیف'),
+        ('featured', 'خودکار: محصولات «ویژه»'),
+    )
+
+    placement = models.CharField(max_length=30, choices=PLACEMENTS, unique=True, verbose_name='محل نمایش')
+    title = models.CharField(max_length=100, blank=True, verbose_name='عنوان بخش',
+                             help_text='مثلاً «پیشنهاد لحظه‌ای»؛ خالی = بدون عنوان.')
+    source = models.CharField(max_length=20, choices=SOURCES, default='manual', verbose_name='منبع محصولات',
+                              help_text='در حالت دستی اگر هیچ محصول منتشرشده‌ای انتخاب نشده باشد، جدیدترین‌ها نمایش داده می‌شوند.')
+    products = models.ManyToManyField(Product, through='ProductShowcaseItem', blank=True,
+                                      related_name='showcases', verbose_name='محصولات')
+    limit = models.PositiveSmallIntegerField(default=8, validators=[MinValueValidator(1), MaxValueValidator(24)],
+                                             verbose_name='حداکثر تعداد محصول')
+    autoplay_seconds = models.PositiveSmallIntegerField(
+        default=5, validators=[MinValueValidator(2), MaxValueValidator(30)],
+        verbose_name='زمان هر اسلاید (ثانیه)', help_text='برای اسلایدرها.')
+    ends_at = models.DateTimeField(null=True, blank=True, verbose_name='پایان نمایش (اختیاری)',
+                                   help_text='پس از این زمان بخش پنهان می‌شود و تا آن زمان شمارش معکوس نمایش داده می‌شود.')
+    is_active = models.BooleanField(default=True, verbose_name='فعال')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='آخرین تغییر')
+
+    class Meta:
+        verbose_name = 'ویترین صفحهٔ اصلی'
+        verbose_name_plural = 'ویترین‌های صفحهٔ اصلی'
+        ordering = ['placement']
+
+    def __str__(self):
+        return self.title or self.get_placement_display()
+
+
+class ProductShowcaseItem(models.Model):
+    showcase = models.ForeignKey(ProductShowcase, on_delete=models.CASCADE, related_name='items',
+                                 verbose_name='ویترین')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='showcase_items',
+                                verbose_name='محصول')
+    order = models.PositiveIntegerField(default=0, verbose_name='ترتیب')
+
+    class Meta:
+        verbose_name = 'محصول ویترین'
+        verbose_name_plural = 'محصولات ویترین'
+        ordering = ['order', 'id']
+        constraints = [
+            models.UniqueConstraint(fields=['showcase', 'product'], name='showcase_product_once'),
+        ]
+
+    def __str__(self):
+        return f'{self.showcase} — {self.product}'

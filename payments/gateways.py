@@ -37,7 +37,13 @@ def _origin(url):
 CHECKOUT_REDIRECT_ORIGINS = tuple(sorted({
     _origin(ZARINPAL_PRODUCTION['start']),
     _origin(ZARINPAL_SANDBOX['start']),
+    # زرین‌پلاس (مستند رسمی): صفحهٔ پرداخت اقساطی
+    'https://pwa.zarinplus.com',
 }))
+# Snapp Pay / Torob Pay return their payment-page URL at runtime (its host is
+# not documented publicly).  Instead of widening the CSP, ``start_payment``
+# sends the browser there through a small interstitial page (a navigation,
+# which ``form-action`` does not govern) when the origin is not listed above.
 
 
 def post_json(url, payload, headers=None):
