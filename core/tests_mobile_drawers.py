@@ -346,6 +346,14 @@ class RootCauseFixTests(TestCase):
         css = _css('fm-admin.css')
         self.assertIn(":root, html[data-theme='light'] {", css)
 
+    def test_admin_search_box_fills_the_toolbar_on_small_screens(self):
+        # The search form is a flex row; without this its inner div shrank to
+        # its content and Django's «width: 0; flex: 1 0 auto» left a ~26px box.
+        css = _css('fm-admin.css')
+        block = re.search(r'@media \(max-width: 1024px\) \{\s*#content #changelist #toolbar form > div \{([^}]*)\}', css)
+        self.assertIsNotNone(block)
+        self.assertIn('flex: 1 1 100%', block.group(1))
+
     def test_old_collapse_glue_is_gone_and_drawers_close_each_other(self):
         main = (STATIC / 'js' / 'main.js').read_text(encoding='utf-8')
         self.assertNotIn(".collapse('hide')", main)

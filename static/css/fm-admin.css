@@ -709,6 +709,17 @@ html.fm-auto-dark #changelist { border-color: var(--fm-border); }
     box-shadow: none;
 }
 #content #changelist #toolbar #searchbar:focus { border-color: var(--fm-primary-400); }
+/* زیر ۱۰۲۴px جنگو کادر جست‌وجو را «width:0; flex:1 0 auto» می‌کند تا ردیفِ
+   div داخل فرم (تا ۴۸۰px) را پر کند. چون فرم بالا flex شده، آن div به اندازهٔ
+   محتوا جمع می‌شد و کادر جست‌وجو در موبایل فقط ~۲۶px پهنا داشت. */
+@media (max-width: 1024px) {
+    #content #changelist #toolbar form > div { flex: 1 1 100%; min-width: 0; flex-wrap: wrap; row-gap: 6px; }
+    #content #changelist #toolbar #searchbar { max-width: none; min-width: 0; }
+    /* «۳ نتیجه (۱۴ در کل)» و راهنمای جست‌وجو یک ردیف کامل زیر کادر می‌گیرند
+       تا کادر جست‌وجو هنگام جست‌وجوی فعال دوباره باریک نشود. */
+    #content #changelist #toolbar form > div > .quiet,
+    #content #changelist #toolbar form > div > .help { flex: 1 0 100%; width: auto; margin: 0; }
+}
 #content #changelist #toolbar form input[type='submit'],
 #content #changelist #toolbar form button[type='submit'] {
     border: 0;
