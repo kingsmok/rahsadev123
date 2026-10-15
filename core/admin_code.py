@@ -2,8 +2,8 @@
 import json
 
 from django import forms
-from django.templatetags.static import static
 
+from .assets import asset_url
 from .custom_html import can_edit_raw_html
 
 # همان لایه‌های CSS فروشگاه تا پیش‌نمایش شبیه صفحهٔ واقعی باشد.
@@ -30,13 +30,15 @@ class CodeEditorWidget(forms.Textarea):
         base.update(attrs or {})
         super().__init__(attrs=base)
 
-    class Media:
-        css = {'all': ('css/fm-code-editor.css',)}
-        js = ('js/fm-code-editor.js',)
+    @property
+    def media(self):
+        # Versioned URLs (?v=…) so an updated editor script is never served stale.
+        return forms.Media(css={'all': (asset_url('css/fm-code-editor.css'),)},
+                           js=(asset_url('js/fm-code-editor.js'),))
 
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
-        context['widget']['preview_css'] = json.dumps([static(path) for path in PREVIEW_STYLESHEETS])
+        context['widget']['preview_css'] = json.dumps([asset_url(path) for path in PREVIEW_STYLESHEETS])
         return context
 
 

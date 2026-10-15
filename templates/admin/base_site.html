@@ -1,5 +1,5 @@
 {% extends "admin/base.html" %}
-{% load i18n static notification_tags %}
+{% load i18n static notification_tags site_extras %}
 
 {% comment %}نام برند در عنوان تب، سربرگ و فوتر ادمین از «تنظیمات سایت» می‌آید
    (site_title/site_header در MasaiShop/admin_branding.py و site_brand از
@@ -7,13 +7,13 @@
 {% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:site_brand.admin_title }}{% endblock %}
 
 {% block extrastyle %}{{ block.super }}
-    <link rel="stylesheet" href="{% static 'fonts/font-awesome/css/fontawesome.min.css' %}">
-    <link rel="stylesheet" href="{% static 'fonts/font-awesome/css/solid.css' %}">
-    <link rel="stylesheet" href="{% static 'fonts/font-awesome/css/brands.css' %}">
+    <link rel="stylesheet" href="{% asset 'fonts/font-awesome/css/fontawesome.min.css' %}">
+    <link rel="stylesheet" href="{% asset 'fonts/font-awesome/css/solid.css' %}">
+    <link rel="stylesheet" href="{% asset 'fonts/font-awesome/css/brands.css' %}">
     {# توکن‌ها + استایل‌های مشترک داشبورد کاربر (بلوک‌ها، جدول‌ها، برچسب‌ها) تا همهٔ بخش‌های ادمین به زبان طراحی داشبورد درآیند #}
-    <link rel="stylesheet" href="{% static 'css/fm-design-system.css' %}">
-    <link rel="stylesheet" href="{% static 'css/fm-dashboard.css' %}">
-    <link rel="stylesheet" href="{% static 'css/fm-admin.css' %}">
+    <link rel="stylesheet" href="{% asset 'css/fm-design-system.css' %}">
+    <link rel="stylesheet" href="{% asset 'css/fm-dashboard.css' %}">
+    <link rel="stylesheet" href="{% asset 'css/fm-admin.css' %}">
 {% endblock %}
 
 {% block extrahead %}
@@ -25,12 +25,12 @@
     {# بدون این لینک‌ها مرورگر /favicon.ico را می‌خواست و در ادمین همیشه آیکن قدیمی را نشان می‌داد. #}
     <link rel="icon" type="image/png" href="{{ site_brand.favicon_url }}">
     <link rel="apple-touch-icon" href="{{ site_brand.touch_icon_url }}">
-    <script src="{% static 'js/fm-admin.js' %}" defer></script>
+    <script src="{% asset 'js/fm-admin.js' %}" defer></script>
 {% endblock %}
 
 {# ── پل اتصال کلید تم: فروشگاه/پنل از `fm-theme` و ادمین جنگو از `theme` استفاده می‌کنند ── #}
 {% block dark-mode-vars %}
-    <link rel="stylesheet" href="{% static 'admin/css/dark_mode.css' %}">
+    <link rel="stylesheet" href="{% asset 'admin/css/dark_mode.css' %}">
     <script>
         /* پیش از theme.js: اگر کاربر در فروشگاه/پنل تم انتخاب کرده، همان را به ادمین بده */
         (function () {
@@ -42,7 +42,7 @@
             } catch (error) { /* localStorage در حالت خصوصی ممکن است بسته باشد */ }
         })();
     </script>
-    <script src="{% static 'admin/js/theme.js' %}"></script>
+    <script src="{% asset 'admin/js/theme.js' %}"></script>
     <script>
         /* پس از theme.js: هر تغییرِ صریحِ تمِ ادمین به fm-theme بازتاب داده شود
            تا فروشگاه و پنل هم از همان تم پیروی کنند (تم مشترک سراسری).

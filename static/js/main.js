@@ -17,18 +17,32 @@
         // Slide duration comes from «ویترین‌های صفحهٔ اصلی» in the admin.
         var bidDelay = (parseInt($('#bid-s').attr('data-autoplay-seconds'), 10) || 5) * 1000;
         var bidCount = $('#bid-s > .item').length;
+        // Desktop: one product beside the offers. Tablet/phone (where the theme
+        // hides the offers carousel): a full-width row of 2–4 products. Looping,
+        // arrows and autoplay only when there are more products than fit.
+        function bidAt(perView) {
+            var items = Math.max(1, Math.min(perView, bidCount));
+            var moves = bidCount > items;
+            return {items: items, loop: moves, nav: moves, autoplay: moves};
+        }
         initCarousel('#bid-s', {
-            rtl: true, items: 1, autoplay: bidCount > 1, autoplayTimeout: bidDelay,
+            rtl: true, items: 1, margin: 12, autoplay: bidCount > 1, autoplayTimeout: bidDelay,
             autoplayHoverPause: true, loop: bidCount > 1, dots: false,
             nav: bidCount > 1,
+            responsive: {0: bidAt(2), 576: bidAt(3), 820: bidAt(4), 1078: bidAt(1)},
             navText: ['<span aria-hidden="true">›</span><span class="fm-sr-only">قبلی</span>', '<span aria-hidden="true">‹</span><span class="fm-sr-only">بعدی</span>'],
             onInitialized: startProgressBar,
             onTranslate: resetProgressBar,
-            onTranslated: startProgressBar
+            onTranslated: startProgressBar,
+            onResized: startProgressBar
         });
 
-        function startProgressBar() {
-            if (bidCount < 2) return;
+        function startProgressBar(event) {
+            var owl = event && event.relatedTarget;
+            if (bidCount < 2 || (owl && owl.settings && !owl.settings.autoplay)) {
+                resetProgressBar();
+                return;
+            }
             $('.slide-progress').css({width: '100%', transition: 'width ' + bidDelay + 'ms linear'});
         }
 

@@ -57,8 +57,8 @@ class SocialLinksTests(TestCase):
         settings_row(instagram_link='https://instagram.com/shop', aparat_link='https://www.aparat.com/shop',
                      rubika_link='https://rubika.ir/shop')
         home = self.client.get('/').content.decode()
-        self.assertIn('social-sprite.svg#si-instagram', home)
-        self.assertIn('social-sprite.svg#si-aparat', home)
+        self.assertRegex(home, r'social-sprite\.svg\?v=[0-9a-f]{10}#si-instagram')
+        self.assertRegex(home, r'social-sprite\.svg\?v=[0-9a-f]{10}#si-aparat')
         self.assertIn('پیام‌رسان‌ها و شبکه‌های ایرانی', home)
         # The old markup used «fa fa-instagram» (solid style) and never showed an icon.
         self.assertNotIn('fa fa-instagram', home)
@@ -126,6 +126,8 @@ class BannerAndShowcaseTests(TestCase):
         response = self.client.get('/')
         self.assertEqual(len(response.context['latest_products']), 3)
         self.assertContains(response, 'id="bid-s"')
+        # The theme hid the whole column below 1078px, so phones/tablets never saw it.
+        self.assertContains(response, 'class="col-3 fm-bid-col"')
 
     def test_manual_showcase_order_title_and_countdown(self):
         first = Product.objects.create(vendor=self.vendor, title='اول', slug='first', price=1, status='published')
@@ -150,6 +152,32 @@ class BannerAndShowcaseTests(TestCase):
         ProductShowcase.objects.filter(placement='home_side').update(is_active=True,
                                                                      ends_at=timezone.now() - timedelta(minutes=1))
         self.assertNotContains(self.client.get('/'), 'id="bid-s"')
+
+    def test_staff_get_edit_shortcuts_on_home_sections_and_customers_do_not(self):
+        Product.objects.create(vendor=self.vendor, title='ویترین', slug='showcase-item', price=1000, status='published')
+        self._banner(title='اسلاید', banner_type='main_slider')
+        side = ProductShowcase.objects.get(placement='home_side')
+        side_url = reverse('admin:product_productshowcase_change', args=[side.pk])
+        slider_url = reverse('admin:core_banner_changelist') + '?banner_type__exact=main_slider'
+
+        for client_user in (None, User.objects.create_user('buyer', password='Safe-pass-123!')):
+            if client_user:
+                self.client.force_login(client_user)
+            html = self.client.get('/').content.decode()
+            self.assertNotIn('fm-staff-edit', html)
+            self.assertNotIn(side_url, html)
+
+        # A staff member without the matching permission gets no dead link.
+        self.client.force_login(self.vendor)
+        self.assertNotIn('fm-staff-edit', self.client.get('/').content.decode())
+
+        admin = User.objects.create_superuser('home-admin', 'a@example.com', 'Safe-pass-123!')
+        self.client.force_login(admin)
+        html = self.client.get('/').content.decode()
+        self.assertIn(f'href="{side_url}"', html)
+        self.assertIn(f'href="{slider_url}"', html)
+        self.assertEqual(self.client.get(side_url).status_code, 200)
+        self.assertEqual(self.client.get(slider_url).status_code, 200)
 
 
 class HtmlCodeTests(TestCase):
@@ -356,3 +384,52 @@ class CommentModerationTests(TestCase):
         self.assertEqual(comment.status, 'published')
         self.client.logout()
         self.assertContains(self.client.get(self.url), 'منتظر تأیید')
+
+
+class AssetVersionTests(TestCase):
+    """CSS/JS URLs carry a content hash so a deploy is never served from a stale cache."""
+
+    def setUp(self):
+        from core import assets
+
+        assets._locations.clear()
+        self.addCleanup(assets._locations.clear)
+
+    def test_url_has_a_content_hash_that_changes_with_the_file(self):
+        import os
+        import re
+
+        from core.assets import asset_url
+
+        folder = tempfile.mkdtemp(prefix='fm-assets-')
+        self.addCleanup(shutil.rmtree, folder, True)
+        os.makedirs(os.path.join(folder, 'js'))
+        script = os.path.join(folder, 'js', 'probe.js')
+        with open(script, 'w') as handle:
+            handle.write('console.log(1);')
+        with self.settings(STATICFILES_DIRS=[folder]):
+            first = asset_url('js/probe.js')
+            self.assertRegex(first, r'^/static/js/probe\.js\?v=[0-9a-f]{10}$')
+            self.assertEqual(asset_url('js/probe.js'), first)  # stable while unchanged
+            with open(script, 'w') as handle:
+                handle.write('console.log("updated build");')
+            second = asset_url('js/probe.js')
+        self.assertNotEqual(first, second)
+        self.assertTrue(re.match(r'^/static/js/probe\.js\?v=', second))
+        # A file that cannot be found still gets its normal static URL.
+        self.assertEqual(asset_url('js/does-not-exist.js'), '/static/js/does-not-exist.js')
+
+    def test_pages_admin_and_service_worker_use_versioned_assets(self):
+        html = self.client.get('/').content.decode()
+        self.assertRegex(html, r'/static/js/store-actions\.js\?v=[0-9a-f]{10}')
+        self.assertRegex(html, r'/static/css/fm-features\.css\?v=[0-9a-f]{10}')
+        self.assertNotRegex(html, r'/static/js/store-actions\.js"')
+
+        worker = self.client.get('/service-worker.js').content.decode()
+        self.assertRegex(worker, r"/static/css/bootstrap\.min\.css\?v=[0-9a-f]{10}")
+        self.assertIn('old.search !== url.search', worker)  # older copies are pruned
+
+        admin = User.objects.create_superuser('asset-admin', 'asset@example.com', 'Safe-pass-123!')
+        self.client.force_login(admin)
+        page = self.client.get(reverse('admin:index')).content.decode()
+        self.assertRegex(page, r'/static/css/fm-admin\.css\?v=[0-9a-f]{10}')

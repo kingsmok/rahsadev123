@@ -1,5 +1,5 @@
 {% extends 'dashboard/admin_panel_base.html' %}
-{% load static %}
+{% load static site_extras %}
 {% load custom_filters %}
 {% load jalali_tags %}
 
@@ -404,6 +404,6 @@
 
 {% block panel_scripts %}
     {{ chart_data|json_script:'ap-chart-data' }}
-    <script src="{% static 'js/plugins/chart.umd.min.js' %}" defer></script>
-    <script src="{% static 'js/fm-admin-charts.js' %}" defer></script>
+    <script src="{% asset 'js/plugins/chart.umd.min.js' %}" defer></script>
+    <script src="{% asset 'js/fm-admin-charts.js' %}" defer></script>
 {% endblock %}

@@ -13,8 +13,8 @@
 {% endblock %}
 
 {% block extra_css %}
-    <link href="{% static 'css/plugins/owl.carousel.css' %}" rel="stylesheet">
-    <link href="{% static 'css/plugins/owl.theme.default.min.css' %}" rel="stylesheet">
+    <link href="{% asset 'css/plugins/owl.carousel.css' %}" rel="stylesheet">
+    <link href="{% asset 'css/plugins/owl.theme.default.min.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
@@ -22,6 +22,8 @@
         {# H1 اصلی صفحه برای سئو — روی صفحه خانه بصری نیست تا اسلایدر در صدر بماند #}
         <h1 class="fm-sr-only">{{ site_name }} | فروش فایل، نرم‌افزار، قالب و محصولات مجازی با دانلود آنی</h1>
         <div class="container-fluid">
+            <div class="fm-staff-anchor">
+            {% staff_edit_link 'core.banner' 'تنظیم اسلایدر و متن بنرها' 'banner_type__exact=main_slider' %}
             <div class="slider_main owl-carousel owl-theme">
                 {% for slider in main_sliders %}
                     <div class="item fm-banner fm-banner--slider {{ slider.css_modifiers }}">
@@ -42,6 +44,7 @@
                         {% if slider.url %}</a>{% else %}</div>{% endif %}
                     </div>
                 {% endfor %}
+            </div>
             </div>
         </div>
         {% html_blocks 'home_top' %}
@@ -89,6 +92,7 @@
                     {% if popular_products %}
                     <section id="offercarousel" class="carousel slide carousel-fade card border_all"
                              data-ride="carousel" {% if offers_showcase.title %}aria-label="{{ offers_showcase.title }}"{% endif %}>
+                        {% staff_edit_link offers_showcase|default:'product.productshowcase' 'انتخاب محصولات این بخش' %}
                         <div class="row m-0">
 
                             <div class="carousel-inner p-0 col-12 col-lg-12">
@@ -174,8 +178,10 @@
                     {% endif %}
                 </div>
                 {% if latest_products %}
-                <div class="col-3 hidden-xs hidden-md">
+                {# روی تبلت/موبایل هم دیده می‌شود (قبلاً hidden-xs hidden-md کل ستون را زیر ۱۰۷۸px پنهان می‌کرد). #}
+                <div class="col-3 fm-bid-col">
                     <div class="widget-bid-s widget card border_all fm-bid">
+                        {% staff_edit_link side_showcase|default:'product.productshowcase' 'انتخاب محصولات' %}
                         {% if side_showcase.title or side_showcase.ends_at %}
                             <header class="fm-bid__head">
                                 {% if side_showcase.title %}<h2 class="fm-bid__title"><i class="fa fa-bolt" aria-hidden="true"></i> {{ side_showcase.title }}</h2>{% endif %}
@@ -223,6 +229,7 @@
                     <div class="row banner-ads">
                         <div class="col-12">
                             <div class="row">
+                                {% if small_banners %}{% staff_edit_link 'core.banner' 'تنظیم بنرهای کوچک' 'banner_type__exact=small_banner' %}{% endif %}
                                 {% for banner in small_banners %}
                                     {% include 'includes/banner.html' with banner=banner %}
                                 {% endfor %}
@@ -236,6 +243,7 @@
                         <div class="row">
                             <div class="col-12">
                                 <div class="widget widget-product card border_all bglight pad_time_prod" id="shegeft_1">
+                                    {% staff_edit_link discounts_showcase|default:'product.productshowcase' 'انتخاب محصولات این بخش' %}
                                     <header class="card-header">
                                         <h3 class="card-title">
                                             <span><i class="fa fa-tags colormain fm-section-title-icon"></i>{{ discounts_showcase.title|default:'تخفیف‌های ویژه فایل‌ها' }}</span>
@@ -293,6 +301,7 @@
                     <div class="row banner-ads">
                         <div class="col-12">
                             <div class="row">
+                                {% if large_banners %}{% staff_edit_link 'core.banner' 'تنظیم بنرهای بزرگ' 'banner_type__exact=large_banner' %}{% endif %}
                                 {% for banner in large_banners %}
                                     {% include 'includes/banner.html' with banner=banner %}
                                 {% endfor %}
@@ -304,6 +313,7 @@
                         <div class="row">
                             <div class="col-12">
                                 <div class="widget widget-product card border_all bglight">
+                                    {% staff_edit_link bestsellers_showcase|default:'product.productshowcase' 'انتخاب محصولات این بخش' %}
                                     <header class="card-header">
                                         <h3 class="card-title">
                                             <span><i class="fa fa-fire colormain fm-section-title-icon"></i>{{ bestsellers_showcase.title|default:'پرفروش‌ترین فایل‌ها' }}</span>
@@ -365,6 +375,7 @@
                 <div class="row banner-ads">
                     <div class="col-12">
                         <div class="row">
+                            {% staff_edit_link single_banner 'ویرایش این بنر' %}
                             {% include 'includes/banner.html' with banner=single_banner %}
                         </div>
                     </div>
@@ -510,5 +521,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'js/plugins/owl.carousel.min.js' %}"></script>
+    <script src="{% asset 'js/plugins/owl.carousel.min.js' %}"></script>
 {% endblock %}

@@ -1,4 +1,4 @@
-{% load static %}{% load custom_filters %}<!doctype html>
+{% load static site_extras %}{% load custom_filters %}<!doctype html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="utf-8">
@@ -9,10 +9,10 @@
     {# نام و آیکن از «تنظیمات سایت» (core.branding) — مثل فروشگاه و Django Admin #}
     <link rel="icon" type="image/png" href="{{ site_brand.favicon_url }}">
     <link rel="apple-touch-icon" href="{{ site_brand.touch_icon_url }}">
-    <link rel="stylesheet" href="{% static 'fonts/font-awesome/css/fontawesome.min.css' %}">
-    <link rel="stylesheet" href="{% static 'fonts/font-awesome/css/solid.css' %}">
-    <link rel="stylesheet" href="{% static 'fonts/font-awesome/css/brands.css' %}">
-    <link rel="stylesheet" href="{% static 'css/fm-admin-panel.css' %}">
+    <link rel="stylesheet" href="{% asset 'fonts/font-awesome/css/fontawesome.min.css' %}">
+    <link rel="stylesheet" href="{% asset 'fonts/font-awesome/css/solid.css' %}">
+    <link rel="stylesheet" href="{% asset 'fonts/font-awesome/css/brands.css' %}">
+    <link rel="stylesheet" href="{% asset 'css/fm-admin-panel.css' %}">
     <script>
         /* حالت شب/روز پنل — همان کلید فروشگاه تا انتخاب کاربر یکجا حفظ شود */
         (function () {
@@ -183,7 +183,7 @@
     </footer>
 </div>
 
-<script src="{% static 'js/fm-admin-panel.js' %}" defer></script>
+<script src="{% asset 'js/fm-admin-panel.js' %}" defer></script>
 {% block panel_scripts %}{% endblock %}
 </body>
 </html>

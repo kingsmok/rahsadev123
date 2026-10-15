@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static site_extras %}
 {% block extra_css %}
-    <link href="{% static 'css/plugins/prettyphoto/css/prettyPhoto.css' %}" rel="stylesheet">
+    <link href="{% asset 'css/plugins/prettyphoto/css/prettyPhoto.css' %}" rel="stylesheet">
 {% endblock %}
 {% block title %}{% if products.meta_title %}{{ products.meta_title }}{% else %}دانلود {{ products.title|truncatewords:12 }}{% endif %}{% endblock %}
 {% block meta_description %}{{ products.meta_description|default:products.description|striptags|truncatechars:160 }}{% endblock %}
@@ -552,7 +552,7 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'css/plugins/prettyphoto/js/jquery.prettyPhoto.js' %}"></script>
+    <script src="{% asset 'css/plugins/prettyphoto/js/jquery.prettyPhoto.js' %}"></script>
     <script>
         if (window.jQuery && jQuery.fn.prettyPhoto) {
             jQuery(function () {

@@ -2,9 +2,19 @@
 from django import template
 from django.core.cache import cache
 from django.db.models import Count, Q
+from django.urls import NoReverseMatch, reverse
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
 register = template.Library()
+
+
+@register.simple_tag
+def asset(path):
+    """Like ``{% static %}`` but with a content-hash ``?v=`` so updated CSS/JS is never served stale."""
+    from core.assets import asset_url
+
+    return asset_url(path)
 
 MEGA_MENU_CACHE_VERSION_KEY = 'fm.megamenu.version'
 MEGA_MENU_PRODUCTS_PER_CATEGORY = 4
@@ -109,3 +119,41 @@ def mega_menu(context, variant='desktop'):
     except Exception:
         categories = []
     return {'mega_categories': categories, 'variant': variant, 'request': context.get('request')}
+
+
+@register.simple_tag(takes_context=True)
+def staff_edit_link(context, target, label='تنظیم این بخش', query=''):
+    """A small "edit this section" shortcut, rendered only for staff who may edit it.
+
+    ``target`` is a model instance (links to its change page) or an
+    ``'app_label.model'`` string (links to the changelist, optionally filtered
+    by ``query``).  Anonymous visitors and customers never get any markup.
+    """
+    request = context.get('request')
+    user = getattr(request, 'user', None)
+    if not (user and user.is_authenticated and user.is_active and user.is_staff) or not target:
+        return ''
+    if isinstance(target, str):
+        try:
+            app_label, model_name = target.lower().split('.')
+        except ValueError:
+            return ''
+        pk = None
+    else:
+        app_label, model_name, pk = target._meta.app_label, target._meta.model_name, target.pk
+    if not user.has_perm(f'{app_label}.change_{model_name}'):
+        return ''
+    try:
+        if pk is not None:
+            url = reverse(f'admin:{app_label}_{model_name}_change', args=[pk])
+        else:
+            url = reverse(f'admin:{app_label}_{model_name}_changelist')
+    except NoReverseMatch:
+        return ''
+    if query:
+        url = f'{url}?{query}'
+    return format_html(
+        '<a class="fm-staff-edit" href="{}" title="این دکمه فقط برای مدیر نمایش داده می‌شود">'
+        '<i class="fa fa-pen" aria-hidden="true"></i> {}</a>',
+        url, label,
+    )

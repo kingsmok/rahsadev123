@@ -1,7 +1,7 @@
 {% extends "admin/base_site.html" %}
-{% load i18n static log admin_extras %}
+{% load i18n static log admin_extras site_extras %}
 
-{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static "admin/css/dashboard.css" %}">{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% asset "admin/css/dashboard.css" %}">{% endblock %}
 
 {% block coltype %}colMS{% endblock %}
 
