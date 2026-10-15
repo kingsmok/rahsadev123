@@ -17,10 +17,27 @@ STATUS = (
 
 
 class SiteSettings(models.Model):
+    """هویت و تنظیمات سراسری فروشگاه.
+
+    فقط یک ردیف معتبر است (اولین ردیف بر اساس pk)؛ همهٔ بخش‌ها — فروشگاه، پنل
+    کاربری، Django Admin، پنل مدیریت، manifest، صفحهٔ آفلاین و آیکن تب مرورگر —
+    نام و لوگو را از طریق ``core.branding`` از همین ردیف می‌خوانند.
+    """
+
+    # فاوآیکن باید بدون افت کیفیت ذخیره شود؛ تبدیل خودکار WebP (core.signals)
+    # برای این فیلد انجام نمی‌شود.
+    image_optimisation_exclude = ('favicon',)
+
     site_name = models.CharField(max_length=100, default='فایل‌مارکت', verbose_name='نام سایت')
     site_slogan = models.CharField(max_length=200, blank=True, default='مارکت فایل، نرم‌افزار و محصولات مجازی', verbose_name='شعار سایت')
     logo = models.ImageField(upload_to='settings/', null=True, blank=True, verbose_name='لوگو (اختیاری)',
-                             help_text='اگر خالی باشد لوگوی متنی نمایش داده می‌شود')
+                             help_text='در هدر فروشگاه، Django Admin و پنل مدیریت نمایش داده می‌شود. '
+                                       'اگر خالی باشد لوگوی متنی (حرف اول نام سایت) نمایش داده می‌شود.')
+    favicon = models.ImageField(upload_to='settings/', null=True, blank=True,
+                                verbose_name='آیکن تب مرورگر (فاوآیکن)',
+                                help_text='آیکن کوچک بالای تب مرورگر، آیکن نصب اپ (PWA) و آیکن صفحهٔ اصلی آیفون. '
+                                          'بهترین نتیجه: تصویر مربعی PNG با حداقل ۵۱۲×۵۱۲ پیکسل و پس‌زمینهٔ شفاف '
+                                          '(ICO و JPG هم پذیرفته می‌شود). اگر خالی باشد از لوگو ساخته می‌شود.')
     text_about_us = CKEditor5Field(config_name='default', null=True, blank=True, verbose_name='متن درباره ما')
     text_contact_us = models.TextField(null=True, blank=True, verbose_name='متن تماس با ما')
     footer_description = models.TextField(blank=True, verbose_name='متن معرفی فوتر',
@@ -46,10 +63,16 @@ class SiteSettings(models.Model):
     google_site_verification = models.CharField(max_length=120, blank=True, verbose_name='کد تأیید Google Search Console')
     bing_site_verification = models.CharField(max_length=120, blank=True, verbose_name='کد تأیید Bing Webmaster')
     products_per_page = models.PositiveIntegerField(default=9, verbose_name='تعداد محصول در هر صفحه')
+    # نسخهٔ برند: آدرس لوگو و آیکن‌ها با این زمان نسخه‌دار می‌شوند تا مرورگرها
+    # پس از هر ذخیره، تصویر جدید را بگیرند و نسخهٔ کش‌شدهٔ قبلی را نشان ندهند.
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='آخرین به‌روزرسانی')
 
     class Meta:
         verbose_name = 'تنظیمات سایت'
         verbose_name_plural = 'تنظیمات سایت'
+
+    def __str__(self):
+        return self.site_name or 'تنظیمات سایت'
 
 
 class Banner(models.Model):

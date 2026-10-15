@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="robots" content="noindex, nofollow">
     <meta name="theme-color" content="#46a9ae">
-    <title>اتصال اینترنت در دسترس نیست | فایل‌مارکت</title>
+    <title>اتصال اینترنت در دسترس نیست | {{ site_brand.name }}</title>
+    <link rel="icon" type="image/png" href="{{ site_brand.favicon_url }}">
     <style>
         :root { color-scheme: light; }
         * { box-sizing: border-box; }
@@ -20,7 +21,7 @@
 </head>
 <body>
 <main>
-    <div class="mark" aria-hidden="true">ف</div>
+    <div class="mark" aria-hidden="true">{{ site_brand.initial }}</div>
     <h1>اینترنت در دسترس نیست</h1>
     <p>اتصال خود را بررسی کنید و دوباره تلاش کنید. بخش‌های ذخیره‌شدهٔ فروشگاه پس از اتصال دوباره به‌روزرسانی می‌شوند.</p>
     <button type="button" onclick="window.location.reload()">تلاش دوباره</button>

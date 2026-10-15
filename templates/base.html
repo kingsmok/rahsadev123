@@ -7,9 +7,10 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="theme-color" content="#ffffff">
-    <link rel="apple-touch-icon" sizes="76x76" href="{% static 'img/favicon.png' %}">
-    <link rel="icon" type="image/png" href="{% static 'img/favicon.png' %}">
-    <link rel="manifest" href="{% static 'json/manifest.webmanifest' %}">
+    {# آیکن تب، آیکن آیفون و manifest از «تنظیمات سایت» (فاوآیکن، یا لوگو) ساخته می‌شوند؛ آدرس‌ها نسخه‌دارند تا کش مرورگر آیکن قبلی را نگه ندارد. #}
+    <link rel="icon" type="image/png" href="{{ site_brand.favicon_url }}">
+    <link rel="apple-touch-icon" href="{{ site_brand.touch_icon_url }}">
+    <link rel="manifest" href="{{ site_brand.manifest_url }}">
     <link rel="preload" href="{% static 'fonts/vazirmatn/Vazirmatn-FD-Regular.woff2' %}" as="font" type="font/woff2" crossorigin>
     {# آیکن‌های هدر و نوار اعتماد در اولین paint استفاده می‌شوند؛ preload از نمایش مربع‌های موقت جلوگیری می‌کند. #}
     <link rel="preload" href="{% static 'fonts/font-awesome/webfonts/fa-solid-900.woff2' %}" as="font" type="font/woff2" crossorigin>
@@ -133,10 +134,10 @@
         <div class="collapse navbar-collapse justify-content-end" id="navigation">
             <div class="logo-nav-res default text-center">
                 <a href="{% url 'core:home' %}" class="text-logo">
-                    {% if site_settings.logo %}
-                        <img src="{{ site_settings.logo.url }}" alt="{{ site_name }}" class="site-logo site-logo--mobile">
+                    {% if site_brand.logo_url %}
+                        <img src="{{ site_brand.logo_url }}" alt="{{ site_name }}" class="site-logo site-logo--mobile">
                     {% else %}
-                        <span class="brand-mark" aria-hidden="true">ف</span>
+                        <span class="brand-mark" aria-hidden="true">{{ site_brand.initial }}</span>
                         <span>{{ site_name }}</span>
                     {% endif %}
                 </a>
@@ -187,10 +188,10 @@
                 <div class="col-lg-2 col-md-3 col-sm-4 col-5">
                     <div class="logo-area default">
                         <a href="{% url 'core:home' %}" class="text-logo">
-                            {% if site_settings.logo %}
-                                <img src="{{ site_settings.logo.url }}" alt="{{ site_name }}" class="site-logo site-logo--desktop">
+                            {% if site_brand.logo_url %}
+                                <img src="{{ site_brand.logo_url }}" alt="{{ site_name }}" class="site-logo site-logo--desktop">
                             {% else %}
-                                <span class="brand-mark" aria-hidden="true">ف</span>
+                                <span class="brand-mark" aria-hidden="true">{{ site_brand.initial }}</span>
                                 <span>{{ site_name }}<small>{{ site_settings.site_slogan|default:'فایل | نرم‌افزار | محصولات مجازی' }}</small></span>
                             {% endif %}
                         </a>

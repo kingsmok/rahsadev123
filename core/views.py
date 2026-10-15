@@ -1,6 +1,13 @@
-from django.http import HttpResponse
+import logging
+
+from django.core.cache import cache
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.templatetags.static import static
+from django.views.decorators.http import require_safe
+
+from core import branding
 from .forms import ContactUsForm
 from product.models import ProductBrand, Product
 from django.db import models
@@ -81,6 +88,69 @@ def service_worker(request):
     response = render(request, 'service-worker.js', content_type='application/javascript; charset=utf-8')
     response['Service-Worker-Allowed'] = '/'
     response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return response
+
+
+# ---------------------------------------------------------------- brand assets
+
+logger = logging.getLogger(__name__)
+
+_ICON_CACHE_SECONDS = 60 * 60 * 24 * 30
+
+
+def _cache_brand_asset(response, request, brand):
+    """Versioned brand URLs never change content; anything else revalidates soon."""
+    if request.GET.get('v') == brand.version:
+        response['Cache-Control'] = 'public, max-age=31536000, immutable'
+    else:
+        response['Cache-Control'] = 'public, max-age=300'
+    return response
+
+
+@require_safe
+def web_manifest(request):
+    """manifest نصب اپ (PWA) با نام و آیکن فعلی؛ قبلاً یک فایل JSON ثابت بود."""
+    brand = branding.get_brand(request)
+    response = JsonResponse(
+        branding.manifest_data(brand),
+        json_dumps_params={'ensure_ascii': False, 'indent': 2},
+        content_type='application/manifest+json; charset=utf-8',
+    )
+    return _cache_brand_asset(response, request, brand)
+
+
+@require_safe
+def brand_icon(request, size):
+    """آیکن مربعی PNG ساخته‌شده از فاوآیکن (یا لوگوی) آپلودشده در «تنظیمات سایت»."""
+    if size not in branding.ICON_SIZES:
+        raise Http404('اندازهٔ آیکن پشتیبانی نمی‌شود.')
+    brand = branding.get_brand(request)
+    if not brand.has_custom_icon:
+        return redirect(static(branding.DEFAULT_ICONS[size]))
+    # The key contains the brand version, so a new upload can never be answered
+    # with an old icon, even by a per-process cache in another worker.
+    cache_key = f'fm:brand-icon:{brand.version}:{size}'
+    payload = cache.get(cache_key)
+    if payload is None:
+        try:
+            payload = branding.render_square_icon(brand.icon_source, size)
+        except branding.ICON_ERRORS as exc:
+            logger.warning('Brand icon %s could not be rendered from %s: %s', size, brand.icon_source.name, exc)
+            return redirect(static(branding.DEFAULT_ICONS[size]))
+        cache.set(cache_key, payload, _ICON_CACHE_SECONDS)
+    response = HttpResponse(payload, content_type='image/png')
+    return _cache_brand_asset(response, request, brand)
+
+
+@require_safe
+def favicon(request):
+    """``/favicon.ico`` که مرورگرها خودکار درخواست می‌کنند → آیکن فعلی سایت.
+
+    عمداً موقت (۳۰۲) است: ریدایرکت دائمی (۳۰۱) قبلی برای همیشه در مرورگر کش
+    می‌شد و آیکن تب هرگز قابل تغییر نبود.
+    """
+    response = redirect(branding.get_brand(request).favicon_ico_url)
+    response['Cache-Control'] = 'no-cache'
     return response
 
 

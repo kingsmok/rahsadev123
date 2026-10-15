@@ -191,6 +191,34 @@ body {
     flex: 0 0 38px;
 }
 
+/* نشان برند از «تنظیمات سایت»: فاوآیکن مربعی، یا لوگو با عرض آزاد، به‌جای آیکن پیش‌فرض */
+#branding .fm-mark--image,
+#branding .fm-mark--logo {
+    background: #fff;
+    border: 1px solid var(--adm-header-line, rgba(20, 53, 65, .1));
+    box-shadow: 0 4px 12px rgba(20, 53, 65, .1);
+    overflow: hidden;
+}
+#branding .fm-mark--image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+#branding .fm-mark--logo {
+    width: auto;
+    max-width: 160px;
+    flex: 0 1 auto;
+    padding: 4px 8px;
+}
+#branding .fm-mark--logo img {
+    display: block;
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+}
+
 #branding #site-name a {
     color: var(--fm-text);
     font-weight: 800;

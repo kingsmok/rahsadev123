@@ -1,12 +1,16 @@
 from django.db import OperationalError, ProgrammingError
 
-from core.models import SiteSettings
+from core.branding import get_brand
 from product.models import ProductCategory, ProductBrand
 from cart.models import Cart, CartItem
 
 
 def shop_func(request):
-    site_settings = SiteSettings.objects.first()
+    # نام، لوگو و آیکن‌ها از یک منبع واحد (core.branding) می‌آیند تا تغییرشان در
+    # «تنظیمات سایت» همزمان در همهٔ قالب‌ها — از جمله ادمین — دیده شود.
+    # «site_brand» نامیده شده چون «brand» در صفحهٔ برندهای محصول، متغیر view است.
+    site_brand = get_brand(request)
+    site_settings = site_brand.settings
     categories = ProductCategory.objects.all()
     brands = ProductBrand.objects.all()
 
@@ -29,7 +33,8 @@ def shop_func(request):
 
     return {
         'site_settings': site_settings,
-        'site_name': site_settings.site_name if site_settings else 'فایل‌مارکت',
+        'site_brand': site_brand,
+        'site_name': site_brand.name,
         'categories': categories,
         'brands': brands,
 

@@ -99,10 +99,7 @@ class ThrottledPasswordResetView(auth_views.PasswordResetView):
         if email:
             record_password_reset_request(request, email)
         # نام سایت در ایمیل از تنظیمات سایت می‌آید، نه از دامنهٔ درخواست.
-        from core.models import SiteSettings
+        from core.branding import get_brand
 
-        site_settings = SiteSettings.objects.first()
-        self.extra_email_context = {
-            'site_name': site_settings.site_name if site_settings else 'فایل‌مارکت',
-        }
+        self.extra_email_context = {'site_name': get_brand(request).name}
         return super().post(request, *args, **kwargs)

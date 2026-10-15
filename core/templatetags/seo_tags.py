@@ -7,10 +7,11 @@
 import json
 
 from django import template
+from django.templatetags.static import static
 from django.utils.html import strip_tags
 from django.utils.safestring import mark_safe
 
-from core.models import SiteSettings
+from core.branding import DEFAULT_SITE_NAME, Brand, get_site_settings
 
 register = template.Library()
 
@@ -53,14 +54,17 @@ def _settings(context=None):
         value = context.get('site_settings', marker)
         if value is not marker:
             return value
-    return SiteSettings.objects.first()
+    return get_site_settings(context.get('request') if context is not None else None)
 
 
 def _site_logo(context, settings_obj):
-    """Use the configured brand logo when available, otherwise a stable fallback."""
-    if settings_obj and settings_obj.logo:
-        return _absolute(context, settings_obj.logo.url)
-    return _absolute(context, '/static/img/favicon.png')
+    """The uploaded logo, else the uploaded icon, else the bundled icon."""
+    brand = Brand(settings_obj)
+    if brand.logo_url:
+        return _absolute(context, brand.logo_url)
+    if brand.has_custom_icon:
+        return _absolute(context, brand.icon_512_url)
+    return _absolute(context, static('img/favicon.png'))
 
 
 def _clean(text, limit=300):
@@ -74,7 +78,7 @@ def _clean(text, limit=300):
 def organization_schema(context):
     """سازمان/ کسب‌وکار — در همه صفحات."""
     s = _settings(context)
-    site_name = s.site_name if s else 'فایل‌مارکت'
+    site_name = s.site_name if s else DEFAULT_SITE_NAME
     data = {
         '@context': 'https://schema.org',
         '@type': 'Organization',
@@ -112,7 +116,7 @@ def organization_schema(context):
 def website_schema(context):
     """وب‌سایت با اکشن جست‌وجو (SearchAction) — در همه صفحات."""
     s = _settings(context)
-    site_name = s.site_name if s else 'فایل‌مارکت'
+    site_name = s.site_name if s else DEFAULT_SITE_NAME
     data = {
         '@context': 'https://schema.org',
         '@type': 'WebSite',
@@ -147,7 +151,7 @@ def webpage_schema(context):
         return ''
 
     settings_obj = _settings(context)
-    site_name = context.get('site_name') or (settings_obj.site_name if settings_obj else 'فایل‌مارکت')
+    site_name = context.get('site_name') or (settings_obj.site_name if settings_obj else DEFAULT_SITE_NAME)
     entity = next(
         (
             context.get(key)
@@ -309,7 +313,7 @@ def product_schema(context, product):
         'price': str(product.price * 10),  # model/UI amounts are تومان; Schema uses IRR.
         'availability': 'https://schema.org/InStock' if product.is_available else 'https://schema.org/OutOfStock',
         'itemCondition': 'https://schema.org/NewCondition',
-        'seller': {'@type': 'Organization', 'name': (context.get('site_name') or 'فایل‌مارکت')},
+        'seller': {'@type': 'Organization', 'name': (context.get('site_name') or DEFAULT_SITE_NAME)},
     }
     # ``old_price`` is a visual crossed-out amount, not a second current offer;
     # publishing it as PriceSpecification would make the structured data
@@ -396,7 +400,7 @@ def article_schema(context, article):
         },
         'publisher': {
             '@type': 'Organization',
-            'name': (context.get('site_name') or 'فایل‌مارکت'),
+            'name': (context.get('site_name') or DEFAULT_SITE_NAME),
             'logo': {'@type': 'ImageObject', 'url': _site_logo(context, _settings(context))},
         },
     }
@@ -500,7 +504,7 @@ def service_schema(context, packages):
         'name': 'خدمات طراحی وب سایت',
         'provider': {
             '@type': 'Organization',
-            'name': (context.get('site_name') or 'فایل‌مارکت'),
+            'name': (context.get('site_name') or DEFAULT_SITE_NAME),
             'url': _absolute(context, '/'),
         },
         'areaServed': 'IR',

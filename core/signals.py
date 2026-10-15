@@ -27,8 +27,11 @@ def optimise_image_fields(sender, instance, raw=False, **kwargs):
     if raw or getattr(instance, '_skip_image_optimisation', False):
         return
 
+    # A model can keep chosen uploads byte-for-byte (e.g. the site favicon,
+    # whose sharp edges suffer from lossy WebP re-encoding).
+    excluded = set(getattr(sender, 'image_optimisation_exclude', ()))
     for field in sender._meta.fields:
-        if not isinstance(field, models.ImageField):
+        if not isinstance(field, models.ImageField) or field.name in excluded:
             continue
         image_field = getattr(instance, field.name, None)
         if not image_field or getattr(image_field, '_committed', True):

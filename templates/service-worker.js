@@ -1,8 +1,11 @@
 {% load static %}
-/* فایل‌مارکت PWA service worker — intentionally conservative for a storefront.
+/* PWA service worker — intentionally conservative for a storefront.
    Only public, versioned UI assets are cached. Authenticated responses, carts,
-   downloads and payment requests always stay on the network. */
-const CACHE_NAME = 'filemarket-shell-v1';
+   downloads and payment requests always stay on the network.
+   The cache name carries the brand version from «تنظیمات سایت»: renaming the
+   shop changes this script, so browsers reinstall it and re-cache the offline
+   page with the new name instead of keeping the old one forever. */
+const CACHE_NAME = 'filemarket-shell-v1-{{ site_brand.version }}';
 const OFFLINE_URL = '/offline/';
 const APP_SHELL = [
   OFFLINE_URL,
@@ -18,7 +21,8 @@ const APP_SHELL = [
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(APP_SHELL))
+      // 'reload' bypasses the HTTP cache so a reinstall never stores a stale copy.
+      .then(cache => cache.addAll(APP_SHELL.map(url => new Request(url, { cache: 'reload' }))))
       .then(() => self.skipWaiting())
   );
 });

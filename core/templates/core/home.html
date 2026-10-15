@@ -29,7 +29,7 @@
                             <img {% if forloop.first %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async" src="{{ slider.image.url }}" class="img-fluid imgslider" alt="{{ slider.title }}" onerror="this.hidden=true">
                             <span class="slider_main__shade" aria-hidden="true"></span>
                             <span class="slider_main__copy">
-                                <span class="slider_main__eyebrow">فایل‌مارکت</span>
+                                <span class="slider_main__eyebrow">{{ site_name }}</span>
                                 <strong class="slider_main__title">{{ slider.title }}</strong>
                                 <span class="slider_main__description">دانلود آنی محصولات دیجیتال با لایسنس رسمی و پشتیبانی تخصصی</span>
                                 <span class="slider_main__cta">مشاهده جزئیات <span aria-hidden="true">←</span></span>

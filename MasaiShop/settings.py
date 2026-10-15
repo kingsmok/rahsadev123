@@ -102,7 +102,8 @@ ZARINPAL_ALLOWED_HOSTS = tuple(
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    # django.contrib.admin with a site whose header/title follow «تنظیمات سایت».
+    'MasaiShop.apps.FileMarketAdminConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',

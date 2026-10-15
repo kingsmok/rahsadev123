@@ -95,7 +95,10 @@ class Command(BaseCommand):
 
         html = anon.get('/').content.decode()
         ok('og:locale و twitter:card', 'og:locale' in html and 'twitter:card' in html)
-        ok('meta author = نام سایت', '<meta name="author" content="فایل‌مارکت">' in html)
+        from django.utils.html import escape
+        from core.branding import get_brand
+        site_name = get_brand(None).name
+        ok('meta author = نام سایت', f'<meta name="author" content="{escape(site_name)}">' in html, site_name)
 
         print('════════ ۳) صفحات خصوصی: noindex خودکار ════════')
         # برای صفحه پرداخت باید سبد پر باشد
