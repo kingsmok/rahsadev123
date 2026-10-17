@@ -425,6 +425,7 @@ def start_payment(request, order_number):
     if request.method != 'POST':
         return HttpResponse('روش پرداخت باید با درخواست معتبر ارسال شود.', status=405)
     guest = not request.user.is_authenticated
+    contact_changed = False
     if order_number == 'new':
         cart = get_cart(request)
         items = list(cart.items.select_related('product').all()) if cart is not None else []
@@ -496,6 +497,9 @@ def start_payment(request, order_number):
                 for field in changed:
                     setattr(order, field, contact[field])
                 order.save(update_fields=changed + ['updated_at'])
+                # Instalment gateways bind the payment to the mobile number:
+                # a changed contact must open a fresh payment.
+                contact_changed = True
 
         if guest:
             grant_order_access(request, order)
@@ -559,7 +563,7 @@ def start_payment(request, order_number):
         .order_by('-created_at').first()
     )
     reuse_url = (recent.raw_response or {}).get('redirect_url') if recent is not None else ''
-    if reuse_url:
+    if reuse_url and not contact_changed:
         return _gateway_redirect(request, reuse_url, gateway_settings.title)
 
     transaction = PaymentTransaction.objects.create(order=order, gateway=gateway, amount=order.final_price)
@@ -767,6 +771,11 @@ def successful_payment_done(request, order_number):
         return render(request, 'cart/guest_order_locked.html', {'order_paid': order.status == 'paid'})
     if order.status != 'paid':
         return redirect('cart:guest_order', access_token=order.access_token)
+    # The purchase is done: forget the typed contact details, so the next person
+    # on a shared computer does not find them pre-filled.
+    from cart.guest import SESSION_DETAILS_KEY
+
+    request.session.pop(SESSION_DETAILS_KEY, None)
     created = views_guest.create_requested_password_account(request, order)
     if created is not None:
         return created

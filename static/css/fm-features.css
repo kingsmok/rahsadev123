@@ -24,7 +24,7 @@
 .fm-link-btn:disabled { color: var(--fm-text-faint, #93a1ad); cursor: default; text-decoration: none; }
 .fm-btn--lg { min-height: 52px; font-size: 15px; }
 .fm-btn--sm { min-height: 34px; padding: 4px 10px; font-size: 13px; }
-.fm-btn.disabled, .fm-btn[aria-disabled="true"] { opacity: .55; pointer-events: none; }
+.fm-btn.disabled, .fm-btn[aria-disabled="true"], .fm-btn:disabled { opacity: .55; pointer-events: none; }
 .fm-tab-count {
     display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; margin-inline-start: 4px;
     border-radius: 999px; background: var(--fm-primary-50, #e9f7f7); color: var(--fm-primary-700, #1f6f74); font-size: 12px;

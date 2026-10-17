@@ -212,6 +212,18 @@ class GuestPaymentTests(GuestCheckoutBase):
         self.assertEqual(Order.objects.count(), 1)
         self.assertEqual(PaymentTransaction.objects.count(), 1)
 
+        # A corrected mobile number opens a fresh payment on the same order.
+        third, gateway_three = self.start({'mobile': '09351112233'}, authority='A' + '4' * 35)
+        gateway_three.assert_called_once()
+        self.assertEqual(Order.objects.get().contact_mobile, '09351112233')
+        self.assertEqual(PaymentTransaction.objects.count(), 2)
+
+    def test_typed_details_are_forgotten_once_the_purchase_is_confirmed(self):
+        order = self.guest_purchase()
+        self.assertIn('checkout_details', self.client.session)
+        self.client.get(reverse('payments:successful_done', args=[order.order_number]))
+        self.assertNotIn('checkout_details', self.client.session)
+
     def test_successful_payment_delivers_the_files_in_the_buyers_browser(self):
         self.add_to_cart()
         self.start()
@@ -611,3 +623,29 @@ class GuestOrderStaffTests(GuestCheckoutBase):
         self.assertEqual(export.status_code, 200)
         self.assertIn('09121234567', export.content.decode('utf-8'))
         self.assertEqual(self.client.get(reverse('admin_home')).status_code, 200)
+
+
+class CleanupGuestCartsTests(GuestCheckoutBase):
+    def test_abandoned_guest_carts_are_removed_and_their_coupon_use_released(self):
+        from django.core.management import call_command
+
+        coupon = Coupon.objects.create(code='LIMITED', discount_type='fixed', discount_value=1000, max_usage=1,
+                                       usage_count=1, valid_to=timezone.now() + timedelta(days=30))
+        stale = Cart.objects.create(coupon=coupon, coupon_discount=1000)
+        CartItem.objects.create(cart=stale, product=self.product)
+        old = timezone.now() - timedelta(days=20)
+        Cart.objects.filter(pk=stale.pk).update(updated_at=old)
+        CartItem.objects.filter(cart=stale).update(created_at=old)
+        fresh = Cart.objects.create()
+        member_cart = Cart.objects.create(user=self.vendor)
+        Cart.objects.filter(pk=member_cart.pk).update(updated_at=old)
+        pending = Order.objects.create(cart=stale, total_price=1, final_price=1, status='pending', contact_mobile='09121234567')
+
+        call_command('cleanup_guest_carts', '--days', '14', stdout=open('/dev/null', 'w'))
+
+        self.assertFalse(Cart.objects.filter(pk=stale.pk).exists())
+        self.assertTrue(Cart.objects.filter(pk=fresh.pk).exists())
+        self.assertTrue(Cart.objects.filter(pk=member_cart.pk).exists())  # account carts are never touched
+        self.assertEqual(Coupon.objects.get(pk=coupon.pk).usage_count, 0)
+        pending.refresh_from_db()
+        self.assertIsNone(pending.cart)  # the order itself is kept
