@@ -32,7 +32,10 @@ def _order_paid(sender, instance, created, raw=False, **kwargs):
     if raw or instance.status != 'paid' or getattr(instance, '_fm_previous_status', None) == 'paid':
         return
     user = instance.user
-    customer = (user.get_full_name() or user.get_username()) if user else 'کاربر'
+    if user:
+        customer = user.get_full_name() or user.get_username()
+    else:
+        customer = f'مهمان ({instance.contact_mobile or instance.contact_email or "بدون اطلاعات تماس"})'
     notify(
         'order_paid',
         f'سفارش {instance.order_number} پرداخت شد',
@@ -46,7 +49,7 @@ def _order_paid(sender, instance, created, raw=False, **kwargs):
 
 
 def _customer_sms(order_pk):
-    order = Order.objects.select_related('user', 'user__profile').filter(pk=order_pk).first()
+    order = Order.objects.select_related('user').filter(pk=order_pk).first()
     if order is not None:
         send_customer_order_sms(order)
 

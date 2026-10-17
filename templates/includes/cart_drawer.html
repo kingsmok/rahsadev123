@@ -43,7 +43,7 @@
             <div class="fm-cart-drawer__empty">
                 <i class="fa fa-cart-shopping" aria-hidden="true"></i>
                 <p>سبد خرید شما خالی است.</p>
-                {% if not request.user.is_authenticated %}<p class="fm-cart-drawer__hint">برای افزودن فایل به سبد خرید وارد حساب کاربری شوید.</p>{% endif %}
+                {% if not request.user.is_authenticated %}<p class="fm-cart-drawer__hint">خرید بدون نیاز به ثبت‌نام انجام می‌شود.</p>{% endif %}
                 <a href="{% url 'product:product_list' %}" class="fm-btn fm-btn--primary">مشاهده فایل‌ها</a>
             </div>
         {% endif %}

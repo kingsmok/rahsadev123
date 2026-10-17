@@ -28,9 +28,12 @@ class DownloadToken(models.Model):
         length=32, max_length=40, unique=True, editable=False,
         verbose_name='توکن دانلود',
     )
+    # خالی = توکنِ سفارش مهمان؛ دانلود آن فقط با دسترسی به همان سفارش
+    # (نشست مرورگر یا لینک محرمانهٔ پیگیری) مجاز است (downloads.views).
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True,
         related_name='download_tokens', verbose_name='کاربر',
+        help_text='خالی = خرید مهمان',
     )
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE,
@@ -59,7 +62,8 @@ class DownloadToken(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f'{self.product.title} - {self.user.username}'
+        owner = self.user.username if self.user_id else 'مهمان'
+        return f'{self.product.title} - {owner}'
 
     @property
     def is_expired(self):

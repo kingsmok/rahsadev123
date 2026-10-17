@@ -1,0 +1,52 @@
+{# کارت «ساخت حساب کاربری» برای سفارش پرداخت‌شدهٔ مهمان (کاملاً اختیاری). #}
+<div class="fm-card fm-account-card" id="create-account">
+    <h2 class="fm-card__title"><i class="fa fa-user-plus" aria-hidden="true"></i> {% if account_card.requested %}تکمیل ساخت حساب{% else %}سفارش‌ها را در حساب کاربری داشته باشید{% endif %}</h2>
+    {% if account_card.conflict %}
+        <p class="fm-account-card__text">ساخت حساب جدید با این اطلاعات ممکن نشد. اگر قبلاً در {{ site_name }} حساب داشته‌اید، <a href="{{ account_card.login_url }}">وارد همان حساب شوید</a>؛ سفارش‌هایی که در همین مرورگر با موبایل یا ایمیل همان حساب ثبت کرده‌اید خودکار به آن اضافه می‌شوند. فایل‌های این سفارش در هر حال از همین صفحه در دسترس است.</p>
+    {% elif account_card.mode == 'otp' %}
+        <p class="fm-account-card__text">برای دیدن همهٔ سفارش‌ها و خرید سریع‌تر در دفعه‌های بعد، شمارهٔ <bdi dir="ltr">{{ account_card.mobile_masked }}</bdi> را با یک کد پیامکی تأیید کنید. اگر با این شماره حساب داشته باشید، سفارش به همان حساب اضافه می‌شود؛ وگرنه حساب تازه ساخته می‌شود. رمز عبور لازم نیست.</p>
+        {% if account_card.send_error %}<p class="fm-field__err" role="alert">{{ account_card.send_error }}</p>{% endif %}
+        {% if account_card.code_sent %}
+            <form method="post" action="{% url 'cart:guest_account' account_card.order_number %}" class="fm-form fm-account-card__form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="verify">
+                <input type="hidden" name="next" value="{{ account_card.next }}">
+                <div class="fm-field">
+                    <label for="account-code">کد تأیید پیامک‌شده</label>
+                    <input type="text" id="account-code" name="code" class="fm-input fm-otp-input" required dir="ltr"
+                           inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="8" placeholder="•••••">
+                </div>
+                <button type="submit" class="fm-btn fm-btn--primary fm-btn--block"><i class="fa fa-user-check" aria-hidden="true"></i> تأیید و ساخت حساب</button>
+            </form>
+            <form method="post" action="{% url 'cart:guest_account' account_card.order_number %}" class="fm-account-card__resend">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="send">
+                <input type="hidden" name="next" value="{{ account_card.next }}">
+                <button type="submit" class="fm-link-btn" {% if account_card.resend_wait %}disabled{% endif %}>ارسال دوبارهٔ کد{% if account_card.resend_wait %} ({{ account_card.resend_wait }} ثانیه){% endif %}</button>
+            </form>
+        {% else %}
+            <form method="post" action="{% url 'cart:guest_account' account_card.order_number %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="send">
+                <input type="hidden" name="next" value="{{ account_card.next }}">
+                <button type="submit" class="fm-btn fm-btn--primary fm-btn--block"><i class="fa fa-paper-plane" aria-hidden="true"></i> ارسال کد تأیید</button>
+            </form>
+        {% endif %}
+    {% else %}
+        <p class="fm-account-card__text">یک رمز عبور انتخاب کنید تا با همین اطلاعات حساب ساخته و این سفارش در آن ثبت شود؛ نام کاربری شما شمارهٔ <bdi dir="ltr">{{ account_card.mobile_masked }}</bdi> خواهد بود. اطلاعات دیگری لازم نیست.</p>
+        <form method="post" action="{% url 'cart:guest_account' account_card.order_number %}" class="fm-form fm-account-card__form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="password">
+            <input type="hidden" name="next" value="{{ account_card.next }}">
+            <div class="fm-field">
+                <label for="account-password">رمز عبور حساب</label>
+                <input type="password" id="account-password" name="password" class="fm-input" required dir="ltr"
+                       autocomplete="new-password" minlength="8" maxlength="128" aria-describedby="account-password-hint">
+                <small class="fm-field__hint" id="account-password-hint">حداقل ۸ کاراکتر.</small>
+            </div>
+            <button type="submit" class="fm-btn fm-btn--primary fm-btn--block"><i class="fa fa-user-check" aria-hidden="true"></i> ساخت حساب</button>
+        </form>
+        <p class="fm-account-card__skip">قبلاً حساب داشته‌اید؟ <a href="{{ account_card.login_url }}">وارد شوید</a>.</p>
+    {% endif %}
+    <p class="fm-account-card__skip"><i class="fa fa-circle-info" aria-hidden="true"></i> کاملاً اختیاری است؛ بدون حساب هم فایل‌ها از همین صفحه و لینک سفارش در دسترس‌اند.</p>
+</div>

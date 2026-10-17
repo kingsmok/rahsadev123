@@ -1,25 +1,33 @@
+from urllib.parse import urlencode
+
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.contrib import messages
+from django.urls import reverse
 from .coupons import discount_amount, release_coupon_reservation, revalidate_coupon
+from .guest import SESSION_ERRORS_KEY, checkout_details, get_cart
 from .models import Cart, CartItem, Coupon, Order
 from product.models import Product
 from django.db import transaction as db_transaction
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
-from core.decorators import login_required_json
+from core.throttling import get_throttle
 
 
-def _cart_summary(user, revalidate=False):
+# سبد خرید، کد تخفیف و صفحهٔ پرداخت بدون ورود هم کار می‌کنند (خرید مهمان):
+# ``get_cart`` سبد حساب کاربر یا سبدِ نشستِ مهمان را برمی‌گرداند و ورود به
+# حساب، سبد مهمان را در سبد حساب ادغام می‌کند (cart.signals).
+
+
+def _cart_summary(request, revalidate=False):
     """جمع سبد خرید دیجیتال (بدون هزینه ارسال).
 
     With ``revalidate`` the applied coupon is re-checked *before* the totals
     are computed; computing them first showed a stale payable amount next to
     an already-corrected discount on the first view after a coupon lapsed.
     """
-    cart = Cart.objects.filter(user=user).select_related('coupon').first()
+    cart = get_cart(request)
     items = list(cart.items.select_related('product')) if cart else []
     if revalidate:
         revalidate_coupon(cart, items)
@@ -45,11 +53,10 @@ def _cart_summary(user, revalidate=False):
     }
 
 
-@login_required
 def cart(request):
     # محتویات سبد می‌تواند از آخرین باری که تخفیف اعمال شده تغییر کرده باشد
     # (مثلاً حذف آیتم در یک تب دیگر)؛ تخفیف را دوباره با جمع فعلی بسنجیم.
-    summary = _cart_summary(request.user, revalidate=True)
+    summary = _cart_summary(request, revalidate=True)
 
     from product.models import Product as _Product
 
@@ -75,7 +82,6 @@ def cart(request):
     return render(request, 'cart/cart.html', context)
 
 
-@login_required_json
 @never_cache
 def cart_drawer(request):
     """The cart drawer fragment, re-fetched by the storefront after an AJAX add.
@@ -87,7 +93,6 @@ def cart_drawer(request):
     return render(request, 'includes/cart_drawer.html')
 
 
-@login_required_json
 @require_POST
 def add_to_cart(request, product_id):
     product = Product.objects.filter(pk=product_id, status='published').first()
@@ -96,7 +101,8 @@ def add_to_cart(request, product_id):
     if not product.is_available:
         return JsonResponse({'success': False, 'message': 'این فایل در حال حاضر قابل خرید نیست.'}, status=400)
 
-    cart, _ = Cart.objects.get_or_create(user=request.user)
+    # مهمان هم سبد دارد: سبدِ نشستِ مرورگر که با رفرش و جابه‌جایی بین صفحه‌ها می‌ماند.
+    cart = get_cart(request, create=True)
     # محصولات دیجیتال کمّیت ندارند؛ هر فایل فقط یک‌بار به سبد اضافه می‌شود.
     _, created = CartItem.objects.get_or_create(cart=cart, product=product, defaults={'quantity': 1})
     count = cart.items.count()
@@ -118,13 +124,16 @@ def add_to_cart(request, product_id):
     })
 
 
-@login_required_json
 @require_POST
 def remove_cart_item(request, item_id):
-    cart_item = CartItem.objects.filter(pk=item_id, cart__user=request.user).select_related('cart').first()
+    current = get_cart(request)
+    cart_item = (
+        CartItem.objects.filter(pk=item_id, cart=current).select_related('cart').first()
+        if current is not None else None
+    )
     if cart_item is None:
         # Already removed (another tab, double click): the desired state holds.
-        cart = Cart.objects.filter(user=request.user).first()
+        cart = current
         remaining_items = list(cart.items.select_related('product')) if cart else []
         return JsonResponse({
             'success': True,
@@ -149,6 +158,29 @@ def remove_cart_item(request, item_id):
     })
 
 
+def paid_coupon_uses_by_contact(coupon, mobile='', email=''):
+    """Per-customer coupon limit for a guest: completed orders placed with the same contact.
+
+    A guest has no account to count against, so the mobile/e-mail typed at
+    checkout identifies the customer (account and guest orders alike).
+    """
+    from django.db.models import Q
+
+    if not mobile and not email:
+        return 0
+    contact = Q(contact_mobile=mobile) if mobile else Q()
+    if email:
+        contact = (contact | Q(contact_email__iexact=email)) if mobile else Q(contact_email__iexact=email)
+    snapshots = Order.objects.filter(contact, status='paid').values_list('items_data', flat=True)
+    coupon_code = coupon.code.casefold()
+    return sum(
+        1
+        for snapshot in snapshots
+        if isinstance(snapshot, dict)
+        and str(snapshot.get('coupon') or '').casefold() == coupon_code
+    )
+
+
 def _paid_coupon_uses(user, coupon):
     """Count completed uses for the per-customer coupon limit.
 
@@ -165,15 +197,26 @@ def _paid_coupon_uses(user, coupon):
     )
 
 
-@login_required
 @require_POST
 def apply_coupon(request):
     coupon_code = (request.POST.get('coupon_code') or '').strip()
+    if not request.user.is_authenticated:
+        # بدون حساب کاربری هر نشست تازه می‌تواند کد امتحان کند؛ سقف تلاش جلوی
+        # حدس‌زدن کدها و رزرو کردن ظرفیت کوپن با نشست‌های پشت‌سرهم را می‌گیرد.
+        throttle = get_throttle('coupon')
+        if throttle.is_throttled(request, coupon_code):
+            messages.error(request, 'تعداد تلاش برای کد تخفیف زیاد است. لطفاً چند دقیقه دیگر دوباره امتحان کنید.')
+            return redirect('cart:cart')
+        throttle.record(request, coupon_code)
+    current = get_cart(request)
+    if current is None:
+        messages.error(request, 'سبد خرید شما خالی است')
+        return redirect('cart:cart')
     try:
         # Lock both rows while checking capacity and reserving the code.  This
         # prevents two parallel tabs from consuming the final allowed use.
         with db_transaction.atomic():
-            cart = Cart.objects.select_for_update().get(user=request.user)
+            cart = Cart.objects.select_for_update().get(pk=current.pk)
             if not cart.items.exists():
                 messages.error(request, 'سبد خرید شما خالی است')
                 return redirect('cart:cart')
@@ -195,7 +238,10 @@ def apply_coupon(request):
                 messages.error(request, 'کد تخفیف معتبر نیست یا منقضی شده است')
                 return redirect('cart:cart')
 
-            if coupon.per_user_limit and _paid_coupon_uses(request.user, coupon) >= coupon.per_user_limit:
+            # For a guest the per-customer limit is checked when payment starts,
+            # once the mobile/e-mail identifying them is known.
+            if coupon.per_user_limit and request.user.is_authenticated \
+                    and _paid_coupon_uses(request.user, coupon) >= coupon.per_user_limit:
                 messages.error(request, 'سقف استفاده شما از این کد تخفیف تکمیل شده است.')
                 return redirect('cart:cart')
 
@@ -225,15 +271,17 @@ def apply_coupon(request):
     return redirect('cart:cart')
 
 
-@login_required
-def shopping_payment(request):
-    # The payment page is reachable without opening the cart, so an expired or
-    # staff-disabled coupon must be re-checked here before a total is shown.
-    summary = _cart_summary(request.user, revalidate=True)
-    if not summary['cart_items']:
-        messages.warning(request, 'سبد خرید شما خالی است')
-        return redirect('cart:cart')
+def _otp_available():
+    try:
+        from notifications.models import SmsSettings
 
+        return SmsSettings.load().otp_available
+    except Exception:  # tables missing during a first migrate
+        return False
+
+
+def checkout_context(request, summary):
+    """Everything the checkout page shows; shared with the payment-start error path."""
     from notifications.sms import normalize_mobile
     from payments.models import GatewaySettings
     from payments.services import GATEWAYS, MOBILE_REQUIRED_KEYS
@@ -254,8 +302,14 @@ def shopping_payment(request):
         gateway.selectable = gateway.is_configured and gateway.eligible
     selectable = [gateway for gateway in gateways if gateway.selectable]
     misconfigured = [gateway for gateway in gateways if not gateway.is_configured] if request.user.is_staff else []
-    profile = getattr(request.user, 'profile', None)
-    context = {
+
+    is_guest = not request.user.is_authenticated
+    profile = getattr(request.user, 'profile', None) if not is_guest else None
+    details = checkout_details(request)
+    errors = request.session.pop(SESSION_ERRORS_KEY, None) or {}
+    checkout_url = reverse('cart:shopping_payment')
+    otp_available = _otp_available()
+    return {
         'cart': summary['cart'],
         'cart_items': summary['cart_items'],
         'total_price': summary['total_price'],
@@ -265,18 +319,34 @@ def shopping_payment(request):
         'default_gateway': selectable[0].key if selectable else '',
         'misconfigured_gateways': misconfigured,
         'has_installment_gateway': any(g.is_installment for g in selectable),
-        'customer_mobile': normalize_mobile(getattr(profile, 'phone', '') or ''),
+        'customer_mobile': normalize_mobile(getattr(profile, 'phone', '') or '') if profile else '',
+        # خرید مهمان
+        'is_guest': is_guest,
+        'otp_available': otp_available,
+        'account_password_mode': is_guest and not otp_available,
+        'details': details,
+        'errors': errors,
+        'login_url': f"{reverse('account:login')}?{urlencode({'next': checkout_url})}",
+        'otp_login_url': f"{reverse('account:otp_login')}?{urlencode({'next': checkout_url})}",
     }
-    return render(request, 'cart/shopping_payment.html', context)
 
 
-@login_required
+@never_cache
+def shopping_payment(request):
+    # The payment page is reachable without opening the cart, so an expired or
+    # staff-disabled coupon must be re-checked here before a total is shown.
+    summary = _cart_summary(request, revalidate=True)
+    if not summary['cart_items']:
+        messages.warning(request, 'سبد خرید شما خالی است')
+        return redirect('cart:cart')
+    return render(request, 'cart/shopping_payment.html', checkout_context(request, summary))
+
+
 def successful_payment(request):
     messages.info(request, 'برای ثبت سفارش، ابتدا از یکی از درگاه‌های پرداخت استفاده کنید.')
     return redirect('cart:shopping_payment')
 
 
-@login_required
 @require_POST
 def remove_coupon(request):
     """Detach the applied coupon so the customer can switch codes or pay full price.
@@ -285,7 +355,7 @@ def remove_coupon(request):
     ``apply_coupon`` refuses while a coupon is attached, and the only escape was
     emptying the whole cart.
     """
-    cart = Cart.objects.filter(user=request.user).first()
+    cart = get_cart(request)
     if cart is None or cart.coupon is None:
         messages.info(request, 'هیچ کد تخفیفی روی سبد شما اعمال نشده است.')
         return redirect('cart:cart')

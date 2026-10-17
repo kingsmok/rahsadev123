@@ -305,12 +305,20 @@ class CartRobustnessTests(TestCase):
         self.ajax = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest', 'HTTP_X_CURRENT_PATH': '/products/'}
 
     def test_expired_session_gets_json_401_not_a_login_page(self):
-        response = self.client.post(reverse('cart:add_to_cart', args=[self.product.pk]), '{}',
+        # Account-only AJAX actions (the wishlist) still answer an expired
+        # session with JSON instead of a login page.
+        response = self.client.post(reverse('dashboard:add_to_wishlist', args=[self.product.pk]), '{}',
                                     content_type='application/json', **self.ajax)
         self.assertEqual(response.status_code, 401)
         data = response.json()
         self.assertTrue(data['login_required'])
         self.assertEqual(data['login_url'], reverse('account:login') + '?next=/products/')
+
+    def test_guest_can_add_to_cart_without_an_account(self):
+        response = self.client.post(reverse('cart:add_to_cart', args=[self.product.pk]), '{}',
+                                    content_type='application/json', **self.ajax)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual((response.json()['success'], response.json()['cart_count']), (True, 1))
 
     def test_adding_twice_and_removing_twice_are_harmless(self):
         self.client.force_login(self.user)

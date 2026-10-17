@@ -1,3 +1,5 @@
+import secrets
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import User
@@ -68,7 +70,10 @@ class Coupon(models.Model):
 
 
 class Cart(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='cart', verbose_name='کاربر')
+    # خالی = سبد خرید مهمان: خرید بدون ثبت‌نام. شناسهٔ آن در نشست مرورگر
+    # (سمت سرور) نگه داشته می‌شود و با ورود به حساب، در سبد همان حساب ادغام می‌شود.
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='cart', null=True, blank=True,
+                                verbose_name='کاربر', help_text='خالی = سبد خرید مهمان (بدون حساب کاربری)')
     coupon = models.ForeignKey(Coupon, null=True, blank=True, on_delete=models.SET_NULL, verbose_name='کوپن تخفیف')
     coupon_discount = models.IntegerField(default=0, verbose_name='مقدار تخفیف اعمال شده')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
@@ -79,7 +84,13 @@ class Cart(models.Model):
         verbose_name_plural = 'سبد های خرید'
 
     def __str__(self):
-        return f"سبد خرید {self.user.username}"
+        if self.user_id:
+            return f"سبد خرید {self.user.username}"
+        return f"سبد خرید مهمان #{self.pk}"
+
+    @property
+    def is_guest(self):
+        return self.user_id is None
 
     @property
     def total_price(self):
@@ -158,7 +169,11 @@ class Order(models.Model):
     #: issued in the same transaction); ``delivered`` remains for legacy rows.
     COMPLETED_STATUSES = ('paid', 'delivered')
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders', verbose_name='کاربر')
+    # خالی = خرید مهمان. چنین سفارشی فقط با نشست همان مرورگر یا لینک محرمانهٔ
+    # «access_token» (صفحهٔ پیگیری سفارش) باز می‌شود؛ ساخت یا ورود به حساب با
+    # تأیید مالکیت، آن را به حساب منتقل می‌کند (cart.guest.attach_orders).
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders', null=True, blank=True,
+                             verbose_name='کاربر', help_text='خالی = خرید مهمان (بدون ثبت‌نام)')
     order_number = ShortUUIDField(length=10, max_length=10, alphabet="1234567890", unique=True, verbose_name="شماره سفارش")
     cart = models.ForeignKey(Cart, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='سبد خرید')
     items_data = models.JSONField(null=True, blank=True, verbose_name='اطلاعات محصولات')
@@ -167,6 +182,17 @@ class Order(models.Model):
     shipping_cost = models.IntegerField(default=0, verbose_name='هزینه ارسال (محصولات دیجیتال: صفر)')
     final_price = models.IntegerField(verbose_name='مبلغ قابل پرداخت')
     status = models.CharField(max_length=20, choices=ORDER_STATUS, default='pending', verbose_name='وضعیت سفارش')
+    # اطلاعات تماسی که خریدار هنگام پرداخت وارد کرده است (برای خرید مهمان
+    # ضروری است؛ برای سفارش اعضا فقط یک عکس فوری از پروفایل برای پشتیبانی).
+    contact_mobile = models.CharField(max_length=11, blank=True, db_index=True, verbose_name='موبایل خریدار')
+    contact_email = models.EmailField(max_length=254, blank=True, verbose_name='ایمیل خریدار')
+    access_token = models.CharField(
+        max_length=64, unique=True, null=True, blank=True, editable=False,
+        verbose_name='کلید محرمانهٔ پیگیری (خرید مهمان)',
+        help_text='فقط برای سفارش مهمان ساخته می‌شود؛ لینک صفحهٔ سفارش و دانلود بدون حساب کاربری.')
+    create_account_requested = models.BooleanField(
+        default=False, verbose_name='خریدار ساخت حساب را انتخاب کرد',
+        help_text='رضایت صریح خریدار مهمان برای ساخت حساب با همین اطلاعات پس از پرداخت.')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='تاریخ به‌روزرسانی')
 
@@ -176,9 +202,24 @@ class Order(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"سفارش {self.order_number} - {self.user.username}"
+        return f"سفارش {self.order_number} - {self.customer_label}"
+
+    @property
+    def is_guest(self):
+        return self.user_id is None
+
+    @property
+    def customer_label(self):
+        """Who placed the order, for staff screens (never shown to other customers)."""
+        if self.user_id:
+            return self.user.get_username()
+        contact = self.contact_mobile or self.contact_email or 'بدون اطلاعات تماس'
+        return f'مهمان ({contact})'
 
     def save(self, *args, **kwargs):
+        if self.user_id is None and not self.access_token:
+            # 256 بیت تصادفی؛ حدس‌زدنی نیست و ستون یکتا تصادم را هم رد می‌کند.
+            self.access_token = secrets.token_urlsafe(32)
         if self.cart and not self.items_data:
             self.items_data = {
                 'items': [{

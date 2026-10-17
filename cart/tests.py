@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.utils import timezone
 
 from cart.models import Cart, CartItem, Coupon, Order, OrderItem
@@ -410,10 +410,16 @@ class CartDrawerFragmentTests(TestCase):
             vendor=self.user, title='فایل کشو', slug='drawer-file', description='توضیح', price=12000,
         )
 
-    def test_requires_login(self):
+    def test_guest_gets_their_own_session_cart(self):
+        # Guest checkout: the drawer no longer sends visitors to the login page;
+        # it shows the cart kept in their own session.
         response = self.client.get('/cart/drawer/')
-        self.assertEqual(response.status_code, 302)
-        self.assertIn('/account/', response['Location'])
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'سبد خرید شما خالی است')
+
+        self.client.post(f'/cart/add/{self.product.pk}/')
+        self.assertContains(self.client.get('/cart/drawer/'), 'فایل کشو')
+        self.assertNotContains(Client().get('/cart/drawer/'), 'فایل کشو')
 
     def test_lists_items_added_after_the_page_was_rendered_and_is_not_cached(self):
         self.client.force_login(self.user)

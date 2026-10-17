@@ -6,3 +6,5 @@ class CartConfig(AppConfig):
     name = 'cart'
     verbose_name = 'سبد خرید'
 
+    def ready(self):
+        from . import signals  # noqa: F401  (ادغام سبد مهمان هنگام ورود)

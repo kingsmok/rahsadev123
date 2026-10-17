@@ -1,15 +1,19 @@
 {% extends 'base.html' %}
-{% block title %}روش پرداخت | {{ site_name }}{% endblock %}
+{% block title %}تکمیل خرید و پرداخت | {{ site_name }}{% endblock %}
 {% load static %}
-{% load custom_filters %}
+{% load custom_filters site_extras %}
 
 {% block content %}
     <main class="cart-page default fm-checkout" data-cart-page>
-        {% include 'includes/page_head.html' with title='پرداخت سفارش' subtitle='روش پرداخت را انتخاب کنید و خرید را کامل کنید.' parent='سبد خرید' parent_url='/cart/' %}
+        {% if is_guest %}
+            {% include 'includes/page_head.html' with title='تکمیل خرید' subtitle='بدون ثبت‌نام: شماره موبایل را وارد کنید، روش پرداخت را انتخاب کنید و فایل‌ها را بلافاصله دانلود کنید.' parent='سبد خرید' parent_url='/cart/' %}
+        {% else %}
+            {% include 'includes/page_head.html' with title='پرداخت سفارش' subtitle='روش پرداخت را انتخاب کنید و خرید را کامل کنید.' parent='سبد خرید' parent_url='/cart/' %}
+        {% endif %}
         <div class="container">
             <ol class="fm-steps" aria-label="مراحل خرید">
                 <li class="is-done"><a href="{% url 'cart:cart' %}"><span class="fm-steps__dot"><i class="fa fa-check" aria-hidden="true"></i></span> سبد خرید</a></li>
-                <li class="is-current" aria-current="step"><span class="fm-steps__dot">۲</span> روش پرداخت</li>
+                <li class="is-current" aria-current="step"><span class="fm-steps__dot">۲</span> {% if is_guest %}اطلاعات و پرداخت{% else %}روش پرداخت{% endif %}</li>
                 <li><span class="fm-steps__dot">۳</span> دانلود فایل‌ها</li>
             </ol>
 
@@ -29,6 +33,64 @@
 
             <div class="fm-checkout__grid">
                 <section class="fm-checkout__main" aria-labelledby="payment-methods-title">
+                    {% if is_guest %}
+                        <div class="fm-card fm-buyer" id="checkout-details" data-checkout-details>
+                            <h2 class="fm-card__title" id="buyer-title"><i class="fa fa-user" aria-hidden="true"></i> اطلاعات خریدار</h2>
+                            <p class="fm-buyer__login">
+                                <i class="fa fa-circle-user" aria-hidden="true"></i>
+                                <span>حساب کاربری دارید؟ <a href="{{ login_url }}">وارد شوید</a>{% if otp_available %} یا <a href="{{ otp_login_url }}">با کد پیامکی وارد شوید</a>{% endif %}؛ سبد خرید شما حفظ می‌شود. در غیر این صورت <b>بدون ثبت‌نام</b> ادامه دهید.</span>
+                            </p>
+                            <div class="fm-form__row fm-buyer__row">
+                                <div class="fm-field">
+                                    <label for="checkout-mobile">شماره موبایل <span aria-hidden="true">*</span></label>
+                                    <input type="tel" id="checkout-mobile" name="mobile" form="payment-start-form"
+                                           class="fm-input{% if errors.mobile %} is-invalid{% endif %}" dir="ltr"
+                                           inputmode="tel" autocomplete="tel" required maxlength="20"
+                                           placeholder="09121234567" value="{{ details.mobile }}"
+                                           aria-describedby="checkout-mobile-hint checkout-mobile-error"
+                                           {% if errors.mobile %}aria-invalid="true"{% endif %} data-validate="mobile">
+                                    <small class="fm-field__hint" id="checkout-mobile-hint">رسید خرید و پیگیری سفارش با همین شماره انجام می‌شود.</small>
+                                    <span class="fm-field__err" id="checkout-mobile-error" role="alert" data-error-for="mobile">{{ errors.mobile }}</span>
+                                </div>
+                                <div class="fm-field">
+                                    <label for="checkout-email">ایمیل <small class="fm-buyer__optional">(اختیاری)</small></label>
+                                    <input type="email" id="checkout-email" name="email" form="payment-start-form"
+                                           class="fm-input{% if errors.email %} is-invalid{% endif %}" dir="ltr"
+                                           inputmode="email" autocomplete="email" maxlength="254"
+                                           placeholder="name@example.com" value="{{ details.email }}"
+                                           aria-describedby="checkout-email-hint checkout-email-error"
+                                           {% if errors.email %}aria-invalid="true"{% endif %} data-validate="email">
+                                    <small class="fm-field__hint" id="checkout-email-hint">لینک دانلود و رسید خرید به این ایمیل هم فرستاده می‌شود.</small>
+                                    <span class="fm-field__err" id="checkout-email-error" role="alert" data-error-for="email">{{ errors.email }}</span>
+                                </div>
+                            </div>
+                            <div class="fm-buyer__account">
+                                <div class="fm-check fm-buyer__check">
+                                    <input type="checkbox" id="checkout-create-account" name="create_account" value="1" form="payment-start-form"
+                                           {% if details.create_account %}checked{% endif %} data-create-account
+                                           aria-describedby="checkout-account-hint">
+                                    <label for="checkout-create-account">ساخت حساب کاربری با همین اطلاعات <small>(اختیاری)</small></label>
+                                </div>
+                                <p class="fm-field__hint" id="checkout-account-hint">
+                                    برای دیدن سفارش‌ها و خرید سریع‌تر در دفعه‌های بعد.
+                                    {% if account_password_mode %}فقط یک رمز عبور انتخاب کنید؛ حساب پس از پرداخت موفق ساخته می‌شود.{% else %}رمز عبور لازم نیست: پس از پرداخت، شماره‌تان را با یک کد پیامکی تأیید می‌کنید.{% endif %}
+                                    بدون این گزینه هم خرید کامل انجام می‌شود.
+                                </p>
+                                {% if account_password_mode %}
+                                    <div class="fm-field fm-buyer__password" data-account-password {% if not details.create_account %}hidden{% endif %}>
+                                        <label for="checkout-password">رمز عبور حساب <span aria-hidden="true">*</span></label>
+                                        <input type="password" id="checkout-password" name="password" form="payment-start-form"
+                                               class="fm-input{% if errors.password %} is-invalid{% endif %}" dir="ltr"
+                                               autocomplete="new-password" minlength="8" maxlength="128"
+                                               aria-describedby="checkout-password-hint checkout-password-error"
+                                               {% if errors.password %}aria-invalid="true"{% endif %} data-validate="password">
+                                        <small class="fm-field__hint" id="checkout-password-hint">حداقل ۸ کاراکتر؛ نام کاربری حساب، همین شماره موبایل خواهد بود.</small>
+                                        <span class="fm-field__err" id="checkout-password-error" role="alert" data-error-for="password">{{ errors.password }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
                     <div class="fm-card">
                         <h2 class="fm-card__title" id="payment-methods-title"><i class="fa fa-credit-card" aria-hidden="true"></i> انتخاب روش پرداخت</h2>
                         {% if enabled_gateways %}
@@ -58,7 +120,7 @@
                                     در حال حاضر امکان پرداخت آنلاین فراهم نیست. لطفاً کمی بعد دوباره تلاش کنید یا با پشتیبانی در تماس باشید.
                                 </div>
                             {% endif %}
-                            {% if has_installment_gateway %}
+                            {% if has_installment_gateway and not is_guest %}
                                 <div class="fm-field fm-paymethod-mobile" data-mobile-field {% if customer_mobile %}hidden{% endif %}>
                                     <label for="checkout-mobile">شماره موبایل برای خرید اقساطی</label>
                                     <input type="tel" id="checkout-mobile" name="mobile" form="payment-start-form" class="fm-input" dir="ltr"
@@ -91,9 +153,15 @@
                             {% endfor %}
                         </ul>
                         <ul class="fm-checkout__notes">
-                            <li><i class="fa fa-bolt" aria-hidden="true"></i> بلافاصله پس از پرداخت موفق، لینک دانلود در همین صفحه و پنل کاربری فعال می‌شود.</li>
-                            <li><i class="fa fa-download" aria-hidden="true"></i> برای هر فایل، لینک اختصاصی تا ۷ روز و تا ۵ بار دانلود در دسترس است.</li>
-                            <li><i class="fa fa-receipt" aria-hidden="true"></i> فاکتور خرید در بخش «سفارش‌ها»ی پنل کاربری قابل مشاهده است.</li>
+                            {% if is_guest %}
+                                <li><i class="fa fa-bolt" aria-hidden="true"></i> بلافاصله پس از پرداخت موفق، لینک دانلود در همین مرورگر نمایش داده می‌شود.</li>
+                                <li><i class="fa fa-link" aria-hidden="true"></i> یک لینک اختصاصی برای صفحهٔ سفارش می‌گیرید (و اگر ایمیل وارد کنید، برایتان فرستاده می‌شود).</li>
+                                <li><i class="fa fa-download" aria-hidden="true"></i> برای هر فایل، لینک اختصاصی تا ۷ روز و تا ۵ بار دانلود در دسترس است.</li>
+                            {% else %}
+                                <li><i class="fa fa-bolt" aria-hidden="true"></i> بلافاصله پس از پرداخت موفق، لینک دانلود در همین صفحه و پنل کاربری فعال می‌شود.</li>
+                                <li><i class="fa fa-download" aria-hidden="true"></i> برای هر فایل، لینک اختصاصی تا ۷ روز و تا ۵ بار دانلود در دسترس است.</li>
+                                <li><i class="fa fa-receipt" aria-hidden="true"></i> فاکتور خرید در بخش «سفارش‌ها»ی پنل کاربری قابل مشاهده است.</li>
+                            {% endif %}
                         </ul>
                     </div>
                 </section>
@@ -107,11 +175,14 @@
                             <div><dt>هزینهٔ ارسال</dt><dd>رایگان (دانلود آنی)</dd></div>
                             <div class="fm-summary__total"><dt>قابل پرداخت</dt><dd>{{ final_price|format_price }} <small>تومان</small></dd></div>
                         </dl>
-                        <form id="payment-start-form" method="post" action="{% url 'payments:start' 'new' %}">
+                        <form id="payment-start-form" method="post" action="{% url 'payments:start' 'new' %}" data-checkout-form novalidate>
                             {% csrf_token %}
-                            <button type="submit" class="fm-btn fm-btn--primary fm-btn--block fm-btn--lg" {% if unavailable_items or final_price > 0 and not default_gateway %}disabled{% endif %}>
-                                {% if final_price > 0 %}<i class="fa fa-lock" aria-hidden="true"></i> اتصال به درگاه و پرداخت{% else %}<i class="fa fa-download" aria-hidden="true"></i> ثبت سفارش رایگان و دانلود{% endif %}
+                            <button type="submit" class="fm-btn fm-btn--primary fm-btn--block fm-btn--lg fm-pay-btn" data-pay-button
+                                    {% if unavailable_items or final_price > 0 and not default_gateway %}disabled{% endif %}>
+                                <span class="fm-pay-btn__idle">{% if final_price > 0 %}<i class="fa fa-lock" aria-hidden="true"></i> پرداخت امن {{ final_price|format_price }} تومان{% else %}<i class="fa fa-download" aria-hidden="true"></i> ثبت سفارش رایگان و دانلود{% endif %}</span>
+                                <span class="fm-pay-btn__busy" aria-hidden="true"><i class="fa fa-circle-notch fa-spin" aria-hidden="true"></i> {% if final_price > 0 %}در حال انتقال به درگاه پرداخت…{% else %}در حال ثبت سفارش…{% endif %}</span>
                             </button>
+                            <p class="fm-sr-only" role="status" aria-live="polite" data-pay-status></p>
                         </form>
                         <p class="fm-summary__secure"><i class="fa fa-shield-halved" aria-hidden="true"></i> پرداخت از طریق درگاه‌های امن دارای مجوز شاپرک انجام می‌شود.</p>
                         <a class="fm-summary__back" href="{% url 'cart:cart' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> بازگشت به سبد خرید</a>
@@ -120,27 +191,5 @@
             </div>
         </div>
     </main>
-    <script>
-        (function () {
-            var field = document.querySelector('[data-mobile-field]');
-            var note = document.querySelector('[data-mobile-note]');
-            var radios = document.querySelectorAll('input[name="gateway"]');
-            var hasMobile = {{ customer_mobile|yesno:'true,false' }};
-            var forceField = false;
-            function sync() {
-                var selected = document.querySelector('input[name="gateway"]:checked');
-                var needs = selected && selected.getAttribute('data-needs-mobile') === '1';
-                if (field) {
-                    field.hidden = !needs || (hasMobile && !forceField);
-                    var input = field.querySelector('input');
-                    if (input) input.required = !!needs && (!hasMobile || forceField);
-                }
-                if (note) note.hidden = !needs || forceField;
-            }
-            radios.forEach(function (radio) { radio.addEventListener('change', sync); });
-            var change = document.querySelector('[data-change-mobile]');
-            if (change) change.addEventListener('click', function () { forceField = true; sync(); var input = field && field.querySelector('input'); if (input) input.focus(); });
-            sync();
-        })();
-    </script>
+    <script src="{% asset 'js/fm-checkout.js' %}" defer></script>
 {% endblock %}

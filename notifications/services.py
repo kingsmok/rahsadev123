@@ -150,15 +150,19 @@ def _send_sms(notification, flag):
 
 
 def send_customer_order_sms(order):
-    """پیامک «خرید موفق» به مشتری، اگر قالب آن در تنظیمات پیامک تعیین شده باشد."""
+    """پیامک «خرید موفق» به مشتری، اگر قالب آن در تنظیمات پیامک تعیین شده باشد.
+
+    شمارهٔ ثبت‌شده در خود سفارش (موبایلی که خریدار هنگام پرداخت وارد کرد؛ برای
+    خرید مهمان تنها راه تماس) مقدم است و بعد شمارهٔ پروفایل.
+    """
     from .sms import SmsError, SmsIrClient, normalize_mobile
 
     try:
         config = SmsSettings.load()
         if not (config.is_usable and config.customer_order_template_id):
             return False
-        profile = getattr(order.user, 'profile', None)
-        mobile = normalize_mobile(getattr(profile, 'phone', '') or '')
+        profile = getattr(order.user, 'profile', None) if order.user_id else None
+        mobile = normalize_mobile(order.contact_mobile or '') or normalize_mobile(getattr(profile, 'phone', '') or '')
         if not mobile:
             return False
         SmsIrClient(config.api_key).send_verify(mobile, config.customer_order_template_id, {
@@ -171,3 +175,62 @@ def send_customer_order_sms(order):
     except Exception:
         logger.exception('پیامک خرید سفارش %s ارسال نشد.', order.pk)
     return False
+
+
+# ------------------------------------------------------------------ خرید مهمان
+
+def _run_after_commit(func, *args, **kwargs):
+    """Run ``func`` after the current transaction commits, off the request thread."""
+    def runner():
+        try:
+            func(*args, **kwargs)
+        finally:
+            close_old_connections()
+
+    def schedule():
+        if getattr(settings, 'NOTIFICATIONS_ASYNC', True):
+            threading.Thread(target=runner, daemon=True).start()
+        else:
+            func(*args, **kwargs)
+
+    transaction.on_commit(schedule)
+
+
+def schedule_guest_order_email(order_pk, link, reminder=False):
+    """رسید خرید مهمان (یا یادآوری لینک از صفحهٔ پیگیری) با لینک محرمانهٔ صفحهٔ سفارش."""
+    _run_after_commit(send_guest_order_email, order_pk, link, reminder)
+
+
+def send_guest_order_email(order_pk, link, reminder=False):
+    """Never raises: a broken SMTP server must not break checkout or tracking."""
+    from cart.models import Order
+
+    try:
+        order = Order.objects.filter(pk=order_pk).first()
+        if order is None or not order.contact_email or order.user_id:
+            return False
+        site = _site_name()
+        lines = []
+        items = order.items_data.get('items', []) if isinstance(order.items_data, dict) else []
+        for item in items if isinstance(items, list) else []:
+            if isinstance(item, dict) and item.get('title'):
+                lines.append(f"• {item.get('title')}")
+        if reminder:
+            subject = f'[{site}] لینک صفحهٔ سفارش {order.order_number}'
+            intro = 'درخواست لینک صفحهٔ سفارش شما ثبت شد.'
+        else:
+            subject = f'[{site}] سفارش {order.order_number} — فایل‌های شما آماده دانلود است'
+            intro = f'از خرید شما سپاسگزاریم. پرداخت سفارش {order.order_number} به مبلغ {order.final_price:,} تومان انجام شد.'
+        body = '\n\n'.join(part for part in (
+            intro,
+            '\n'.join(lines),
+            f'صفحهٔ سفارش و دانلود فایل‌ها (این لینک را نزد خود نگه دارید و با کسی به اشتراک نگذارید):\n{link}',
+            'لینک دانلود هر فایل تا ۷ روز و تا ۵ بار معتبر است.',
+            'اگر بخواهید سفارش‌هایتان در یک حساب کاربری بماند، از همان صفحه می‌توانید حساب بسازید.',
+            'اگر این خرید را شما انجام نداده‌اید، این ایمیل را نادیده بگیرید.',
+        ) if part)
+        send_mail(subject, body, None, [order.contact_email], fail_silently=False)
+        return True
+    except Exception:
+        logger.exception('ایمیل سفارش مهمان %s ارسال نشد.', order_pk)
+        return False

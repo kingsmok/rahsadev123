@@ -145,7 +145,7 @@
     // Restored from the back/forward cache the page shows the cart as it was
     // when the visitor left it (e.g. before adding a file on another page).
     window.addEventListener('pageshow', function (event) {
-        if (event.persisted && config.isAuthenticated) refreshCartDrawer();
+        if (event.persisted) refreshCartDrawer();
     });
 
     function setCartDrawer(open, trigger, restoreFocus) {
@@ -213,25 +213,10 @@
         trapCartDrawerFocus(event);
     });
 
+    // خرید بدون ثبت‌نام: مهمان هم سبد خرید دارد (سبدِ نشست؛ cart.guest) و ورود
+    // به حساب فقط هنگام پرداخت و به‌صورت اختیاری پیشنهاد می‌شود.
     window.addToCart = function addToCart(element) {
         if (!element) return;
-        if (!config.isAuthenticated) {
-            notify({
-                title: 'ورود به سیستم',
-                text: 'برای افزودن فایل به سبد خرید، ابتدا وارد حساب کاربری شوید.',
-                icon: 'warning',
-                confirmButtonText: 'ورود',
-                confirmButtonColor: '#46a9ae',
-                showCancelButton: true,
-                cancelButtonText: 'انصراف'
-            }).then(function (result) {
-                if (result && result.isConfirmed) {
-                    var next = window.location.pathname + window.location.search;
-                    window.location.assign((config.loginUrl || '/account/') + '?next=' + encodeURIComponent(next));
-                }
-            });
-            return;
-        }
 
         var productId = element.getAttribute('data-product-id');
         if (!productId) return;

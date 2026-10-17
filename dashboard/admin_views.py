@@ -125,8 +125,8 @@ def admin_export_orders(request):
         payment = order.paid_payments[0] if order.paid_payments else None
         writer.writerow([
             order.order_number,
-            csv_safe(order.user.get_username()),
-            csv_safe(order.user.email or ''),
+            csv_safe(order.user.get_username() if order.user_id else f'مهمان {order.contact_mobile}'.strip()),
+            csv_safe((order.user.email if order.user_id else '') or order.contact_email or ''),
             analytics.jalali_full(order.created_at),
             order.total_price,
             order.coupon_discount,

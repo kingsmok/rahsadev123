@@ -9,15 +9,27 @@
         <div class="container" style="max-width:720px;padding:48px 16px;text-align:center">
             <div style="font-size:56px;color:#e0a800;line-height:1" aria-hidden="true">⚠️</div>
 
-            <h1 style="margin:16px 0 8px;font-size:22px">پرداخت تأیید شد، اما تحویل خودکار انجام نشد</h1>
+            {% if duplicate %}
+                <h1 style="margin:16px 0 8px;font-size:22px">این سفارش قبلاً پرداخت شده بود</h1>
 
-            <p style="color:#5d7285;line-height:2;margin:0 0 24px">
-                مبلغ
-                <b>{{ transaction.amount|format_price|persian_digits }}</b>
-                تومان از سوی درگاه تأیید شده است، اما یکی از فایل‌های این سفارش در
-                لحظهٔ تحویل در دسترس نبوده است. برای همین سفارش هنوز به وضعیت
-                «پرداخت شده» نرفته تا اشتباهی چیزی تحویل داده نشود.
-            </p>
+                <p style="color:#5d7285;line-height:2;margin:0 0 24px">
+                    مبلغ
+                    <b>{{ transaction.amount|format_price|persian_digits }}</b>
+                    تومان برای سفارشی پرداخت شد که پیش‌تر پرداخت و تحویل شده بود
+                    (مثلاً پرداخت هم‌زمان در دو تب). فایل‌های سفارش در دسترس شماست و
+                    این پرداخت تکراری برای بازگرداندن به پشتیبانی اعلام شد.
+                </p>
+            {% else %}
+                <h1 style="margin:16px 0 8px;font-size:22px">پرداخت تأیید شد، اما تحویل خودکار انجام نشد</h1>
+
+                <p style="color:#5d7285;line-height:2;margin:0 0 24px">
+                    مبلغ
+                    <b>{{ transaction.amount|format_price|persian_digits }}</b>
+                    تومان از سوی درگاه تأیید شده است، اما یکی از فایل‌های این سفارش در
+                    لحظهٔ تحویل در دسترس نبوده است. برای همین سفارش هنوز به وضعیت
+                    «پرداخت شده» نرفته تا اشتباهی چیزی تحویل داده نشود.
+                </p>
+            {% endif %}
 
             <p style="color:#5d7285;line-height:2;margin:0 0 24px">
                 این وضعیت به‌طور خودکار برای تیم پشتیبانی ثبت شده و تراکنش با
@@ -31,7 +43,7 @@
             </p>
 
             <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-                <a class="btn btn-main-masai" href="{% url 'dashboard:order_detail' order_number=transaction.order.order_number %}">
+                <a class="btn btn-main-masai" href="{% if order_url %}{{ order_url }}{% else %}{% url 'dashboard:order_detail' order_number=transaction.order.order_number %}{% endif %}">
                     مشاهدهٔ جزئیات سفارش
                 </a>
                 <a class="btn btn-main-masai" href="{% url 'core:contact' %}">تماس با پشتیبانی</a>

@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views, views_guest
 
 
 app_name = 'cart'
@@ -12,4 +12,8 @@ urlpatterns = [
     path('remove_coupon/', views.remove_coupon, name='remove_coupon'),
     path('shopping_payment/', views.shopping_payment, name='shopping_payment'),
     path('successful_payment/', views.successful_payment, name='successful_payment'),
+    # خرید مهمان: صفحهٔ سفارش با لینک محرمانه، پیگیری سفارش و ساخت حساب اختیاری
+    path('order/<str:access_token>/', views_guest.guest_order, name='guest_order'),
+    path('guest-account/<str:order_number>/', views_guest.guest_account, name='guest_account'),
+    path('track/', views_guest.track_order, name='track_order'),
 ]

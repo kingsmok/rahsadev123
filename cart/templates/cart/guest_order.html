@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}سفارش {{ order.order_number }} | {{ site_name }}{% endblock %}
+{% block meta_robots %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+{% load static %}
+{% load custom_filters jalali_tags %}
+
+{% block content %}
+    <main class="cart-page default fm-done fm-guest-order">
+        {% with order_title='سفارش '|add:order.order_number %}
+            {% include 'includes/page_head.html' with title=order_title subtitle='جزئیات سفارش و لینک دانلود فایل‌ها — بدون نیاز به حساب کاربری.' %}
+        {% endwith %}
+        <div class="container">
+            <div class="fm-done__grid{% if account_card %} has-aside{% endif %}">
+                <section class="fm-card fm-done__main" aria-labelledby="guest-order-title">
+                    <header class="fm-guest-order__head">
+                        <h2 class="fm-card__title" id="guest-order-title"><i class="fa fa-receipt" aria-hidden="true"></i> سفارش <bdi dir="ltr">{{ order.order_number }}</bdi></h2>
+                        <ul class="fm-guest-order__meta">
+                            <li><i class="fa fa-calendar" aria-hidden="true"></i> {{ order.created_at|to_jalali:'%Y/%m/%d' }}</li>
+                            <li class="fm-guest-order__status is-{{ order.status }}">{{ order.get_status_display }}</li>
+                            {% if mobile_masked %}<li><i class="fa fa-mobile-screen" aria-hidden="true"></i> <bdi dir="ltr">{{ mobile_masked }}</bdi></li>{% endif %}
+                            {% if email_masked %}<li><i class="fa fa-envelope" aria-hidden="true"></i> <bdi dir="ltr">{{ email_masked }}</bdi></li>{% endif %}
+                        </ul>
+                    </header>
+
+                    {% if order.status == 'pending' %}
+                        <div class="alert alert-warning" role="status">
+                            <i class="fa fa-clock" aria-hidden="true"></i>
+                            این سفارش هنوز پرداخت نشده است.
+                            {% if can_resume_payment %}<a href="{% url 'cart:shopping_payment' %}">ادامهٔ پرداخت</a>{% else %}برای خرید، فایل‌ها را دوباره به سبد اضافه کنید یا با پشتیبانی تماس بگیرید.{% endif %}
+                        </div>
+                    {% elif order.status == 'cancelled' %}
+                        <div class="alert alert-danger" role="status"><i class="fa fa-circle-xmark" aria-hidden="true"></i> این سفارش لغو شده است.</div>
+                    {% endif %}
+
+                    {% if tokens %}
+                        <h3 class="fm-guest-order__sub"><i class="fa fa-download" aria-hidden="true"></i> فایل‌های قابل دانلود</h3>
+                        <ul class="fm-done__files">
+                            {% for token in tokens %}
+                                <li>
+                                    <span class="fm-done__file-title">{{ token.product.title|truncatewords:8 }}</span>
+                                    {% if token.is_valid %}
+                                        <a href="{% url 'downloads:download' token.token %}" class="fm-btn fm-btn--primary fm-download-token">
+                                            <i class="fa fa-download" aria-hidden="true"></i> دانلود <small>({{ token.remaining_downloads }} بار باقی‌مانده)</small>
+                                        </a>
+                                    {% elif token.is_revoked %}
+                                        <span class="fm-text-danger">با لغو یا استرداد سفارش، دانلود غیرفعال شده است</span>
+                                    {% else %}
+                                        <span class="fm-text-danger">لینک منقضی شده یا سقف دانلود تمام شده است</span>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    <h3 class="fm-guest-order__sub">اقلام سفارش</h3>
+                    <ul class="fm-order-lines">
+                        {% for item in items %}
+                            <li class="fm-guest-order__line">
+                                <span class="fm-order-lines__title">{{ item.title }}</span>
+                                <span class="fm-order-lines__price">{{ item.total_price|format_price }} <small>تومان</small></span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <dl class="fm-summary__rows fm-guest-order__totals">
+                        <div><dt>جمع فایل‌ها</dt><dd>{{ order.total_price|format_price }} <small>تومان</small></dd></div>
+                        <div><dt>تخفیف</dt><dd>{{ order.coupon_discount|format_price }} <small>تومان</small></dd></div>
+                        <div><dt>هزینهٔ ارسال</dt><dd>رایگان (دانلود آنی)</dd></div>
+                        <div class="fm-summary__total"><dt>{% if order.status == 'pending' %}قابل پرداخت{% else %}پرداخت‌شده{% endif %}</dt><dd>{{ order.final_price|format_price }} <small>تومان</small></dd></div>
+                    </dl>
+
+                    <p class="fm-done__note">
+                        <i class="fa fa-shield-halved" aria-hidden="true"></i>
+                        این صفحه با لینک محرمانهٔ سفارش باز شده است؛ آن را با کسی به اشتراک نگذارید.
+                    </p>
+                </section>
+
+                {% if account_card %}
+                    <aside class="fm-done__aside" aria-label="ساخت حساب کاربری">
+                        {% include 'cart/includes/account_card.html' %}
+                    </aside>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+{% endblock %}

@@ -495,6 +495,72 @@ html.fm-share-open { overflow: hidden; }
     .fm-paymethod__logo { width: 52px; height: 44px; }
 }
 
+/* ---------------------------------------------------------------- خرید بدون ثبت‌نام (مهمان) */
+/* اطلاعات خریدار در صفحهٔ تکمیل خرید */
+.fm-buyer__login { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 16px; padding: 12px 14px; border-radius: 12px; background: var(--fm-primary-50, #e9f7f7); color: var(--fm-text, #22333f); font-size: 13.5px; line-height: 1.95; }
+.fm-buyer__login > .fa { margin-top: 6px; color: var(--fm-primary-700, #1f6f74); }
+.fm-buyer__login a { color: var(--fm-primary-700, #1f6f74); font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+.fm-buyer__row .fm-field { margin-bottom: 14px; }
+.fm-buyer__optional { color: var(--fm-text-faint, #8796a3); font-weight: 400; }
+.fm-buyer__account { padding-top: 14px; border-top: 1px dashed var(--fm-border, #dde5ea); }
+.fm-buyer__check { margin-bottom: 2px; }
+.fm-buyer__check label { color: var(--fm-text, #22333f); font-size: 14px; font-weight: 700; }
+.fm-buyer__check label small { color: var(--fm-text-faint, #8796a3); font-weight: 400; }
+.fm-buyer__account > .fm-field__hint { margin: 0 26px 0 0; }
+.fm-buyer__password { max-width: 380px; margin: 12px 0 0; }
+.fm-buyer__password[hidden] { display: none; }
+.fm-buyer .fm-field__err:empty, .fm-buyer__account .fm-field__err:empty { display: none; }
+/* دکمهٔ پرداخت: حالت «در حال انتقال» و جلوگیری از کلیک دوباره */
+.fm-pay-btn__busy { display: none; }
+.fm-pay-btn.is-busy { pointer-events: none; opacity: .88; }
+.fm-pay-btn.is-busy .fm-pay-btn__idle { display: none; }
+.fm-pay-btn.is-busy .fm-pay-btn__busy { display: inline-flex; align-items: center; gap: 8px; }
+/* صفحهٔ پرداخت موفق و صفحهٔ سفارش مهمان */
+.fm-done__grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; margin-bottom: 30px; }
+.fm-done__grid.has-aside { grid-template-columns: minmax(0, 1fr) 360px; }
+.fm-done__head { margin-bottom: 18px; padding: 4px 0 18px; border-bottom: 1px solid var(--fm-border-soft, #edf1f4); text-align: center; }
+.fm-done__icon { display: inline-grid; place-items: center; width: 64px; height: 64px; margin-bottom: 10px; border-radius: 50%; background: var(--fm-success-bg, #e7f6ee); color: var(--fm-success, #13795b); font-size: 34px; }
+.fm-done__head h1 { margin: 0 0 6px; color: var(--fm-text, #22333f); font-size: 22px; font-weight: 800; }
+.fm-done__head p { margin: 0; color: var(--fm-text-soft, #5d7285); }
+.fm-done__files { display: grid; gap: 8px; margin: 0 0 10px; padding: 0; list-style: none; }
+.fm-done__files li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--fm-surface-alt, #f6f9fb); }
+.fm-done__file-title { min-width: 0; color: var(--fm-text, #22333f); font-weight: 700; }
+.fm-done__files .fm-btn { flex-shrink: 0; }
+.fm-done__files .fm-btn small { font-weight: 400; }
+.fm-done__note { margin: 10px 0 0; color: var(--fm-text-soft, #5d7285); font-size: 13px; line-height: 1.9; }
+.fm-done__note a { color: var(--fm-primary-700, #1f6f74); font-weight: 700; }
+.fm-done__link { margin-top: 18px; padding: 14px; border: 1px solid var(--fm-border, #dde5ea); border-radius: 14px; }
+.fm-done__link label { display: block; margin-bottom: 8px; color: var(--fm-text, #22333f); font-weight: 800; }
+.fm-done__link-row { display: flex; gap: 8px; }
+.fm-done__link-row .fm-input { flex: 1 1 auto; min-width: 0; font-size: 12.5px; }
+.fm-done__actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.fm-account-card__text { margin: 0; color: var(--fm-text-soft, #5d7285); font-size: 13.5px; line-height: 2; }
+.fm-account-card__text a { color: var(--fm-primary-700, #1f6f74); font-weight: 700; }
+.fm-account-card__form { margin-top: 12px; }
+.fm-account-card form + form { margin-top: 8px; }
+.fm-account-card__resend { text-align: center; }
+.fm-account-card__skip { margin: 12px 0 0; color: var(--fm-text-faint, #8796a3); font-size: 12.5px; line-height: 1.9; }
+.fm-account-card__skip a { color: var(--fm-primary-700, #1f6f74); font-weight: 700; }
+.fm-guest-order__head { margin-bottom: 14px; }
+.fm-guest-order__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 0; padding: 0; list-style: none; color: var(--fm-text-soft, #5d7285); font-size: 13px; }
+.fm-guest-order__status { padding: 2px 10px; border-radius: 999px; background: var(--fm-neutral-100, #eef2f5); color: var(--fm-text, #22333f); font-weight: 700; }
+.fm-guest-order__status.is-paid, .fm-guest-order__status.is-delivered { background: var(--fm-success-bg, #e7f6ee); color: var(--fm-success, #13795b); }
+.fm-guest-order__status.is-pending, .fm-guest-order__status.is-processing { background: var(--fm-warning-bg, #fff6e5); color: var(--fm-text, #22333f); }
+.fm-guest-order__status.is-cancelled { background: var(--fm-danger-bg, #fdecec); color: var(--fm-danger, #c62828); }
+.fm-guest-order__sub { margin: 18px 0 10px; color: var(--fm-text, #22333f); font-size: 15px; font-weight: 800; }
+.fm-order-lines li.fm-guest-order__line { grid-template-columns: minmax(0, 1fr) auto; }
+.fm-guest-order__totals { margin-top: 10px; }
+.fm-auth__guest { padding: 10px 12px; border-radius: 12px; background: var(--fm-primary-50, #e9f7f7); }
+@media (max-width: 991.98px) {
+    .fm-done__grid.has-aside { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 480px) {
+    .fm-done__files li { flex-wrap: wrap; }
+    .fm-done__files .fm-btn { width: 100%; justify-content: center; }
+    .fm-done__link-row { flex-wrap: wrap; }
+    .fm-done__link-row .fm-btn { width: 100%; justify-content: center; }
+}
+
 /* ---------------------------------------------------------------- کشوی سبد خرید */
 .fm-cart-drawer__count { margin-inline-start: 6px; padding: 1px 8px; border-radius: 999px; background: var(--fm-primary-50, #e9f7f7); color: var(--fm-primary-700, #1f6f74); font-size: 12px; font-weight: 700; }
 .fm-cart-drawer__total--sub { font-size: 13px; color: var(--fm-text-soft, #5d7285); }

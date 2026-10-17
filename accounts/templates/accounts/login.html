@@ -75,6 +75,15 @@
                         کاربر جدید هستید؟
                         <a href="{% url 'account:register' %}">ساخت حساب کاربری</a>
                     </p>
+                    {% if request.GET.next == '/cart/shopping_payment/' or request.GET.next == '/cart/' %}
+                        <p class="fm-auth__alt fm-auth__guest">
+                            <i class="fa fa-bag-shopping" aria-hidden="true"></i>
+                            حساب ندارید؟ <a href="{{ request.GET.next }}">بدون ثبت‌نام خرید را ادامه دهید</a>؛ سبد خرید شما حفظ شده است.
+                        </p>
+                    {% endif %}
+                    <p class="fm-auth__alt">
+                        خرید بدون ثبت‌نام انجام داده‌اید؟ <a href="{% url 'cart:track_order' %}">پیگیری سفارش</a>
+                    </p>
                 </div>
 
                 <ul class="fm-auth__perks">

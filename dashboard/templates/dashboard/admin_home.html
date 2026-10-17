@@ -284,7 +284,7 @@
                     {% for order in recent_orders %}
                         <tr>
                             <td><a class="ap-num" href="{% url 'admin:cart_order_change' order.pk %}">{{ order.order_number }}</a></td>
-                            <td>{{ order.user.get_username }}</td>
+                            <td>{{ order.customer_label }}</td>
                             <td class="ap-num"><b>{{ order.final_price|format_price|persian_digits }}</b></td>
                             <td><span class="ap-badge is-{{ order.status }}">{{ order.get_status_display }}</span></td>
                             <td class="ap-muted-cell ap-num">{{ order.created_at|to_jalali:'%Y/%m/%d %H:%M'|persian_digits }}</td>
