@@ -1,6 +1,9 @@
 from django.contrib import admin
 from . import models
+from accounts.roles import author_choices
+from core.admin_code import RawHtmlAdminMixin
 from core.admin_utils import EnhancedAdminMixin, to_jalali
+from product.admin import _RoleRestrictedForm
 from jalali_date import datetime2jalali
 from jalali_date.admin import ModelAdminJalaliMixin
 
@@ -24,8 +27,18 @@ class CategoryAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
         return to_jalali(obj.created_at, '%a, %d %b %Y')
 
 
+class ArticleAdminForm(_RoleRestrictedForm):
+    role_field = 'author'
+    role_choices = staticmethod(author_choices)
+
+    class Meta:
+        model = models.Article
+        fields = '__all__'
+
+
 @admin.register(models.Article)
-class ArticleAdmin(ModelAdminJalaliMixin, EnhancedAdminMixin, admin.ModelAdmin):
+class ArticleAdmin(RawHtmlAdminMixin, ModelAdminJalaliMixin, EnhancedAdminMixin, admin.ModelAdmin):
+    form = ArticleAdminForm
     list_display = ['short_title', 'author', 'views', 'article_image', 'get_created_jalali', 'status']
     prepopulated_fields = {'slug': ('title',)}
     list_editable = ['status']
@@ -43,6 +56,12 @@ class ArticleAdmin(ModelAdminJalaliMixin, EnhancedAdminMixin, admin.ModelAdmin):
         }),
         ('سئو', {
             'fields': ('meta_title', 'meta_description', 'canonical_url')
+        }),
+        ('کد HTML سفارشی (با پیش‌نمایش زنده)', {
+            'classes': ('collapse',),
+            'description': 'برای ویدئو، جدول، فرم یا هر بخش سفارشی در متن مقاله. '
+                           'فقط مدیر کل یا دارندهٔ مجوز «ویرایش کد HTML خام» می‌تواند آن را تغییر دهد.',
+            'fields': ('custom_html_mode', 'custom_html'),
         }),
         ('آمار (فقط خواندنی)', {
             'classes': ('collapse',),

@@ -1,0 +1,24 @@
+/* ویرایشگر کد HTML پنل مدیریت (core.admin_code.CodeEditorWidget) */
+.fm-code-editor { display: grid; gap: 8px; width: 100%; max-width: 100%; }
+.fm-code-editor__toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.fm-code-editor__group { display: inline-flex; border: 1px solid var(--hairline-color, #d0d7de); border-radius: 8px; overflow: hidden; }
+.fm-code-editor__btn { border: 0; background: transparent; color: inherit; padding: 6px 12px; font: inherit; font-size: 12px; cursor: pointer; }
+.fm-code-editor__btn + .fm-code-editor__btn { border-inline-start: 1px solid var(--hairline-color, #d0d7de); }
+.fm-code-editor__btn.is-active { background: #0f766e; color: #fff; }
+.fm-code-editor__hint { font-size: 11px; opacity: .75; }
+.fm-code-editor__panes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; align-items: stretch; }
+.fm-code-editor[data-view="code"] .fm-code-editor__panes { grid-template-columns: minmax(0, 1fr); }
+.fm-code-editor[data-view="code"] .fm-code-editor__preview { display: none; }
+.fm-code-editor[data-view="preview"] .fm-code-editor__panes { grid-template-columns: minmax(0, 1fr); }
+.fm-code-editor[data-view="preview"] .fm-code-editor__code { display: none; }
+.fm-code-editor textarea.fm-code-editor__input {
+    width: 100% !important; min-height: 360px; box-sizing: border-box; resize: vertical;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: 13px; line-height: 1.6;
+    direction: ltr; text-align: left; tab-size: 2; white-space: pre; overflow: auto;
+    background: #0f172a; color: #e2e8f0; border-radius: 10px; border: 1px solid #1e293b; padding: 12px;
+}
+.fm-code-editor__preview { background: repeating-conic-gradient(#eef1f5 0 25%, #fff 0 50%) 0 0 / 16px 16px; border: 1px solid var(--hairline-color, #d0d7de); border-radius: 10px; overflow: auto; display: flex; justify-content: center; min-height: 360px; }
+.fm-code-editor__preview iframe { width: 100%; min-height: 360px; height: 100%; border: 0; background: #fff; transition: width .2s ease; }
+@media (max-width: 1024px) {
+    .fm-code-editor__panes { grid-template-columns: minmax(0, 1fr); }
+}

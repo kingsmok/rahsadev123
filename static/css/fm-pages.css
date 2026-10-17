@@ -70,8 +70,9 @@
 
 .svc-cta a.btn {
     background: #fff;
-    /* primary-600 روی سفید ۴٫۲ بود (AA=۴٫۵)؛ primary-700 هم‌خانواده ۵٫۳ می‌دهد */
-    color: var(--fm-primary-700);
+    /* primary-600 روی سفید ۴٫۲ بود (AA=۴٫۵)؛ #2d6e74 (primary-700 حالت روز) ۵٫۸ می‌دهد.
+       مقدار ثابت است چون دکمه در شب هم سفید می‌ماند و primary-700 در شب روشن می‌شود. */
+    color: #2d6e74;
     font-weight: 700;
     border-radius: var(--fm-r-pill);
     padding: 10px 34px;
@@ -94,7 +95,7 @@
 
 .svc-hero .btn {
     background: #fff;
-    color: var(--fm-primary-700);
+    color: #2d6e74; /* دکمه در هر دو حالت سفید است؛ ر.ک. .svc-cta a.btn */
     font-weight: 700;
     border-radius: var(--fm-r-pill);
     padding: 11px 38px;

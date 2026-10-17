@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static site_extras %}
 {% block extra_css %}
-    <link href="{% static 'css/plugins/prettyphoto/css/prettyPhoto.css' %}" rel="stylesheet">
+    <link href="{% asset 'css/plugins/prettyphoto/css/prettyPhoto.css' %}" rel="stylesheet">
 {% endblock %}
 {% block title %}{% if products.meta_title %}{{ products.meta_title }}{% else %}دانلود {{ products.title|truncatewords:12 }}{% endif %}{% endblock %}
 {% block meta_description %}{{ products.meta_description|default:products.description|striptags|truncatechars:160 }}{% endblock %}
@@ -19,7 +19,7 @@
     {% product_breadcrumb products %}
 {% endblock %}
 {% load jalali_tags %}
-{% load custom_filters %}
+{% load custom_filters site_extras %}
 
 {% block content %}
 
@@ -81,38 +81,10 @@
                                         </button>
                                     </li>
                                     <li>
-                                        <button type="button" class="favorites2" data-toggle="modal" data-target="#myModal" aria-label="اشتراک‌گذاری محصول"><i
-                                                class="fa fa-share-alt" aria-hidden="true"></i></button>
+                                        <button type="button" class="favorites2" data-share-open aria-haspopup="dialog" aria-controls="fm-share-sheet" aria-label="اشتراک‌گذاری محصول"><i
+                                                class="fa fa-share-nodes" aria-hidden="true"></i></button>
                                     </li>
                                 </ul>
-                                <!-- Modal Core -->
-                                <div class="modal-share modal fade" id="myModal" tabindex="-1" role="dialog"
-                                     aria-labelledby="myModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <button type="button" class="close" data-dismiss="modal"
-                                                        aria-hidden="true">&times;
-                                                </button>
-                                                <h4 class="modal-title" id="myModalLabel">به اشتراک گذاشتن</h4>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <div class="row w-100">
-                                                    <div class="col-12">
-                                                        <p>آدرس محصول را با دکمه زیر کپی کنید.</p>
-                                                        <p class="right-side-header shareurlvalue fm-share-url" id="share-url">
-                                                            {{ request.build_absolute_uri|truncatechars:100 }}
-                                                        </p>
-                                                        <button type="button" class="btn btn-second-masai" id="copy-product-url">
-                                                            <i class="fa fa-copy" aria-hidden="true"></i> کپی آدرس
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Modal Core -->
                             </div>
                             <div class="col-lg-7 col-md-6 col-sm-12 ">
 
@@ -144,8 +116,10 @@
                                                     <li class="list-group-item">نسخه:
                                                         {{ products.digital_info.version }}</li>
                                                 {% endif %}
-                                                <li class="list-group-item">حجم فایل:
-                                                    {{ products.digital_info.file_size_display }}</li>
+                                                {% if products.digital_info.file_size %}
+                                                    <li class="list-group-item">حجم فایل:
+                                                        {{ products.digital_info.file_size_display }}</li>
+                                                {% endif %}
                                             {% endif %}
                                             {% if products.operating_system %}
                                                 <li class="list-group-item"> سیستم عامل
@@ -304,7 +278,7 @@
                                     </li>
                                     <li class="box-tabs-tab">
                                         <a id="tab-comments" data-toggle="tab" href="#comments" role="tab" aria-controls="comments" aria-selected="false">
-                                            دیدگاه کاربران
+                                            دیدگاه کاربران{% if comments %} <span class="fm-tab-count">{{ comments|length }}</span>{% endif %}
                                         </a>
                                     </li>
                                     <li class="box-tabs-tab">
@@ -324,9 +298,16 @@
                                             </header>
                                             <div class="parent-expert default">
                                                 {# توضیحات محصول HTML است و نباید داخل <p> قرار گیرد #}
-                                                <div class="content-expert fm-prose">
-                                                    {{ products.description|safe }}
-                                                </div>
+                                                {% if products.custom_html_before %}<div class="fm-custom-html">{{ products.custom_html|safe }}</div>{% endif %}
+                                                {% if products.custom_html_replaces_content %}
+                                                    <div class="fm-custom-html">{{ products.custom_html|safe }}</div>
+                                                {% else %}
+                                                    <div class="content-expert fm-prose">
+                                                        {{ products.description|safe }}
+                                                    </div>
+                                                {% endif %}
+                                                {% if products.custom_html_after %}<div class="fm-custom-html">{{ products.custom_html|safe }}</div>{% endif %}
+                                                {% html_blocks 'product_bottom' %}
                                             </div>
 
                                         </div>
@@ -355,8 +336,10 @@
                                                             <li class="list-group-item">نسخه:
                                                                 {{ products.digital_info.version }}</li>
                                                         {% endif %}
-                                                        <li class="list-group-item">حجم فایل:
-                                                            {{ products.digital_info.file_size_display }}</li>
+                                                        {% if products.digital_info.file_size %}
+                                                            <li class="list-group-item">حجم فایل:
+                                                                {{ products.digital_info.file_size_display }}</li>
+                                                        {% endif %}
                                                         <li class="list-group-item">تعداد دانلود:
                                                             {{ products.digital_info.download_count }}</li>
                                                     {% endif %}
@@ -404,38 +387,41 @@
                                             <header class="card-header">
                                                 <h3 class="card-title"><span>دیدگاه کاربران</span></h3>
                                             </header>
-                                            {% if products.product_comments.all %}
+                                            {% if comments or own_pending_comments %}
                                                 <div class="comments_form default">
-                                                    <ol class="comment-list">
-                                                        <!-- #comment-## -->
-                                                        {% for comment in comments %}
-                                                            {% if comment.status == 'published' %}
-                                                                <li>
-                                                                    <div class="comment-body">
-                                                                        <div class="comment-author">
-                                                                            <img alt="{{ comment.author.username }}"
-                                                                                 src="
-
-                                                                                         {% if comment.author.profile.image %}{{ comment.author.profile.image.url }}{% else %}{% static 'img/default_profile_image.png' %}{% endif %}"
-                                                                                 class="avatar">
-                                                                            <div class="text-h5">
-                                                                                {% if comment.author.profile.first_name and comment.author.profile.last_name %}
-                                                                                    {{ comment.author.profile.first_name }}
-                                                                                    {{ comment.author.profile.last_name }}
-                                                                                {% else %}
-                                                                                    {{ comment.author.username }}
-                                                                                {% endif %}
-                                                                            </div>
-                                                                        </div>
-                                                                        <p>{{ comment.body }}</p>
-                                                                        <ul class="commentul">
-                                                                            <li>{{ comment.created_at|to_jalali_fa:'%d %B %Y' }}</li>
-                                                                        </ul>
+                                                    <ol class="comment-list" id="fm-comment-list">
+                                                        {% for comment in own_pending_comments %}
+                                                            <li class="fm-comment fm-comment--pending">
+                                                                <div class="comment-body">
+                                                                    <div class="comment-author">
+                                                                        <img alt="" src="{% if comment.author.profile.image %}{{ comment.author.profile.image.url }}{% else %}{% static 'img/default_profile_image.png' %}{% endif %}" class="avatar">
+                                                                        <div class="text-h5">{{ comment.author.profile.first_name|default:comment.author.username }} <span class="fm-badge fm-badge--warning"><i class="fa fa-hourglass-half" aria-hidden="true"></i> در انتظار تأیید — فقط شما می‌بینید</span></div>
                                                                     </div>
-                                                                </li>
-                                                            {% else %}
-                                                                <li>دیدگاهی وجود ندارد!</li>
-                                                            {% endif %}
+                                                                    <p>{{ comment.body|linebreaksbr }}</p>
+                                                                    <ul class="commentul"><li>{{ comment.created_at|to_jalali_fa:'%d %B %Y' }}</li></ul>
+                                                                </div>
+                                                            </li>
+                                                        {% endfor %}
+                                                        {% for comment in comments %}
+                                                            <li class="fm-comment">
+                                                                <div class="comment-body">
+                                                                    <div class="comment-author">
+                                                                        <img alt="" src="{% if comment.author.profile.image %}{{ comment.author.profile.image.url }}{% else %}{% static 'img/default_profile_image.png' %}{% endif %}" class="avatar">
+                                                                        <div class="text-h5">
+                                                                            {% if comment.author.profile.first_name and comment.author.profile.last_name %}
+                                                                                {{ comment.author.profile.first_name }}
+                                                                                {{ comment.author.profile.last_name }}
+                                                                            {% else %}
+                                                                                {{ comment.author.username }}
+                                                                            {% endif %}
+                                                                        </div>
+                                                                    </div>
+                                                                    <p>{{ comment.body|linebreaksbr }}</p>
+                                                                    <ul class="commentul">
+                                                                        <li>{{ comment.created_at|to_jalali_fa:'%d %B %Y' }}</li>
+                                                                    </ul>
+                                                                </div>
+                                                            </li>
                                                         {% endfor %}
                                                     </ol>
                                                 </div>
@@ -450,6 +436,7 @@
                                             </header>
 
                                             {% if request.user.is_authenticated %}
+                                                <p class="fm-comment-note"><i class="fa fa-circle-info" aria-hidden="true"></i> دیدگاه‌ها پس از بررسی و تأیید مدیر برای همه نمایش داده می‌شوند.</p>
                                                 <form id="comment-form" class="comment">
                                                     {% csrf_token %}
                                                     {# برچسبِ واقعی: placeholder با شروع تایپ ناپدید می‌شود و برای صفحه‌خوان کافی نیست. #}
@@ -459,7 +446,7 @@
                                                     <button class="btn btn-main-masai" type="submit">ثبت دیدگاه</button>
                                                 </form>
                                             {% else %}
-                                                <a href="{% url 'account:login' %}" class="btn btn-main-masai">برای ثبت دیدگاه ابتدا باید
+                                                <a href="{% url 'account:login' %}?next={{ request.path|urlencode }}%23comments_questions" class="btn btn-main-masai">برای ثبت دیدگاه ابتدا باید
                                                     وارد شوید</a>
                                             {% endif %}
 
@@ -473,62 +460,59 @@
             </div>
         </div>
     </main>
+    {% include 'includes/share_sheet.html' with share_url=canonical_url|default:request.build_absolute_uri share_title=products.title %}
     <script>
         (function () {
-            function csrfToken() {
-                const input = document.querySelector('#comment-form [name="csrfmiddlewaretoken"]');
-                return input ? input.value : '';
-            }
-
             function showMessage(options) {
                 if (window.Swal) return Swal.fire(options);
                 alert(options.text || options.title || 'عملیات انجام نشد.');
                 return Promise.resolve();
             }
 
-            async function copyProductUrl() {
-                const text = '{{ request.build_absolute_uri|escapejs }}';
-                try {
-                    if (navigator.clipboard && window.isSecureContext) {
-                        await navigator.clipboard.writeText(text);
-                    } else {
-                        const textarea = document.createElement('textarea');
-                        textarea.value = text;
-                        textarea.setAttribute('readonly', '');
-                        textarea.style.position = 'fixed';
-                        textarea.style.opacity = '0';
-                        document.body.appendChild(textarea);
-                        textarea.select();
-                        if (!document.execCommand('copy')) throw new Error('copy failed');
-                        textarea.remove();
-                    }
-                    showMessage({text: 'آدرس در کلیپ‌بورد شما کپی شد.', icon: 'success', confirmButtonText: 'تأیید', confirmButtonColor: '#46a9ae'});
-                } catch (error) {
-                    showMessage({title: 'خطا', text: 'کپی‌کردن آدرس انجام نشد. لطفاً آدرس را دستی کپی کنید.', icon: 'error', confirmButtonColor: '#d94848'});
-                }
+            function headers() {
+                return window.FMJsonHeaders ? window.FMJsonHeaders() : {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'};
             }
 
-            document.getElementById('copy-product-url')?.addEventListener('click', copyProductUrl);
+            function readJson(response) {
+                return window.FMReadJson ? window.FMReadJson(response) : response.json().catch(function () { return {}; });
+            }
+
+            // Tabs can be opened from the URL (#comments after posting, or a
+            // login redirect back to #comments_questions).
+            function openTabFromHash() {
+                var hash = window.location.hash;
+                if (!hash || !window.jQuery) return;
+                var tab = document.querySelector('.box-tabs a[href="' + hash + '"]');
+                if (tab) window.jQuery(tab).tab('show');
+            }
+            // Bootstrap's tab plugin loads after this inline script.
+            if (document.readyState === 'complete') { openTabFromHash(); }
+            else { window.addEventListener('load', openTabFromHash); }
+            window.addEventListener('hashchange', openTabFromHash);
 
             document.getElementById('comment-form')?.addEventListener('submit', async function (event) {
                 event.preventDefault();
                 const form = event.currentTarget;
-                const body = form.querySelector('[name="body"]').value.trim();
+                const field = form.querySelector('[name="body"]');
+                const body = field.value.trim();
                 const submit = form.querySelector('[type="submit"]');
-                if (!body) return;
+                if (!body || submit.disabled) return;
                 submit.disabled = true;
                 try {
-                    const response = await fetch(window.location.href, {
+                    const response = await fetch(window.location.pathname, {
                         method: 'POST',
-                        headers: {'X-CSRFToken': csrfToken(), 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+                        credentials: 'same-origin',
+                        headers: headers(),
                         body: JSON.stringify({body: body})
                     });
-                    const data = await response.json();
+                    const data = await readJson(response);
                     if (!response.ok || data.status !== 'success') throw new Error(data.message || 'ثبت دیدگاه انجام نشد.');
-                    await showMessage({text: 'دیدگاه شما ثبت شد و پس از بررسی نمایش داده می‌شود.', icon: 'success', confirmButtonText: 'تأیید', confirmButtonColor: '#46a9ae'});
+                    field.value = '';
+                    await showMessage({text: data.message || 'دیدگاه شما ثبت شد و پس از بررسی نمایش داده می‌شود.', icon: 'success', confirmButtonText: 'تأیید', confirmButtonColor: '#46a9ae'});
                     window.location.hash = 'comments';
                     window.location.reload();
                 } catch (error) {
+                    if (error.loginRequired && window.FMPromptLogin) { window.FMPromptLogin(error.data); return; }
                     showMessage({title: 'خطا', text: error.message || 'مشکلی در ارتباط با سرور پیش آمد.', icon: 'error', confirmButtonColor: '#d94848'});
                 } finally {
                     submit.disabled = false;
@@ -542,6 +526,7 @@
                         if (result && result.isConfirmed) window.location.assign((window.FM.loginUrl || '/account/') + '?next=' + encodeURIComponent(window.location.pathname));
                         return;
                     }
+                    if (button.disabled) return;
                     const productId = button.getAttribute('data-product-id');
                     const isActive = button.classList.contains('active');
                     button.disabled = true;
@@ -549,18 +534,17 @@
                         const urlTemplate = isActive ? window.FM.wishlistRemoveUrl : window.FM.wishlistAddUrl;
                         const wishlistUrl = urlTemplate && urlTemplate.replace('{id}', encodeURIComponent(productId));
                         if (!wishlistUrl) throw new Error('نشانی تغییر علاقه‌مندی در دسترس نیست.');
-                        const response = await fetch(wishlistUrl, {
-                            method: 'POST',
-                            headers: {'X-CSRFToken': csrfToken(), 'X-Requested-With': 'XMLHttpRequest'}
-                        });
-                        const data = await response.json();
+                        const response = await fetch(wishlistUrl, {method: 'POST', credentials: 'same-origin', headers: headers()});
+                        const data = await readJson(response);
                         if (!response.ok || !['success', 'info'].includes(data.status)) throw new Error(data.message || 'تغییر علاقه‌مندی انجام نشد.');
                         const nowActive = !isActive;
                         button.classList.toggle('active', nowActive);
                         button.setAttribute('aria-pressed', String(nowActive));
                         button.setAttribute('aria-label', nowActive ? 'حذف از علاقه‌مندی‌ها' : 'افزودن به علاقه‌مندی‌ها');
+                        if (window.FMUpdateWishlistCount) window.FMUpdateWishlistCount(data.wishlist_count);
                         showMessage({text: data.message, icon: data.status, confirmButtonText: 'تأیید', confirmButtonColor: '#46a9ae'});
                     } catch (error) {
+                        if (error.loginRequired && window.FMPromptLogin) { window.FMPromptLogin(error.data); return; }
                         showMessage({title: 'خطا', text: error.message || 'مشکلی در ارتباط با سرور پیش آمد.', icon: 'error', confirmButtonColor: '#d94848'});
                     } finally {
                         button.disabled = false;
@@ -572,7 +556,7 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'css/plugins/prettyphoto/js/jquery.prettyPhoto.js' %}"></script>
+    <script src="{% asset 'css/plugins/prettyphoto/js/jquery.prettyPhoto.js' %}"></script>
     <script>
         if (window.jQuery && jQuery.fn.prettyPhoto) {
             jQuery(function () {

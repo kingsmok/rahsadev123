@@ -1,0 +1,51 @@
+{% load static site_extras %}
+{% comment %}پنل اشتراک‌گذاری (محصول/مقاله). خارج از کانتینرهای صفحه رندر می‌شود تا مثل
+   مودال قدیمی Bootstrap پشت backdrop گیر نکند. لینک‌های واتساپ، تلگرام، ایکس،
+   فیسبوک، لینکدین و ایمیل بدون JS هم کار می‌کنند. اینستاگرام لینک اشتراک وب
+   ندارد: روی موبایل از منوی اشتراک گوشی (Web Share API) استفاده می‌شود و در
+   غیر این صورت لینک کپی و اینستاگرام باز می‌شود.
+   پارامترها: share_url، share_title{% endcomment %}
+{% with sprite='img/social/social-sprite.svg' %}{% asset sprite as sprite_url %}
+<div class="fm-share-backdrop" data-share-close hidden></div>
+<div class="fm-share-sheet" id="fm-share-sheet" role="dialog" aria-modal="true" aria-labelledby="fm-share-title" hidden
+     data-share-url="{{ share_url }}" data-share-title="{{ share_title }}">
+    <header class="fm-share-sheet__head">
+        <h2 id="fm-share-title"><i class="fa fa-share-nodes" aria-hidden="true"></i> اشتراک‌گذاری</h2>
+        <button type="button" class="fm-share-sheet__close" data-share-close aria-label="بستن پنل اشتراک‌گذاری"><i class="fa fa-xmark" aria-hidden="true"></i></button>
+    </header>
+    <p class="fm-share-sheet__subject">{{ share_title|truncatechars:90 }}</p>
+    <button type="button" class="fm-share-native" data-share-native hidden>
+        <i class="fa fa-mobile-screen" aria-hidden="true"></i> اشتراک با برنامه‌های گوشی (اینستاگرام، پیام‌رسان‌ها و …)
+    </button>
+    <ul class="fm-share-grid">
+        <li><a class="fm-share-btn" style="--fm-social-color:#25D366" target="_blank" rel="noopener" data-share-network="whatsapp"
+               href="https://wa.me/?text={{ share_title|urlencode:'' }}%0A{{ share_url|urlencode:'' }}">
+            <svg class="fm-social__icon" aria-hidden="true" focusable="false"><use href="{{ sprite_url }}#si-whatsapp"></use></svg><span>واتساپ</span></a></li>
+        <li><a class="fm-share-btn" style="--fm-social-color:#229ED9" target="_blank" rel="noopener" data-share-network="telegram"
+               href="https://t.me/share/url?url={{ share_url|urlencode:'' }}&amp;text={{ share_title|urlencode:'' }}">
+            <svg class="fm-social__icon" aria-hidden="true" focusable="false"><use href="{{ sprite_url }}#si-telegram"></use></svg><span>تلگرام</span></a></li>
+        <li><button type="button" class="fm-share-btn" style="--fm-social-color:#E1306C" data-share-instagram>
+            <svg class="fm-social__icon" aria-hidden="true" focusable="false"><use href="{{ sprite_url }}#si-instagram"></use></svg><span>اینستاگرام</span></button></li>
+        <li><a class="fm-share-btn" style="--fm-social-color:#111111" target="_blank" rel="noopener" data-share-network="x"
+               href="https://twitter.com/intent/tweet?url={{ share_url|urlencode:'' }}&amp;text={{ share_title|urlencode:'' }}">
+            <svg class="fm-social__icon" aria-hidden="true" focusable="false"><use href="{{ sprite_url }}#si-x"></use></svg><span>ایکس</span></a></li>
+        <li><a class="fm-share-btn" style="--fm-social-color:#1877F2" target="_blank" rel="noopener" data-share-network="facebook"
+               href="https://www.facebook.com/sharer/sharer.php?u={{ share_url|urlencode:'' }}">
+            <svg class="fm-social__icon" aria-hidden="true" focusable="false"><use href="{{ sprite_url }}#si-facebook"></use></svg><span>فیسبوک</span></a></li>
+        <li><a class="fm-share-btn" style="--fm-social-color:#0A66C2" target="_blank" rel="noopener" data-share-network="linkedin"
+               href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url|urlencode:'' }}">
+            <svg class="fm-social__icon" aria-hidden="true" focusable="false"><use href="{{ sprite_url }}#si-linkedin"></use></svg><span>لینکدین</span></a></li>
+        <li><a class="fm-share-btn" style="--fm-social-color:#5b6b7b" data-share-network="email"
+               href="mailto:?subject={{ share_title|urlencode:'' }}&amp;body={{ share_url|urlencode:'' }}">
+            <i class="fa fa-envelope fm-share-btn__fa" aria-hidden="true"></i><span>ایمیل</span></a></li>
+        <li><button type="button" class="fm-share-btn" style="--fm-social-color:#0f766e" data-share-copy>
+            <i class="fa fa-link fm-share-btn__fa" aria-hidden="true"></i><span>کپی لینک</span></button></li>
+    </ul>
+    <div class="fm-share-copy">
+        <label class="fm-sr-only" for="fm-share-url-input">آدرس صفحه</label>
+        <input id="fm-share-url-input" type="text" dir="ltr" readonly value="{{ share_url }}">
+        <button type="button" class="fm-btn fm-btn--primary" data-share-copy><i class="fa fa-copy" aria-hidden="true"></i> کپی</button>
+    </div>
+    <p class="fm-share-status" role="status" aria-live="polite" data-share-status></p>
+</div>
+{% endwith %}

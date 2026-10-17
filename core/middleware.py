@@ -29,7 +29,7 @@ class BrowserPolicyMiddleware:
     """
 
     _POLICY = 'camera=(), geolocation=(), microphone=(), payment=(), usb=()'
-    _CSP = (
+    _CSP_TEMPLATE = (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline'; "
         "style-src 'self' 'unsafe-inline'; "
@@ -39,18 +39,28 @@ class BrowserPolicyMiddleware:
         "connect-src 'self'; "
         "object-src 'none'; "
         "base-uri 'self'; "
-        "form-action 'self'; "
+        "form-action {form_action}; "
         "frame-ancestors 'none'; "
         "worker-src 'self'"
     )
 
     def __init__(self, get_response):
         self.get_response = get_response
+        # ``form-action`` also governs the redirects that follow a form POST.
+        # Checkout POSTs to ``payments:start``, which 302s to the gateway, so
+        # a bare ``'self'`` made the browser block every payment.  Imported
+        # here (apps are ready once middleware is built) to keep the gateway
+        # list in one place.
+        from payments.gateways import CHECKOUT_REDIRECT_ORIGINS
+
+        self.csp = self._CSP_TEMPLATE.format(
+            form_action=' '.join(("'self'", *CHECKOUT_REDIRECT_ORIGINS)),
+        )
 
     def __call__(self, request):
         response = self.get_response(request)
         response.setdefault('Permissions-Policy', self._POLICY)
-        response.setdefault('Content-Security-Policy', self._CSP)
+        response.setdefault('Content-Security-Policy', self.csp)
         return response
 
 

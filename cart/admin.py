@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Count
 from . import models
 from core.admin_utils import EnhancedAdminMixin, to_jalali
 from jalali_date import datetime2jalali
@@ -32,7 +33,13 @@ class CouponAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
 
 @admin.register(models.Cart)
 class CartAdmin(ModelAdminJalaliMixin, admin.ModelAdmin):
-    list_display = ['user', 'coupon', 'coupon_discount', 'get_created_at_jalali', 'get_updated_at_jalali']
+    list_display = ['owner', 'coupon', 'coupon_discount', 'get_created_at_jalali', 'get_updated_at_jalali']
+    list_filter = [('user', admin.EmptyFieldListFilter)]
+    list_select_related = ['user', 'coupon']
+
+    @admin.display(description='صاحب سبد', ordering='user__username')
+    def owner(self, obj):
+        return obj.user.get_username() if obj.user_id else f'مهمان #{obj.pk}'
 
     @admin.display(description='تاریخ ایجاد', ordering='created_at')
     def get_created_at_jalali(self, obj):
@@ -63,22 +70,43 @@ class OrderItemAdmin(admin.ModelAdmin):
     list_display = ('order', 'product', 'title_snapshot', 'unit_price', 'quantity', 'total_price')
 
 
+class GuestOrderFilter(admin.SimpleListFilter):
+    title = 'نوع خریدار'
+    parameter_name = 'buyer'
+
+    def lookups(self, request, model_admin):
+        return (('guest', 'مهمان (بدون ثبت‌نام)'), ('member', 'کاربر عضو'))
+
+    def queryset(self, request, queryset):
+        if self.value() == 'guest':
+            return queryset.filter(user__isnull=True)
+        if self.value() == 'member':
+            return queryset.filter(user__isnull=False)
+        return queryset
+
+
 @admin.register(models.Order)
 class OrderAdmin(ModelAdminJalaliMixin, EnhancedAdminMixin, admin.ModelAdmin):
-    list_display = ['order_number', 'user', 'items_summary', 'total_price', 'coupon_discount', 'shipping_cost',
+    list_display = ['order_number', 'customer', 'items_summary', 'total_price', 'coupon_discount', 'shipping_cost',
                     'final_price', 'status', 'get_created_at_jalali']
-    list_filter = ['status', 'created_at']
-    search_fields = ['order_number', 'user__username', 'user__email', 'user__first_name', 'user__last_name']
+    list_filter = ['status', GuestOrderFilter, 'created_at']
+    search_fields = ['order_number', 'user__username', 'user__email', 'user__first_name', 'user__last_name',
+                     'contact_mobile', 'contact_email']
     autocomplete_fields = ['user']
     date_hierarchy = 'created_at'
     list_select_related = ['user']
     readonly_fields = ['order_number', 'items_data', 'total_price', 'coupon_discount', 'shipping_cost',
-                       'final_price', 'created_at', 'updated_at']
+                       'final_price', 'created_at', 'updated_at', 'guest_order_link']
     inlines = [OrderItemInline]
     csv_filename = 'masaishop-orders.csv'
     fieldsets = (
         ('سفارش', {
             'fields': ('order_number', 'user', 'status', 'cart')
+        }),
+        ('خریدار', {
+            'description': 'برای خرید مهمان، فیلد «کاربر» خالی است و مشتری با لینک محرمانهٔ زیر به سفارش و '
+                           'فایل‌هایش دسترسی دارد؛ در صورت درخواست پشتیبانی می‌توانید همین لینک را برایش بفرستید.',
+            'fields': ('contact_mobile', 'contact_email', 'create_account_requested', 'guest_order_link'),
         }),
         ('مبالغ (خودکار از سبد خرید)', {
             'classes': ('collapse',),
@@ -90,9 +118,32 @@ class OrderAdmin(ModelAdminJalaliMixin, EnhancedAdminMixin, admin.ModelAdmin):
         }),
     )
 
-    @admin.display(description='اقلام')
+    def get_queryset(self, request):
+        # Counted in the list query; ``order_items.count()`` per row was N+1.
+        return super().get_queryset(request).annotate(items_count=Count('order_items', distinct=True))
+
+    @admin.display(description='خریدار', ordering='user__username')
+    def customer(self, obj):
+        return obj.customer_label
+
+    @admin.display(description='لینک صفحهٔ سفارش مهمان')
+    def guest_order_link(self, obj):
+        from django.urls import reverse
+        from django.utils.html import format_html
+
+        if obj.user_id or not obj.access_token:
+            return '—'
+        path = reverse('cart:guest_order', kwargs={'access_token': obj.access_token})
+        from notifications.services import absolute_url
+
+        link = absolute_url(path)
+        return format_html('<a href="{}" target="_blank" rel="noopener noreferrer" dir="ltr">{}</a>', link, link)
+
+    @admin.display(description='اقلام', ordering='items_count')
     def items_summary(self, obj):
-        count = obj.order_items.count()
+        count = getattr(obj, 'items_count', None)
+        if count is None:
+            count = obj.order_items.count()
         return f'{count} قلم'
 
     @admin.display(description='تاریخ ایجاد', ordering='created_at')

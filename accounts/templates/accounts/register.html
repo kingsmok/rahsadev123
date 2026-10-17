@@ -102,6 +102,13 @@
                         </button>
                     </form>
 
+                    {% if otp_available %}
+                        <div class="fm-auth__divider"><span>یا</span></div>
+                        <a href="{% url 'account:otp_login' %}" class="fm-btn fm-btn--ghost fm-btn--block">
+                            <i class="fa fa-mobile-screen" aria-hidden="true"></i> ثبت‌نام سریع با شماره موبایل (کد پیامکی)
+                        </a>
+                    {% endif %}
+
                     <p class="fm-auth__alt">
                         قبلاً ثبت‌نام کرده‌اید؟
                         <a href="{% url 'account:login' %}">ورود به حساب</a>

@@ -1,5 +1,5 @@
 {% extends 'dashboard/admin_panel_base.html' %}
-{% load static %}
+{% load static site_extras %}
 {% load custom_filters %}
 {% load jalali_tags %}
 
@@ -218,10 +218,22 @@
                 <div><b class="ap-num">{{ pending.pending_orders|persian_digits }} سفارش در انتظار پرداخت</b>
                     <span><a href="{% url 'admin:cart_order_changelist' %}?status__exact=pending">پیگیری و یادآوری</a></span></div>
             </div>
+            {% if pending.unfulfilled_payments %}
+            <div class="ap-alert is-danger">
+                <i class="fa-solid fa-scale-unbalanced" aria-hidden="true"></i>
+                <div><b class="ap-num">{{ pending.unfulfilled_payments|persian_digits }} پرداختِ تأییدشده و تحویل‌نشده</b>
+                    <span><a href="{% url 'admin_health' %}">پول از مشتری کسر شده — استرداد یا پیگیری</a></span></div>
+            </div>
+            {% endif %}
             <div class="ap-alert {% if pending.failed_payments %}is-danger{% else %}is-success{% endif %}">
                 <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
                 <div><b class="ap-num">{{ pending.failed_payments|persian_digits }} تراکنش ناموفق</b>
                     <span><a href="{% url 'admin:payments_paymenttransaction_changelist' %}?status__exact=failed">بررسی لاگ درگاه</a></span></div>
+            </div>
+            <div class="ap-alert {% if pending.pending_comments %}is-warning{% else %}is-success{% endif %}">
+                <i class="fa-solid fa-comments" aria-hidden="true"></i>
+                <div><b class="ap-num">{{ pending.pending_comments|persian_digits }} دیدگاه در انتظار تأیید</b>
+                    <span><a href="{% url 'admin:product_productcomment_changelist' %}?status__exact=pending">بررسی و انتشار</a></span></div>
             </div>
             <div class="ap-alert {% if pending.new_service_requests %}is-warning{% else %}is-success{% endif %}">
                 <i class="fa-solid fa-envelope-open-text" aria-hidden="true"></i>
@@ -272,7 +284,7 @@
                     {% for order in recent_orders %}
                         <tr>
                             <td><a class="ap-num" href="{% url 'admin:cart_order_change' order.pk %}">{{ order.order_number }}</a></td>
-                            <td>{{ order.user.get_username }}</td>
+                            <td>{{ order.customer_label }}</td>
                             <td class="ap-num"><b>{{ order.final_price|format_price|persian_digits }}</b></td>
                             <td><span class="ap-badge is-{{ order.status }}">{{ order.get_status_display }}</span></td>
                             <td class="ap-muted-cell ap-num">{{ order.created_at|to_jalali:'%Y/%m/%d %H:%M'|persian_digits }}</td>
@@ -392,6 +404,6 @@
 
 {% block panel_scripts %}
     {{ chart_data|json_script:'ap-chart-data' }}
-    <script src="{% static 'js/plugins/chart.umd.min.js' %}" defer></script>
-    <script src="{% static 'js/fm-admin-charts.js' %}" defer></script>
+    <script src="{% asset 'js/plugins/chart.umd.min.js' %}" defer></script>
+    <script src="{% asset 'js/fm-admin-charts.js' %}" defer></script>
 {% endblock %}

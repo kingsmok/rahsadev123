@@ -1,6 +1,23 @@
 {% load static %}
 {% load jalali_tags %}
-<div class="profile-page-aside col-xl-3 col-lg-4 col-md-6 center-section order-1">
+{% comment %}منوی کناری پنل کاربری.
+   دسکتاپ: کارت پروفایل + فهرست بخش‌ها در ستون کناری (مثل قبل).
+   موبایل و تبلت (زیر ۹۹۲px): همین ستون یک کشوی همبرگری است که دکمهٔ «منوی حساب
+   کاربری» بالای محتوا بازش می‌کند (static/js/fm-drawers.js). dropdown قدیمی
+   «حساب کاربری شما» که همین فهرست را دوباره تکرار می‌کرد حذف شد.{% endcomment %}
+{% include 'includes/side_drawer_toggle.html' with target='fm-account-menu' label='منوی حساب کاربری' hint='دانلودها، سفارش‌ها، علاقه‌مندی‌ها و پروفایل' extra_class='order-0' %}
+<aside class="profile-page-aside col-xl-3 col-lg-4 col-md-6 center-section order-1 fm-side" id="fm-account-menu"
+       data-fm-drawer data-fm-drawer-media="(max-width: 991.98px)" aria-label="منوی حساب کاربری">
+    <div class="fm-side__head">
+        <span class="fm-side__avatar" aria-hidden="true">
+            {% if profile.image %}<img src="{{ profile.image.url }}" alt="">{% else %}<i class="fa fa-user"></i>{% endif %}
+        </span>
+        <span class="fm-side__who">
+            <b>{% if profile.first_name and profile.last_name %}{{ profile.first_name }} {{ profile.last_name }}{% else %}{{ request.user.username }}{% endif %}</b>
+            <small>عضو از {{ request.user.date_joined|to_jalali:'%Y/%m/%d' }}</small>
+        </span>
+        <button type="button" class="fm-side__close" data-fm-drawer-close aria-label="بستن منوی حساب کاربری"><i class="fa fa-xmark" aria-hidden="true"></i></button>
+    </div>
     <div class="profile-card-1">
         <!--image-->
         <div class="img">
@@ -27,151 +44,78 @@
         </div>
 
     </div>
-    <div class="responsive-profile-menu show-md location_me">
-        <div class="btn-group">
-            <button type="button" class="btn btn-second-masai dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i class="fa fa-navicon"></i>
-                حساب کاربری شما
-            </button>
-            <div class="dropdown-menu dropdown-menu-right text-right">
-
-                <a href="{% url "dashboard:home" %}" class="dropdown-item {% if request.resolver_match.url_name == 'home' %}active-menu{% endif %}">
-                    <i class="fa fa-home colormain" aria-hidden="true"></i>
-                    داشبورد
-                </a>
-
-                <a href="{% url "dashboard:my_downloads" %}" class="dropdown-item {% if request.resolver_match.url_name == 'my_downloads' %}active-menu{% endif %}">
-                    <i class="fa fa-cloud-arrow-down colormain" aria-hidden="true"></i>
-                    دانلودهای من
-                </a>
-
-                <a href="{% url "dashboard:orders" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders' %}active-menu{% endif %}">
-                    <i class="fa fa-cart-arrow-down colormain" aria-hidden="true"></i>
-                    سفارشات
-                </a>
-
-                <a href="{% url "dashboard:orders_delivered" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders_delivered' %}active-menu{% endif %}">
-                    <i class="fa fa-check-circle colormain" aria-hidden="true"></i>
-                    سفارشات تکمیل شده
-                </a>
-
-                <a href="{% url "dashboard:cart_summary" %}" class="dropdown-item {% if request.resolver_match.url_name == 'cart_summary' %}active-menu{% endif %}">
-                    <i class="fa fa-shopping-cart colormain" aria-hidden="true"></i> سفارشات در سبد
-                </a>
-
-                <a href="{% url "dashboard:orders_cancelled" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders_cancelled' %}active-menu{% endif %}">
-                    <i class="fa fa-times colormain" aria-hidden="true"></i>
-                    سفارشات لغو شده
-                </a>
-
-                <a href="{% url "dashboard:orders_return" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders_return' %}active-menu{% endif %}">
-                    <i class="fa fa-undo colormain" aria-hidden="true"></i>
-                    لغو سفارش
-                </a>
-
-                <a href="{% url "dashboard:wishlist_products" %}" class="dropdown-item {% if request.resolver_match.url_name == 'wishlist_products' %}active-menu{% endif %}">
-                    <i class="fa fa-heart colormain" aria-hidden="true"></i>
-                    محصولات مورد علاقه
-                </a>
-
-                <a href="{% url "dashboard:notifications" %}" class="dropdown-item {% if request.resolver_match.url_name == 'notifications' %}active-menu{% endif %}">
-                    <i class="fa fa-bell colormain" aria-hidden="true"></i>
-                    اعلان ها
-                </a>
-
-                <a href="{% url "dashboard:user_profile" %}" class="dropdown-item {% if request.resolver_match.url_name == 'user_profile' %}active-menu{% endif %}">
-                    <i class="fa fa-user-large colormain"></i>
-                    پروفایل
-                </a>
-
-                <a href="{% url "dashboard:change_password" %}" class="dropdown-item {% if request.resolver_match.url_name == 'change_password' %}active-menu{% endif %}">
-                    <i class="fa fa-shield colormain" aria-hidden="true"></i>
-                    تغییر رمز عبور
-                </a>
-
-                <form method="post" action="{% url 'account:logout' %}" class="fm-logout-form">
-                    {% csrf_token %}
-                    <button type="submit" class="dropdown-item">
-                        <i class="fa fa-sign-out-alt colormain" aria-hidden="true"></i>
-                        خروج از حساب
-                    </button>
-                </form>
-
-            </div>
-        </div>
-    </div>
     <div class="profile-menu ">
         <ul class="profile-menu-items">
 
             <li>
-                <a href="{% url "dashboard:home" %}" class="dropdown-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                <a href="{% url "dashboard:home" %}" class="dropdown-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}"{% if request.resolver_match.url_name == 'home' %} aria-current="page"{% endif %}>
                     <i class="fa fa-home colormain" aria-hidden="true"></i>
                     داشبورد
                 </a>
             </li>
 
             <li>
-                <a href="{% url "dashboard:my_downloads" %}" class="dropdown-item {% if request.resolver_match.url_name == 'my_downloads' %}active{% endif %}">
+                <a href="{% url "dashboard:my_downloads" %}" class="dropdown-item {% if request.resolver_match.url_name == 'my_downloads' %}active{% endif %}"{% if request.resolver_match.url_name == 'my_downloads' %} aria-current="page"{% endif %}>
                     <i class="fa fa-cloud-arrow-down colormain" aria-hidden="true"></i> دانلودهای من
                 </a>
             </li>
 
             <li>
-                <a href="{% url "dashboard:orders" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders' %}active{% endif %}">
+                <a href="{% url "dashboard:orders" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders' %}active{% endif %}"{% if request.resolver_match.url_name == 'orders' %} aria-current="page"{% endif %}>
                     <i class="fa fa-cart-arrow-down colormain" aria-hidden="true"></i> سفارشات
                 </a>
             </li>
 
             <li>
-                <a href="{% url "dashboard:orders_delivered" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders_delivered' %}active{% endif %}">
+                <a href="{% url "dashboard:orders_delivered" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders_delivered' %}active{% endif %}"{% if request.resolver_match.url_name == 'orders_delivered' %} aria-current="page"{% endif %}>
                     <i class="fa fa-check-circle colormain" aria-hidden="true"></i>
                     سفارشات تکمیل شده
                 </a>
             </li>
 
             <li>
-                <a href="{% url "dashboard:cart_summary" %}" class="dropdown-item {% if request.resolver_match.url_name == 'cart_summary' %}active{% endif %}">
+                <a href="{% url "dashboard:cart_summary" %}" class="dropdown-item {% if request.resolver_match.url_name == 'cart_summary' %}active{% endif %}"{% if request.resolver_match.url_name == 'cart_summary' %} aria-current="page"{% endif %}>
                     <i class="fa fa-shopping-cart colormain" aria-hidden="true"></i> سفارشات در سبد
                 </a>
             </li>
 
             <li>
-                <a href="{% url "dashboard:orders_cancelled" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders_cancelled' %}active{% endif %}">
+                <a href="{% url "dashboard:orders_cancelled" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders_cancelled' %}active{% endif %}"{% if request.resolver_match.url_name == 'orders_cancelled' %} aria-current="page"{% endif %}>
                     <i class="fa fa-times colormain" aria-hidden="true"></i>
                     سفارشات لغو شده
                 </a>
             </li>
 
             <li>
-                <a href="{% url "dashboard:orders_return" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders_return' %}active{% endif %}">
+                <a href="{% url "dashboard:orders_return" %}" class="dropdown-item {% if request.resolver_match.url_name == 'orders_return' %}active{% endif %}"{% if request.resolver_match.url_name == 'orders_return' %} aria-current="page"{% endif %}>
                     <i class="fa fa-undo colormain" aria-hidden="true"></i>
                     لغو سفارش
                 </a>
             </li>
 
             <li>
-                <a href="{% url "dashboard:wishlist_products" %}" class="dropdown-item {% if request.resolver_match.url_name == 'wishlist_products' %}active{% endif %}">
+                <a href="{% url "dashboard:wishlist_products" %}" class="dropdown-item {% if request.resolver_match.url_name == 'wishlist_products' %}active{% endif %}"{% if request.resolver_match.url_name == 'wishlist_products' %} aria-current="page"{% endif %}>
                     <i class="fa fa-heart colormain" aria-hidden="true"></i>
                     محصولات مورد علاقه
                 </a>
             </li>
 
             <li>
-                <a href="{% url "dashboard:notifications" %}" class="dropdown-item {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+                <a href="{% url "dashboard:notifications" %}" class="dropdown-item {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}"{% if request.resolver_match.url_name == 'notifications' %} aria-current="page"{% endif %}>
                     <i class="fa fa-bell colormain" aria-hidden="true"></i>
                     اعلان ها
                 </a>
             </li>
 
             <li>
-                <a href="{% url "dashboard:user_profile" %}" class="dropdown-item {% if request.resolver_match.url_name == 'user_profile' %}active{% endif %}">
+                <a href="{% url "dashboard:user_profile" %}" class="dropdown-item {% if request.resolver_match.url_name == 'user_profile' %}active{% endif %}"{% if request.resolver_match.url_name == 'user_profile' %} aria-current="page"{% endif %}>
                     <i class="fa fa-user-large colormain"></i>
                     پروفایل
                 </a>
             </li>
 
             <li>
-                <a href="{% url "dashboard:change_password" %}" class="dropdown-item {% if request.resolver_match.url_name == 'change_password' %}active{% endif %}">
+                <a href="{% url "dashboard:change_password" %}" class="dropdown-item {% if request.resolver_match.url_name == 'change_password' %}active{% endif %}"{% if request.resolver_match.url_name == 'change_password' %} aria-current="page"{% endif %}>
                     <i class="fa fa-shield colormain" aria-hidden="true"></i>
                     تغییر رمز عبور
                 </a>
@@ -189,4 +133,4 @@
 
         </ul>
     </div>
-</div>
+</aside>

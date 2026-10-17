@@ -95,7 +95,10 @@ class Command(BaseCommand):
 
         html = anon.get('/').content.decode()
         ok('og:locale و twitter:card', 'og:locale' in html and 'twitter:card' in html)
-        ok('meta author = نام سایت', '<meta name="author" content="فایل‌مارکت">' in html)
+        from django.utils.html import escape
+        from core.branding import get_brand
+        site_name = get_brand(None).name
+        ok('meta author = نام سایت', f'<meta name="author" content="{escape(site_name)}">' in html, site_name)
 
         print('════════ ۳) صفحات خصوصی: noindex خودکار ════════')
         # برای صفحه پرداخت باید سبد پر باشد
@@ -204,7 +207,7 @@ class Command(BaseCommand):
 
         print('════════ ۸) تنظیمات و درگاه‌ها از پنل ════════')
         gs = GatewaySettings.objects.get(key='zarinpal')
-        ok('درگاه‌ها seed شده', GatewaySettings.objects.count() == 3 and gs.is_enabled)
+        ok('درگاه‌ها seed شده', GatewaySettings.objects.count() == 4 and gs.is_enabled)
         r = admin.get(f'/admin/payments/gatewaysettings/{gs.id}/change/')
         ok('فرم تنظیم درگاه', r.status_code == 200)
         r = admin.get(f'/admin/core/sitesettings/{SiteSettings.objects.first().id}/change/')

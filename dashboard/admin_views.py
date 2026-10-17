@@ -8,6 +8,7 @@ import csv
 from datetime import timedelta
 
 from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Prefetch
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
@@ -18,7 +19,7 @@ from core.csv_safety import csv_safe
 from core.models import Redirect
 from downloads.models import DownloadToken
 from payments.models import GatewaySettings, PaymentTransaction
-from product.models import Product
+from product.models import Product, missing_file_q
 from services.models import PortfolioItem, ServicePackage, ServiceRequest
 
 from . import analytics
@@ -102,6 +103,12 @@ def admin_export_orders(request):
         Order.objects.select_related('user')
         .filter(created_at__gte=start)
         .order_by('-created_at')
+        # One query for all paid payments instead of one per exported order.
+        .prefetch_related(Prefetch(
+            'payments',
+            queryset=PaymentTransaction.objects.filter(status='paid').order_by('-created_at'),
+            to_attr='paid_payments',
+        ))
     )
 
     response = HttpResponse(content_type='text/csv; charset=utf-8')
@@ -115,11 +122,11 @@ def admin_export_orders(request):
         'تخفیف', 'مبلغ پرداختی', 'وضعیت', 'درگاه', 'کد رهگیری',
     ])
     for order in orders:
-        payment = order.payments.filter(status='paid').order_by('-created_at').first()
+        payment = order.paid_payments[0] if order.paid_payments else None
         writer.writerow([
             order.order_number,
-            csv_safe(order.user.get_username()),
-            csv_safe(order.user.email or ''),
+            csv_safe(order.user.get_username() if order.user_id else f'مهمان {order.contact_mobile}'.strip()),
+            csv_safe((order.user.email if order.user_id else '') or order.contact_email or ''),
             analytics.jalali_full(order.created_at),
             order.total_price,
             order.coupon_discount,
@@ -136,7 +143,7 @@ def admin_health(request):
     """بررسی سریع سلامت فروشگاه: داده‌های ناقص و کارهای نیمه‌تمام."""
     context = {
         'products_without_asset': Product.objects.filter(
-            status='published', digital_asset__isnull=True
+            missing_file_q(), status='published'
         ).order_by('-created_at'),
         'products_without_image': Product.objects.filter(
             status='published', image=''
@@ -148,15 +155,14 @@ def admin_health(request):
         'draft_articles': Article.objects.filter(status='draft').order_by('-created_at'),
         'low_stock': analytics.low_stock_products(limit=20),
         'pending_orders': Order.objects.filter(status='pending').order_by('-created_at'),
-        'failed_payments': PaymentTransaction.objects.filter(status='failed').order_by('-created_at')[:30],
+        'failed_payments': PaymentTransaction.objects.declined().select_related('order').order_by('-created_at')[:30],
         # Money that the gateway confirmed but that could not be delivered to
         # the order (the customer had just cancelled it, or the last licence
         # sold out).  These look like failed payments in the database, but the
         # customer HAS been charged, so they must not be read as declines.
         # Showing them separately is what makes the refund queue actionable.
-        'unfulfilled_payments': PaymentTransaction.objects.filter(
-            status='failed', raw_response__unfulfilled=True,
-        ).order_by('-created_at')[:30],
+        'unfulfilled_payments': PaymentTransaction.objects.unfulfilled()
+        .select_related('order').order_by('-created_at')[:30],
         'unconfigured_gateways': [
             gateway for gateway in GatewaySettings.objects.all()
             if gateway.is_enabled and not gateway.is_configured

@@ -1,30 +1,38 @@
 {% extends "admin/base.html" %}
-{% load i18n static %}
+{% load i18n static notification_tags site_extras %}
 
-{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | مدیریت فایل‌مارکت{% endblock %}
+{% comment %}نام برند در عنوان تب، سربرگ و فوتر ادمین از «تنظیمات سایت» می‌آید
+   (site_title/site_header در MasaiShop/admin_branding.py و site_brand از
+   context processor). قبلاً اینجا رشتهٔ ثابت بود و با تغییر نام سایت عوض نمی‌شد.{% endcomment %}
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:site_brand.admin_title }}{% endblock %}
 
 {% block extrastyle %}{{ block.super }}
-    <link rel="stylesheet" href="{% static 'fonts/font-awesome/css/fontawesome.min.css' %}">
-    <link rel="stylesheet" href="{% static 'fonts/font-awesome/css/solid.css' %}">
-    <link rel="stylesheet" href="{% static 'fonts/font-awesome/css/brands.css' %}">
+    <link rel="stylesheet" href="{% asset 'fonts/font-awesome/css/fontawesome.min.css' %}">
+    <link rel="stylesheet" href="{% asset 'fonts/font-awesome/css/solid.css' %}">
+    <link rel="stylesheet" href="{% asset 'fonts/font-awesome/css/brands.css' %}">
     {# توکن‌ها + استایل‌های مشترک داشبورد کاربر (بلوک‌ها، جدول‌ها، برچسب‌ها) تا همهٔ بخش‌های ادمین به زبان طراحی داشبورد درآیند #}
-    <link rel="stylesheet" href="{% static 'css/fm-design-system.css' %}">
-    <link rel="stylesheet" href="{% static 'css/fm-dashboard.css' %}">
-    <link rel="stylesheet" href="{% static 'css/fm-admin.css' %}">
+    <link rel="stylesheet" href="{% asset 'css/fm-design-system.css' %}">
+    <link rel="stylesheet" href="{% asset 'css/fm-dashboard.css' %}">
+    <link rel="stylesheet" href="{% asset 'css/fm-admin.css' %}">
 {% endblock %}
 
 {% block extrahead %}
     {{ block.super }}
-    {# صفحهٔ ورودِ ادمین از admin/base.html جنگو ارث می‌برد و viewport آن
+    {% comment %}صفحهٔ ورودِ ادمین از admin/base.html جنگو ارث می‌برد و viewport آن
        viewport-fit=cover ندارد؛ در نتیجه env(safe-area-inset-*) در این صفحه
-       صفر می‌ماند. در HTML آخرین viewport برنده است، پس اینجا بازنویسی می‌شود. #}
+       صفر می‌ماند. در HTML آخرین viewport برنده است، پس اینجا بازنویسی می‌شود.{% endcomment %}
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <script src="{% static 'js/fm-admin.js' %}" defer></script>
+    {# بدون این لینک‌ها مرورگر /favicon.ico را می‌خواست و در ادمین همیشه آیکن قدیمی را نشان می‌داد. #}
+    <link rel="icon" type="image/png" href="{{ site_brand.favicon_url }}">
+    <link rel="apple-touch-icon" href="{{ site_brand.touch_icon_url }}">
+    {# منوی کشویی موبایل فقط با JS فعال می‌شود؛ بدون JS لینک‌ها مثل قبل در سربرگ می‌مانند. #}
+    <script>document.documentElement.classList.add('fm-adm-js');</script>
+    <script src="{% asset 'js/fm-admin.js' %}" defer></script>
 {% endblock %}
 
 {# ── پل اتصال کلید تم: فروشگاه/پنل از `fm-theme` و ادمین جنگو از `theme` استفاده می‌کنند ── #}
 {% block dark-mode-vars %}
-    <link rel="stylesheet" href="{% static 'admin/css/dark_mode.css' %}">
+    <link rel="stylesheet" href="{% asset 'admin/css/dark_mode.css' %}">
     <script>
         /* پیش از theme.js: اگر کاربر در فروشگاه/پنل تم انتخاب کرده، همان را به ادمین بده */
         (function () {
@@ -36,7 +44,7 @@
             } catch (error) { /* localStorage در حالت خصوصی ممکن است بسته باشد */ }
         })();
     </script>
-    <script src="{% static 'admin/js/theme.js' %}"></script>
+    <script src="{% asset 'admin/js/theme.js' %}"></script>
     <script>
         /* پس از theme.js: هر تغییرِ صریحِ تمِ ادمین به fm-theme بازتاب داده شود
            تا فروشگاه و پنل هم از همان تم پیروی کنند (تم مشترک سراسری).
@@ -76,13 +84,21 @@
 {% endblock %}
 
 {% block branding %}
-    <span class="fm-mark" aria-hidden="true"><i class="fa-solid fa-bolt"></i></span>
-    {# h1 نگه داشته می‌شود: جایگزینی آن با span باعث می‌شد صفحاتی مثل ورودِ ادمین
+    {% comment %}نشان کنار نام: فاوآیکن مربعی (اگر آپلود شده)، وگرنه لوگو، وگرنه آیکن پیش‌فرض.
+       تزئینی است (alt خالی)؛ نام برند در h1 کنارش خوانده می‌شود.{% endcomment %}
+    {% if site_brand.has_favicon %}
+        <span class="fm-mark fm-mark--image" aria-hidden="true"><img src="{{ site_brand.touch_icon_url }}" alt="" width="38" height="38" decoding="async"></span>
+    {% elif site_brand.logo_url %}
+        <span class="fm-mark fm-mark--logo" aria-hidden="true"><img src="{{ site_brand.logo_url }}" alt="" height="38" decoding="async"></span>
+    {% else %}
+        <span class="fm-mark" aria-hidden="true"><i class="fa-solid fa-bolt"></i></span>
+    {% endif %}
+    {% comment %}h1 نگه داشته می‌شود: جایگزینی آن با span باعث می‌شد صفحاتی مثل ورودِ ادمین
        هیچ تیتری نداشته باشند. استایل‌های fm-admin.css هم دقیقاً همین
-       #branding #site-name را هدف گرفته‌اند. #}
+       #branding #site-name را هدف گرفته‌اند.{% endcomment %}
     <h1 id="site-name">
-        <a href="{% url 'admin:index' %}">{{ site_header|default:"مدیریت فایل‌مارکت" }}</a>
-        <small class="fm-sub">فروشگاه فایل، قالب و محصولات دیجیتال</small>
+        <a href="{% url 'admin:index' %}">{{ site_header|default:site_brand.admin_title }}</a>
+        <small class="fm-sub">{{ site_brand.slogan|default:"فروشگاه فایل، قالب و محصولات دیجیتال" }}</small>
     </h1>
     {% if user.is_anonymous %}
         {% include "admin/color_theme_toggle.html" %}
@@ -90,6 +106,7 @@
 {% endblock %}
 
 {% block userlinks %}
+    {% admin_notification_bell %}
     <a class="fm-panel-link" href="{% url 'admin_home' %}">
         <i class="fa-solid fa-chart-pie" aria-hidden="true"></i> داشبورد تحلیل فروش
     </a>
@@ -108,15 +125,12 @@
 
 {% block nav-global %}
     {% if user.is_authenticated %}
-        <a href="{% url 'admin_home' %}"><i class="fa-solid fa-gauge-high" aria-hidden="true"></i> پنل مدیریت</a>
-        <a href="{% url 'admin_health' %}"><i class="fa-solid fa-stethoscope" aria-hidden="true"></i> سلامت فروشگاه</a>
-        <a href="{% url 'admin:product_product_add' %}"><i class="fa-solid fa-plus" aria-hidden="true"></i> محصول جدید</a>
-        <a href="{% url 'admin:blog_article_add' %}"><i class="fa-solid fa-newspaper" aria-hidden="true"></i> مقاله جدید</a>
-        <a href="{% url 'admin:cart_coupon_add' %}"><i class="fa-solid fa-percent" aria-hidden="true"></i> کد تخفیف</a>
-        <a href="{% url 'admin:core_redirect_changelist' %}"><i class="fa-solid fa-arrow-turn-down fa-rotate-90" aria-hidden="true"></i> ریدایرکت‌ها</a>
+        {% include "admin/includes/quick_links.html" with link_class="fm-adm-quick-link" %}
+        {# موبایل (زیر ۷۶۸px): دکمهٔ همبرگری + کشوی منو با دسترسی سریع و همهٔ بخش‌ها #}
+        {% include "admin/includes/mobile_drawer.html" %}
     {% endif %}
 {% endblock %}
 
 {% block footer %}
-    <span>پنل مدیریت فایل‌مارکت — برای آمار نموداری و گزارش فروش به <a href="{% url 'admin_home' %}">داشبورد تحلیل</a> بروید.</span>
+    <span>پنل مدیریت {{ site_brand.name }} — برای آمار نموداری و گزارش فروش به <a href="{% url 'admin_home' %}">داشبورد تحلیل</a> بروید.</span>
 {% endblock %}

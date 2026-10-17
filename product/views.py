@@ -7,8 +7,7 @@ from django.contrib import messages
 from django.db import models
 from django.core.paginator import Paginator
 from django.db.models import Min, Max
-from urllib.parse import urlencode
-from django.http import JsonResponse, FileResponse, Http404
+from django.http import JsonResponse
 
 from .models import Product, ProductComment, ProductCategory, ProductBrand, PRODUCT_TYPES
 from downloads.models import DownloadToken
@@ -97,6 +96,21 @@ def _price_range(qs):
     return qs.aggregate(min=Min('price'), max=Max('price'))
 
 
+def _active_filter_count(request, prices, selected_types, selected_brands, instant_only):
+    """تعداد فیلترهای فعال برای نشان روی دکمهٔ «فیلتر محصولات» در موبایل.
+
+    اسلایدر قیمت همیشه min_price/max_price را می‌فرستد؛ قیمت فقط وقتی فیلتر
+    فعال حساب می‌شود که بازه واقعاً از کمینه/بیشینهٔ فروشگاه تنگ‌تر شده باشد.
+    """
+    count = len(selected_types) + len(selected_brands) + (1 if instant_only == '1' else 0)
+    low = _positive_decimal(request.GET.get('min_price'))
+    high = _positive_decimal(request.GET.get('max_price'))
+    if (low is not None and prices['min'] is not None and low > prices['min']) or \
+            (high is not None and prices['max'] is not None and high < prices['max']):
+        count += 1
+    return count
+
+
 def _product_cards(queryset):
     """Fetch the relations shown by reusable product-card templates in bulk."""
     return queryset.select_related('digital_asset').prefetch_related('brand')
@@ -110,7 +124,10 @@ def _paginate(request, products, per_page=None):
     query_params = request.GET.copy()
     if 'page' in query_params:
         query_params.pop('page')
-    return object_list, pages_to_show, urlencode(query_params)
+    # ``QueryDict.urlencode`` keeps every value of multi-select filters
+    # (?type=a&type=b); ``urllib.parse.urlencode`` only saw the last one, so
+    # page 2 silently showed a different filter than page 1.
+    return object_list, pages_to_show, query_params.urlencode()
 
 
 def _snapshot_contains_product(items_data, product_id):
@@ -173,6 +190,7 @@ def product_list(request):
         'actual_max_price': prices['max'],
         'instant_only': instant_only,
         'querystring': querystring,
+        'active_filters': _active_filter_count(request, prices, selected_types, selected_brands, instant_only),
     }
     return render(request, 'product/product_list.html', context)
 
@@ -202,6 +220,7 @@ def category_product_list(request, slug):
         'actual_max_price': prices['max'],
         'instant_only': instant_only,
         'querystring': querystring,
+        'active_filters': _active_filter_count(request, prices, selected_types, selected_brands, instant_only),
     }
     return render(request, 'product/category_product_list.html', context)
 
@@ -228,6 +247,7 @@ def brand_product_list(request, slug):
         'actual_max_price': prices['max'],
         'instant_only': instant_only,
         'querystring': querystring,
+        'active_filters': _active_filter_count(request, prices, selected_types, selected_brands, instant_only),
     }
     return render(request, 'product/brand_product_list.html', context)
 
@@ -260,6 +280,7 @@ def discount_product_list(request):
         'actual_max_price': prices['max'],
         'instant_only': instant_only,
         'querystring': querystring,
+        'active_filters': _active_filter_count(request, prices, selected_types, selected_brands, instant_only),
     }
     return render(request, 'product/discount_product_list.html', context)
 
@@ -297,6 +318,9 @@ def product_search(request):
         'products': object_list,
         'product_types': PRODUCT_TYPES,
         'selected_types': selected_types,
+        # product_list.html ticks brand checkboxes from this; without it an
+        # active brand filter looked unticked and was dropped on resubmit.
+        'selected_brands': [int(b) for b in selected_brands if b.isdigit()],
         'pages_to_show': pages_to_show,
         'search': products_search,
         'min_price': request.GET.get('min_price') or prices['min'],
@@ -305,6 +329,7 @@ def product_search(request):
         'actual_max_price': prices['max'],
         'instant_only': instant_only,
         'querystring': querystring,
+        'active_filters': _active_filter_count(request, prices, selected_types, selected_brands, instant_only),
     }
     return render(request, 'product/product_list.html', context)
 
@@ -327,7 +352,12 @@ def product_detail(request, pid, slug):
             data = json.loads(request.body or '{}')
         except (TypeError, ValueError, json.JSONDecodeError):
             return JsonResponse({'status': 'fail', 'message': 'درخواست دیدگاه نامعتبر است.'}, status=400)
-        body = (data.get('body') or '').strip()
+        # Valid JSON that is not an object ([], "x", 5, null) or a non-string
+        # body used to raise AttributeError -> HTTP 500, even for anonymous users.
+        if not isinstance(data, dict):
+            return JsonResponse({'status': 'fail', 'message': 'درخواست دیدگاه نامعتبر است.'}, status=400)
+        body = data.get('body')
+        body = body.strip() if isinstance(body, str) else ''
         if not request.user.is_authenticated:
             return JsonResponse({'status': 'fail', 'message': 'برای ثبت دیدگاه وارد حساب شوید.'}, status=403)
         if not body:
@@ -348,11 +378,25 @@ def product_detail(request, pid, slug):
         throttle.record(request, identity)
 
         comment = ProductComment.objects.create(body=body, product=products, author=request.user)
-        return JsonResponse({'status': 'success', 'comment_id': comment.id})
+        return JsonResponse({
+            'status': 'success',
+            'comment_id': comment.id,
+            'moderation': comment.status == 'pending',
+            'message': 'دیدگاه شما ثبت شد و پس از تأیید مدیر برای همه نمایش داده می‌شود.',
+        })
 
     comments = products.product_comments.filter(status='published').select_related(
         'author', 'author__profile'
     ).order_by('-created_at')
+    # A pending comment used to vanish after submitting, so customers thought
+    # it was never saved and posted it again.  Its author sees it (marked as
+    # awaiting approval) until staff publish it.
+    own_pending_comments = []
+    if request.user.is_authenticated:
+        own_pending_comments = list(
+            products.product_comments.filter(status='pending', author=request.user)
+            .select_related('author', 'author__profile').order_by('-created_at')
+        )
 
     viewed_products = request.session.get('viewed_products', [])
     if products.id not in viewed_products:
@@ -370,7 +414,14 @@ def product_detail(request, pid, slug):
     in_cart = False
     if request.user.is_authenticated:
         is_in_wishlist = Wishlist.objects.filter(user=request.user, product=products).exists()
-        user_tokens = list(DownloadToken.objects.filter(user=request.user, product=products).order_by('-created_at'))
+        # Tokens of cancelled/refunded orders no longer mean "already purchased":
+        # showing them hid the buy button from a refunded customer.
+        user_tokens = list(
+            DownloadToken.objects.entitled()
+            .filter(user=request.user, product=products)
+            .select_related('order')
+            .order_by('-created_at')
+        )
         already_purchased = _has_purchased_product(request.user, products)
         in_cart = products.cartitem_set.filter(cart__user=request.user).exists()
 
@@ -378,6 +429,7 @@ def product_detail(request, pid, slug):
         'products': products,
         'product_image': product_image,
         'comments': comments,
+        'own_pending_comments': own_pending_comments,
         'is_in_wishlist': is_in_wishlist,
         'user_tokens': user_tokens,
         'already_purchased': already_purchased,
@@ -388,22 +440,22 @@ def product_detail(request, pid, slug):
 
 @login_required
 def download_asset(request, pid):
-    """دانلود فایل دیجیتال برای خریدار تأییدشده (از طریق توکن دانلود)."""
-    product = get_object_or_404(Product.objects.select_related('digital_asset'), pid=pid)
-    asset = getattr(product, 'digital_asset', None)
-    if asset is None:
-        raise Http404('فایلی برای این محصول ثبت نشده است.')
+    """Legacy per-product download URL (``/products/download/<pid>/``).
 
-    token = DownloadToken.objects.filter(user=request.user, product=product).order_by('-created_at').first()
-    if token is None or not token.is_valid:
+    It used to serve the file itself after checking only the token, so a
+    customer whose order had been cancelled or refunded could keep downloading
+    here although ``/downloads/<token>/`` refused them.  It now hands over to
+    that view, which is the single place deciding whether a download is allowed.
+    """
+    product = get_object_or_404(Product, pid=pid)
+    tokens = (
+        DownloadToken.objects.entitled()
+        .filter(user=request.user, product=product)
+        .select_related('order')
+        .order_by('-created_at')
+    )
+    token = next((candidate for candidate in tokens if candidate.is_valid), None)
+    if token is None:
         messages.error(request, 'شما به این فایل دسترسی ندارید یا لینک دانلود شما منقضی شده است.')
         return redirect('product:product_detail', pid=product.pid, slug=product.slug)
-
-    # ``register_download`` rechecks validity in one conditional database
-    # update, preventing concurrent requests from exceeding the token limit.
-    if not token.register_download():
-        messages.error(request, 'لینک دانلود شما منقضی شده یا به سقف تعداد دانلود رسیده است.')
-        return redirect('product:product_detail', pid=product.pid, slug=product.slug)
-
-    type(asset).objects.filter(pk=asset.pk).update(download_count=models.F('download_count') + 1)
-    return FileResponse(asset.file.open('rb'), as_attachment=True, filename=asset.file.name.rsplit('/', 1)[-1])
+    return redirect('downloads:download', token=token.token)

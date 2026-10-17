@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ورود با شماره موبایل | {{ site_name }}{% endblock %}
+{% block meta_description %}ورود یا ثبت‌نام سریع در {{ site_name }} با شماره موبایل و کد تأیید پیامکی{% endblock %}
+
+{% block content %}
+    <main class="fm-auth-page">
+        <div class="container">
+            <div class="fm-auth">
+                <div class="fm-auth__card">
+                    <div class="fm-auth__head">
+                        <div class="fm-auth__icon"><i class="fa fa-mobile-screen" aria-hidden="true"></i></div>
+                        <h1>ورود یا ثبت‌نام با موبایل</h1>
+                        {% if otp_phone %}
+                            <p>کد ارسال‌شده به شمارهٔ <bdi dir="ltr">{{ otp_phone_masked }}</bdi> را وارد کنید.</p>
+                        {% else %}
+                            <p>شماره موبایل خود را وارد کنید؛ اگر حساب نداشته باشید، به‌صورت خودکار ساخته می‌شود.</p>
+                        {% endif %}
+                    </div>
+
+                    {% if messages %}
+                        <div class="fm-messages" role="status" aria-live="polite">
+                            {% for message in messages %}
+                                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %}">
+                                    <span>{{ message }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% if not otp_phone %}
+                        <form method="post" class="fm-form" novalidate>
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="send">
+                            {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+                            <div class="fm-field">
+                                <label for="id_phone">شماره موبایل <span aria-hidden="true">*</span></label>
+                                <input type="tel" id="id_phone" name="phone" required autofocus dir="ltr"
+                                       inputmode="numeric" autocomplete="tel" maxlength="14"
+                                       class="fm-input" placeholder="09121234567">
+                            </div>
+                            <button type="submit" class="fm-btn fm-btn--primary fm-btn--block">
+                                <i class="fa fa-paper-plane" aria-hidden="true"></i> دریافت کد تأیید
+                            </button>
+                        </form>
+                    {% else %}
+                        <form method="post" class="fm-form" novalidate>
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="verify">
+                            {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+                            <div class="fm-field">
+                                <label for="id_code">کد تأیید <span aria-hidden="true">*</span></label>
+                                <input type="text" id="id_code" name="code" required autofocus dir="ltr"
+                                       inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="8"
+                                       class="fm-input fm-otp-input" placeholder="•••••">
+                            </div>
+                            <button type="submit" class="fm-btn fm-btn--primary fm-btn--block">
+                                <i class="fa fa-right-to-bracket" aria-hidden="true"></i> تأیید و ورود
+                            </button>
+                        </form>
+                        <div class="fm-otp-actions">
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="resend">
+                                {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+                                <button type="submit" class="fm-link-btn" data-otp-resend data-wait="{{ resend_wait }}" {% if resend_wait %}disabled{% endif %}>
+                                    ارسال دوبارهٔ کد<span data-otp-timer>{% if resend_wait %} ({{ resend_wait }} ثانیه){% endif %}</span>
+                                </button>
+                            </form>
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="change">
+                                {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+                                <button type="submit" class="fm-link-btn">تغییر شماره</button>
+                            </form>
+                        </div>
+                    {% endif %}
+
+                    <p class="fm-auth__alt">
+                        <a href="{% url 'account:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">ورود با نام کاربری و رمز عبور</a>
+                    </p>
+                </div>
+
+                <ul class="fm-auth__perks">
+                    <li><i class="fa fa-bolt" aria-hidden="true"></i> ورود سریع بدون نیاز به رمز عبور</li>
+                    <li><i class="fa fa-shield-halved" aria-hidden="true"></i> کد یک‌بارمصرف با اعتبار کوتاه</li>
+                    <li><i class="fa fa-cloud-arrow-down" aria-hidden="true"></i> دسترسی همیشگی به فایل‌های خریداری‌شده</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+    <script>
+        (function () {
+            var button = document.querySelector('[data-otp-resend]');
+            if (!button) return;
+            var wait = parseInt(button.getAttribute('data-wait'), 10) || 0;
+            var timer = button.querySelector('[data-otp-timer]');
+            if (!wait) return;
+            var handle = window.setInterval(function () {
+                wait -= 1;
+                if (wait <= 0) {
+                    window.clearInterval(handle);
+                    button.disabled = false;
+                    if (timer) timer.textContent = '';
+                    return;
+                }
+                if (timer) timer.textContent = ' (' + wait + ' ثانیه)';
+            }, 1000);
+        })();
+    </script>
+{% endblock %}
+
+{% block messages %}{% endblock %}

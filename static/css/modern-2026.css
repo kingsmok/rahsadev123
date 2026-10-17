@@ -554,7 +554,10 @@ html { scroll-behavior: smooth; }
     from { opacity: 0; transform: translateY(16px); }
     to { opacity: 1; transform: translateY(0); }
 }
-main .container, main .container-fluid { animation: fmFadeUp .45s ease both; }
+/* backwards (نه both): با both، transform پایانیِ انیمیشن برای همیشه روی
+   .container می‌ماند و هر عنصر position:fixed داخل صفحه (کشوی فیلتر و منوی
+   حساب در موبایل) به‌جای صفحه نسبت به همین .container جای‌گذاری می‌شد. */
+main .container, main .container-fluid { animation: fmFadeUp .45s ease backwards; }
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {

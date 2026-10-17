@@ -94,6 +94,15 @@
     --ap-head-line: rgba(232, 238, 244, .07);
     --ap-btn-second: #1d4e52;
     --ap-btn-second-fg: #e7eef4;
+    /* رنگ‌های «متن» روی کارت تیره باید روشن باشند: #2d6e74 فقط ۲٫۹ و رنگ‌های
+       وضعیتِ روز ۳٫۱ تا ۳٫۹ کنتراست داشتند. */
+    --ap-primary-strong: #8fd8dd;
+    --ap-muted: #9fb2c1;
+    --ap-success: #3fcf8e;
+    --ap-warning: #e9b949;
+    --ap-danger: #f47c7c;
+    --ap-info: #6cb6ec;
+    --ap-purple: #b3a6f5;
     --ap-shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 26px rgba(0, 0, 0, .28);
     --ap-shadow-hover: 0 2px 8px rgba(0, 0, 0, .35), 0 18px 36px rgba(0, 0, 0, .35);
 }
@@ -194,7 +203,32 @@ a { color: inherit; text-decoration: none; }
     box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
 }
 
-.ap-brand__text { line-height: 1.35; }
+/* نشان برند از «تنظیمات سایت»: فاوآیکن مربعی، یا لوگو با عرض آزاد */
+.ap-brand__mark--image { padding: 4px; overflow: hidden; }
+.ap-brand__mark--image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 9px;
+}
+.ap-brand--logo { flex-wrap: wrap; row-gap: 10px; }
+.ap-brand__mark--logo {
+    width: auto;
+    max-width: min(100%, 170px);
+    flex: 0 1 auto;
+    padding: 5px 9px;
+    overflow: hidden;
+}
+.ap-brand__mark--logo img {
+    display: block;
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+.ap-brand__text { line-height: 1.35; min-width: 0; overflow-wrap: anywhere; }
 .ap-brand__title {
     color: #ffffff;
     font-weight: 800;
@@ -630,6 +664,7 @@ table.ap-table { width: 100%; border-collapse: collapse; min-width: 520px; backg
 
 .ap-burger { display: none; }
 .ap-scrim { display: none; }
+.ap-sidebar__close { display: none; }
 
 @media (max-width: 1080px) {
     .ap-grid--2 { grid-template-columns: minmax(0, 1fr); }
@@ -675,6 +710,27 @@ table.ap-table { width: 100%; border-collapse: collapse; min-width: 520px; backg
         z-index: 35;
     }
     body.ap-nav-open .ap-scrim { opacity: 1; pointer-events: auto; }
+    /* منوی باز: صفحهٔ پشت اسکرول نمی‌شود (مثل منوی همبرگری فروشگاه). */
+    body.ap-nav-open { overflow: hidden; }
+    .ap-sidebar { overscroll-behavior: contain; }
+    /* دکمهٔ بستن داخل نوار برند؛ تراشهٔ سفید مثل نشان برند (کنتراست آیکن ۵٫۶). */
+    .ap-sidebar__close {
+        display: inline-grid;
+        place-items: center;
+        flex: 0 0 40px;
+        width: 40px;
+        height: 40px;
+        margin-inline-start: auto;
+        padding: 0;
+        border: 0;
+        border-radius: 12px;
+        background: #ffffff;
+        color: #2d6e74;
+        font-size: 16px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+    }
+    .ap-sidebar__close:hover { background: #eefafa; }
     .ap-burger { display: inline-flex; }
     .ap-content { padding: 18px 15px 32px; }
     .ap-topbar { padding: 12px 15px; }
@@ -733,3 +789,13 @@ table.ap-table { width: 100%; border-collapse: collapse; min-width: 520px; backg
     border-radius: 3px;
     flex: 0 0 9px;
 }
+
+
+/* ───────────────────────── حالت شب: سطوحِ دارای متن سفید ─────────────────────────
+   --ap-primary (#46a9ae) برای متن سفید روشن است (۲٫۸)؛ در شب دکمه‌ها، نوار برند و
+   رتبهٔ اول فیروزه‌ای تیره‌تر می‌گیرند تا متن سفید خوانا بماند (۵٫۹). */
+[data-theme='dark'] .ap-brand { background: linear-gradient(160deg, #1f6f74 0%, #18565a 100%); }
+[data-theme='dark'] .ap-range a.is-active,
+[data-theme='dark'] .ap-btn--primary,
+[data-theme='dark'] .ap-rank li:nth-child(1) .ap-rank__no { background: #1f6f74; }
+[data-theme='dark'] .ap-btn--primary:hover { background: #2a6a70; color: #ffffff; }

@@ -64,9 +64,25 @@
                         </p>
                     </form>
 
+                    {% if otp_available %}
+                        <div class="fm-auth__divider"><span>یا</span></div>
+                        <a href="{% url 'account:otp_login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}" class="fm-btn fm-btn--ghost fm-btn--block">
+                            <i class="fa fa-mobile-screen" aria-hidden="true"></i> ورود با شماره موبایل (کد پیامکی)
+                        </a>
+                    {% endif %}
+
                     <p class="fm-auth__alt">
                         کاربر جدید هستید؟
                         <a href="{% url 'account:register' %}">ساخت حساب کاربری</a>
+                    </p>
+                    {% if request.GET.next == '/cart/shopping_payment/' or request.GET.next == '/cart/' %}
+                        <p class="fm-auth__alt fm-auth__guest">
+                            <i class="fa fa-bag-shopping" aria-hidden="true"></i>
+                            حساب ندارید؟ <a href="{{ request.GET.next }}">بدون ثبت‌نام خرید را ادامه دهید</a>؛ سبد خرید شما حفظ شده است.
+                        </p>
+                    {% endif %}
+                    <p class="fm-auth__alt">
+                        خرید بدون ثبت‌نام انجام داده‌اید؟ <a href="{% url 'cart:track_order' %}">پیگیری سفارش</a>
                     </p>
                 </div>
 

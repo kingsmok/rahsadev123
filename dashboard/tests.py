@@ -259,6 +259,17 @@ class AdminIndexBrandingTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'fm-admin.css')
 
+    def test_admin_pages_do_not_print_template_comments(self):
+        # کامنت‌های چندخطیِ {# … #} در admin/base_site.html خام بالای همهٔ صفحات
+        # ادمین (از جمله صفحهٔ ورود) چاپ می‌شدند و <head> را زودتر از موعد می‌بستند.
+        responses = [self.client.get(reverse('admin:index'))]
+        self.client.logout()
+        responses.append(self.client.get(reverse('admin:login')))
+        for response in responses:
+            self.assertNotContains(response, '{#')
+            self.assertNotContains(response, '#}')
+            self.assertContains(response, '<h1 id="site-name">')
+
 
 class ProfileImageSizeLimitTests(TestCase):
     """A customer's avatar upload must be bounded in size."""
@@ -359,3 +370,170 @@ class AdminReconciliationQueueTests(TestCase):
         response = self.client.get('/admin-panel/health/')
         self.assertEqual(len(response.context['unfulfilled_payments']), 0)
         self.assertContains(response, 'تأییدشده و تحویل‌نشده‌ای وجود ندارد')
+
+
+class CustomerDashboardConsistencyTests(TestCase):
+    """Dashboard counters and lists must agree with the pages they summarise."""
+
+    def setUp(self):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        self.user = User.objects.create_user('dash-consistency', password='Safe-pass-123!')
+        self.others = [User.objects.create_user(f'dash-other-{i}', password='Safe-pass-123!') for i in range(3)]
+        self.timedelta, self.timezone = timedelta, timezone
+        self.client.force_login(self.user)
+
+    def test_notification_badge_matches_the_notifications_page(self):
+        from dashboard.models import Notification
+
+        broadcast = Notification.objects.create(message='برای همه', is_for_all_users=True)
+        broadcast.users.set([self.user, *self.others])  # used to be counted once per listed user
+        Notification.objects.create(
+            message='منقضی', is_for_all_users=True,
+            expiration_date=self.timezone.now() - self.timedelta(days=1),
+        )
+        Notification.objects.create(message='غیرفعال', is_for_all_users=True, is_active=False)
+        personal = Notification.objects.create(message='شخصی')
+        personal.users.set([self.user])
+
+        badge = self.client.get(reverse('dashboard:home')).context['user_notifications_count']
+        listed = list(self.client.get(reverse('dashboard:notifications')).context['notifications'])
+
+        self.assertEqual(badge, 2)
+        self.assertEqual(len(listed), 2)
+
+    def test_popular_products_include_unlimited_licences(self):
+        unlimited = Product.objects.create(
+            vendor=self.user, title='نامحدود', slug='unlimited-popular', description='-', price=1000,
+            is_unlimited=True, stock_count=0, views=50,
+        )
+        sold_out = Product.objects.create(
+            vendor=self.user, title='تمام‌شده', slug='soldout-popular', description='-', price=1000,
+            is_unlimited=False, stock_count=0, views=99,
+        )
+
+        popular = list(self.client.get(reverse('dashboard:home')).context['popular_products'])
+
+        self.assertIn(unlimited, popular)
+        self.assertNotIn(sold_out, popular)
+
+    def test_a_paid_digital_order_counts_as_completed(self):
+        paid = Order.objects.create(user=self.user, total_price=1000, final_price=1000, status='paid')
+        Order.objects.create(user=self.user, total_price=1000, final_price=1000, status='pending')
+
+        home = self.client.get(reverse('dashboard:home'))
+        completed = self.client.get(reverse('dashboard:orders_delivered'))
+
+        self.assertEqual(home.context['delivered_orders'], 1)
+        self.assertEqual([order.pk for order in completed.context['orders']], [paid.pk])
+
+    def test_malformed_address_ids_are_404_not_500(self):
+        for field in ('delete_address', 'set_default'):
+            response = self.client.post(reverse('dashboard:user_addresses'), {field: 'abc'})
+            self.assertEqual(response.status_code, 404, field)
+
+
+class AdminPanelCountersTests(TestCase):
+    """Staff counters must not mix charged-but-undelivered payments with declines."""
+
+    setUp = AdminReconciliationQueueTests.setUp
+    _transaction = AdminReconciliationQueueTests._transaction
+
+    def test_an_undelivered_payment_is_not_also_listed_or_counted_as_failed(self):
+        undelivered = self._transaction({'ref_id': 'REF-9', 'error': 'x', 'unfulfilled': True})
+        declined = self._transaction({'error': 'انصراف'})
+        bare_decline = self._transaction({})
+
+        health = self.client.get('/admin-panel/health/')
+        failed_ids = [t.pk for t in health.context['failed_payments']]
+        self.assertNotIn(undelivered.pk, failed_ids)
+        self.assertCountEqual(failed_ids, [declined.pk, bare_decline.pk])
+
+        home = self.client.get('/admin-panel/')
+        self.assertEqual(home.context['kpis']['failed_payments'], 2)
+        self.assertEqual(home.context['pending']['failed_payments'], 2)
+        self.assertEqual(home.context['pending']['unfulfilled_payments'], 1)
+        self.assertContains(home, 'پرداختِ تأییدشده و تحویل‌نشده')
+
+    def test_comments_awaiting_moderation_are_counted_and_linked(self):
+        from product.models import ProductComment
+
+        self._transaction({})
+        product = Product.objects.first()
+        ProductComment.objects.create(product=product, author=self.staff, body='در انتظار')  # default: pending
+        ProductComment.objects.create(product=product, author=self.staff, body='منتشر', status='published')
+
+        home = self.client.get('/admin-panel/')
+
+        self.assertEqual(home.context['pending']['pending_comments'], 1)
+        self.assertContains(home, 'productcomment/?status__exact=pending')
+
+    def test_order_export_runs_a_constant_number_of_queries(self):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        def export_queries():
+            with CaptureQueriesContext(connection) as ctx:
+                response = self.client.get('/admin-panel/export/orders/?range=365')
+            self.assertEqual(response.status_code, 200)
+            return len(ctx.captured_queries), response.content.decode('utf-8')
+
+        paid = self._transaction({'ref_id': 'REF-A'}, status='paid')
+        Order.objects.filter(pk=paid.order_id).update(status='paid')
+        PaymentTransaction.objects.filter(pk=paid.pk).update(ref_id='REF-A')
+        baseline, _ = export_queries()
+        for _ in range(4):
+            self._transaction({}, status='paid')
+        queries, body = export_queries()
+
+        self.assertEqual(queries, baseline)
+        self.assertIn('REF-A', body)
+
+
+class CustomerPageQueryTests(TestCase):
+    """My-downloads and cart-summary pages must not run a query per row."""
+
+    def setUp(self):
+        from product.models import DigitalAsset
+
+        self.user = User.objects.create_user('query-customer', password='Safe-pass-123!')
+        self.products = []
+        for index in range(8):
+            product = Product.objects.create(
+                vendor=self.user, title=f'فایل شمارش {index}', slug=f'query-file-{index}',
+                description='-', price=1000,
+            )
+            DigitalAsset.objects.create(product=product, file=f'digital-products/q{index}.zip', version='1.0')
+            self.products.append(product)
+        self.client.force_login(self.user)
+
+    def _queries(self, url):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        with CaptureQueriesContext(connection) as ctx:
+            self.assertEqual(self.client.get(url).status_code, 200)
+        return len(ctx.captured_queries)
+
+    def _add(self, products):
+        from cart.models import Cart, CartItem
+        from downloads.models import DownloadToken
+
+        cart, _ = Cart.objects.get_or_create(user=self.user)
+        for product in products:
+            order = Order.objects.create(user=self.user, total_price=1000, final_price=1000, status='paid')
+            DownloadToken.objects.create(user=self.user, product=product, order=order)
+            CartItem.objects.create(cart=cart, product=product)
+
+    def test_query_count_does_not_grow_with_rows(self):
+        urls = ('/dashboard/downloads/', '/dashboard/cart_summary/')
+        self._add(self.products[:1])
+        # Warm per-process caches first (e.g. the header mega menu is cached
+        # until a product or category changes); only per-row queries matter.
+        for url in urls:
+            self._queries(url)
+        baseline = [self._queries(url) for url in urls]
+        self._add(self.products[1:6])
+        self.assertEqual([self._queries(url) for url in urls], baseline)

@@ -1,126 +1,104 @@
 {% extends 'base.html' %}
-{% block title %}سبد خرید فایل‌ها{% endblock %}
+{% block title %}سبد خرید | {{ site_name }}{% endblock %}
 {% load static %}
-{% load custom_filters %}
-{% load jalali_tags %}
+{% load custom_filters site_extras %}
 
 {# پیام‌ها در همین صفحه کنار فرم کد تخفیف نمایش داده می‌شوند #}
 {% block messages %}{% endblock %}
 
 {% block content %}
-    <main class="cart-page default">
+    <main class="cart-page default fm-cart" data-cart-page>
         {% include 'includes/page_head.html' with title='سبد خرید' subtitle='فایل‌های انتخابی خود را بررسی و سفارش را نهایی کنید.' %}
+        {% html_blocks 'cart_top' %}
         <div class="container">
-            <div class="row">
-                <div class="col-12 text-center">
-                    <ul class="order-steps">
-                        <li>
-                            <a href="{% url 'cart:cart' %}" class="active">
-                                <span>سبدخرید</span>
-                            </a>
-                        </li>
-                        <li>
-                            {% if cart_items %}
-                                <a href="{% url 'cart:shopping_payment' %}"><span>روش پرداخت</span></a>
-                            {% else %}
-                                <span class="disabled" aria-disabled="true">روش پرداخت</span>
-                            {% endif %}
-                        </li>
-                        <li>
-                            <span class="disabled" aria-disabled="true">پایان خرید و دانلود</span>
-                        </li>
-                    </ul>
-                </div>
-                <div class="cart_content col-xl-12 col-lg-12 col-md-12">
-                    <header class="card-header">
-                        <h3 class="card-title"><span>سبد خرید شما (فایل‌های دیجیتال)</span></h3>
-                    </header>
-                    <div class="table-responsive default">
-                        <table class="table">
-                            {% if cart_items %}<thead>
-                            <tr>
-                                <th scope="col">فایل</th>
-                                <th scope="col">عنوان</th>
-                                <th scope="col">نوع</th>
-                                <th scope="col">قیمت</th>
-                                <th scope="col">قیمت نهایی</th>
-                            </tr>
-                            </thead>{% endif %}
-                            <tbody>
+            <ol class="fm-steps" aria-label="مراحل خرید">
+                <li class="is-current" aria-current="step"><span class="fm-steps__dot">۱</span> سبد خرید</li>
+                <li>{% if cart_items %}<a href="{% url 'cart:shopping_payment' %}"><span class="fm-steps__dot">۲</span> روش پرداخت</a>{% else %}<span class="fm-steps__dot">۲</span> روش پرداخت{% endif %}</li>
+                <li><span class="fm-steps__dot">۳</span> دانلود فایل‌ها</li>
+            </ol>
+
+            {% if cart_items %}
+                <div class="fm-cart__grid">
+                    <section class="fm-cart__items" aria-labelledby="cart-items-title">
+                        <header class="fm-cart__items-head">
+                            <h2 id="cart-items-title"><i class="fa fa-cart-shopping" aria-hidden="true"></i> سبد خرید شما <span class="fm-cart__count">{{ cart_items|length }} فایل</span></h2>
+                            <a href="{% url 'product:product_list' %}" class="fm-link"><i class="fa fa-plus" aria-hidden="true"></i> افزودن فایل دیگر</a>
+                        </header>
+
+                        {% if unavailable_items %}
+                            <div class="alert alert-danger" role="alert">
+                                <i class="fa fa-circle-exclamation" aria-hidden="true"></i>
+                                {{ unavailable_items|length }} فایل دیگر قابل خرید نیست؛ برای ادامه آن را از سبد حذف کنید.
+                            </div>
+                        {% endif %}
+
+                        <ul class="fm-cart__list">
                             {% for item in cart_items %}
-                                <tr class="cart_item">
-                                    <td>
-                                        {% if item.product.image %}
-                                            <img src="{{ item.product.image.url }}"
-                                                 alt="{{ item.product.title|truncatewords:5 }}">
-                                        {% else %}
-                                            <img src="{% static 'img/product_image_not_found.jpg' %}"
-                                                 alt="{{ item.product.title|truncatewords:5 }}">
-                                        {% endif %}
-                                        <button type="button" class="remove-cart-item" data-item-id="{{ item.id }}" aria-label="حذف {{ item.product.title }} از سبد خرید">
-                                            <i class="fa fa-times" aria-hidden="true"></i>
-                                        </button>
-                                    </td>
-                                    <td>
-                                        <h3 class="cart_title">
-                                            <a href="{% url 'product:product_detail' item.product.pid item.product.slug %}">
-                                                {{ item.product.title|truncatewords:5 }}
-                                            </a>
-                                        </h3>
-                                        <div class="cart_content">
-                                            <div><span>تحویل: </span><span
-                                                    class="item_property">دانلود آنی پس از پرداخت</span></div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="item_property">{{ item.product.get_product_type_display }}</span>
-                                    </td>
-                                    <td>
-                                        <div class="cart_price">
-                                            {% if item.product.old_price %}
-                                                <del>
-                                                    <span>{{ item.product.old_price|format_price }}<span>تومان</span></span>
-                                                </del>
+                                {% with product=item.product %}
+                                    <li class="fm-cart-item cart_item{% if product.status != 'published' or not product.is_available %} is-unavailable{% endif %}" data-cart-row>
+                                        <a class="fm-cart-item__thumb" href="{% url 'product:product_detail' product.pid product.slug %}" tabindex="-1" aria-hidden="true">
+                                            {% if product.image %}
+                                                <img src="{{ product.image.url }}" alt="" loading="lazy">
+                                            {% else %}
+                                                <img src="{% static 'img/product_image_not_found.jpg' %}" alt="" loading="lazy">
                                             {% endif %}
-                                            <ins><span>{{ item.product.price|format_price }}<span>تومان</span></span>
-                                            </ins>
+                                        </a>
+                                        <div class="fm-cart-item__body">
+                                            <h3 class="fm-cart-item__title cart_title">
+                                                <a href="{% url 'product:product_detail' product.pid product.slug %}">{{ product.title }}</a>
+                                            </h3>
+                                            <ul class="fm-cart-item__meta">
+                                                <li><i class="fa fa-file-zipper" aria-hidden="true"></i> {{ product.get_product_type_display }}</li>
+                                                <li><i class="fa fa-certificate" aria-hidden="true"></i> {{ product.get_license_type_display }}</li>
+                                                <li><i class="fa fa-bolt" aria-hidden="true"></i> دانلود آنی پس از پرداخت</li>
+                                            </ul>
+                                            {% if product.status != 'published' or not product.is_available %}
+                                                <p class="fm-cart-item__warning"><i class="fa fa-circle-exclamation" aria-hidden="true"></i> این فایل دیگر قابل خرید نیست.</p>
+                                            {% endif %}
                                         </div>
-                                    </td>
-                                    <td class="price_alltd"
-                                        id="item-total-{{ item.id }}">{{ item.total_price|format_price }}
-                                        <span>تومان</span></td>
-                                </tr>
-                            {% empty %}
-                                <tr class="fm-empty-row">
-                                    <td colspan="5">
-                                        {% include 'includes/empty_state.html' with icon='fa-cart-shopping' title='سبد خرید شما خالی است' text='فایل موردنظرتان را انتخاب کنید؛ بلافاصله پس از پرداخت قابل دانلود است.' cta_url='/products/' cta_label='مشاهده فایل‌ها' %}
-                                    </td>
-                                </tr>
+                                        <div class="fm-cart-item__price cart_price">
+                                            {% if product.old_price and product.old_price > product.price %}
+                                                <del>{{ product.old_price|format_price }}</del>
+                                                <span class="fm-badge fm-badge--accent">%{{ product.discount_percentage }}</span>
+                                            {% endif %}
+                                            <strong id="item-total-{{ item.id }}">{{ item.total_price|format_price }} <small>تومان</small></strong>
+                                        </div>
+                                        <button type="button" class="remove-cart-item fm-cart-item__remove" data-item-id="{{ item.id }}" aria-label="حذف {{ product.title }} از سبد خرید" title="حذف از سبد">
+                                            <i class="fa fa-trash-can" aria-hidden="true"></i>
+                                        </button>
+                                    </li>
+                                {% endwith %}
                             {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="cart-page-content col-xl-12 col-lg-12 col-md-12">
-                    <div class="row cart_details">
-                        <div class="cart-page-content col-xl-8 col-lg-7 col-md-7 ">
-                            <form method="post" action="{% url 'cart:apply_coupon' %}" class="coupon-form">
+                        </ul>
+
+
+                    </section>
+
+                    <aside class="fm-cart__aside" aria-label="خلاصهٔ سفارش">
+                        <div class="fm-card fm-summary">
+                            <h2 class="fm-card__title">خلاصهٔ سفارش</h2>
+                            <dl class="fm-summary__rows">
+                                <div><dt>جمع فایل‌ها ({{ cart_items|length }})</dt><dd id="total-price">{{ total_price|format_price }} <small>تومان</small></dd></div>
+                                {% if product_savings %}<div class="fm-text-success"><dt>سود شما از تخفیف محصولات</dt><dd>{{ product_savings|format_price }} <small>تومان</small></dd></div>{% endif %}
+                                <div id="coupon-discount"><dt>کد تخفیف</dt><dd>{% if cart and cart.coupon %}{{ cart.coupon_discount|format_price }}{% else %}0{% endif %} <small>تومان</small></dd></div>
+                                <div class="fm-summary__total"><dt>قابل پرداخت</dt><dd id="final-price">{{ final_price|format_price }} <small>تومان</small></dd></div>
+                            </dl>
+
+                            <form method="post" action="{% url 'cart:apply_coupon' %}" class="fm-coupon coupon-form">
                                 {% csrf_token %}
-                                <label class="fm-sr-only" for="coupon_code">کد تخفیف</label>
-                                <input type="text" name="coupon_code" id="coupon_code" placeholder="کد تخفیف"
-                                       class="input_second input_all width-200" autocomplete="off">
-                                <button type="submit" class="btn btn-main-masai">اعمال کد</button>
+                                <label for="coupon_code">کد تخفیف دارید؟</label>
+                                <div class="fm-coupon__row">
+                                    <input type="text" name="coupon_code" id="coupon_code" placeholder="کد تخفیف" class="fm-input" autocomplete="off" dir="ltr" {% if cart.coupon %}disabled{% endif %}>
+                                    <button type="submit" class="fm-btn fm-btn--ghost" {% if cart.coupon %}disabled{% endif %}>اعمال</button>
+                                </div>
                                 {% if messages %}
                                     {% for message in messages %}
-                                        <div class="coupon-{{ message.tags }} coupon-message">
-                                            {{ message }}
-                                        </div>
+                                        <div class="coupon-{{ message.tags }} coupon-message" role="status">{{ message }}</div>
                                     {% endfor %}
                                 {% endif %}
-                                {% if cart and cart.coupon and cart_items %}
+                                {% if cart and cart.coupon %}
                                     <div class="coupon-success coupon-message">
-                                        کد تخفیف {{ cart.coupon.code }} با موفقیت اعمال شد
-                                        ({{ cart.coupon_discount|format_price }} تومان تخفیف)
+                                        کد تخفیف <b dir="ltr">{{ cart.coupon.code }}</b> اعمال شد ({{ cart.coupon_discount|format_price }} تومان تخفیف)
                                     </div>
                                 {% endif %}
                             </form>
@@ -128,69 +106,59 @@
                                 {# فرم جداگانه: حذف کد باید درخواست POST مستقل باشد، نه دکمه‌ای داخل فرمِ اعمال کد #}
                                 <form method="post" action="{% url 'cart:remove_coupon' %}" class="coupon-form">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-main-masai fm-remove-coupon">
+                                    <button type="submit" class="fm-link-btn fm-remove-coupon">
                                         <i class="fa fa-xmark" aria-hidden="true"></i>
                                         حذف کد تخفیف و پرداخت بدون تخفیف
                                     </button>
                                 </form>
                             {% endif %}
-                            <div class="text_details">
-                                <p>
-                                    <i class="fa fa-cloud-arrow-down colormain" aria-hidden="true"></i>
-                                    بلافاصله پس از پرداخت موفق، لینک دانلود فایل‌ها در پنل کاربری و صفحه سفارش فعال می‌شود.
-                                </p>
-                                <p>
-                                    <i class="fa fa-shield-halved colormain" aria-hidden="true"></i>
-                                    تمام فایل‌ها دارای لایسنس رسمی هستند و در صورت مغایرت، تا ۷ روز ضمانت بازگشت وجه دارند.
-                                </p>
-                            </div>
+
+                            {% if unavailable_items %}
+                                <span class="fm-btn fm-btn--primary fm-btn--block fm-btn--lg disabled" aria-disabled="true">ابتدا فایل‌های ناموجود را حذف کنید</span>
+                            {% else %}
+                                <a href="{% url 'cart:shopping_payment' %}" class="fm-btn fm-btn--primary fm-btn--block fm-btn--lg">ادامه و انتخاب روش پرداخت <i class="fa fa-arrow-left" aria-hidden="true"></i></a>
+                            {% endif %}
+                            <p class="fm-summary__secure"><i class="fa fa-shield-halved" aria-hidden="true"></i> پرداخت امن با درگاه‌های دارای مجوز شاپرک — امکان خرید اقساطی</p>
                         </div>
-                        <div class="cart-page-aside col-xl-4 col-lg-5 col-md-5 divider_details">
-                            <table class="table table_details">
-                                <tbody>
-                                <tr>
-                                    <td>قیمت کل سفارش:</td>
-                                    <td id="total-price">{{ total_price|format_price }} <span>تومان</span></td>
-                                </tr>
-                                <tr>
-                                    <td>تخفیف:</td>
-                                    <td id="coupon-discount">
-                                        {% if cart and cart.coupon and cart_items %}
-                                            {{ cart.coupon_discount|format_price }} <span>تومان</span>
-                                        {% else %}
-                                            0 <span>تومان</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>هزینه ارسال:</td>
-                                    <td id="shipping-cost">رایگان (دانلود آنی)</td>
-                                </tr>
-                                <tr class="all">
-                                    <td>قیمت قابل پرداخت:</td>
-                                    {% if cart_items %}
-                                        <td id="final-price">{{ final_price|format_price }} <span>تومان</span></td>
-                                    {% else %}
-                                        <td id="final-price">0 <span>تومان</span></td>
-                                    {% endif %}
-                                </tr>
-                                <tr>
-                                    <td colspan="2">
-                                        {% if cart_items %}
-                                            <a href="{% url 'cart:shopping_payment' %}" class="btn big_btn btn-main-masai">گام بعدی</a>
-                                        {% else %}
-                                            <span class="btn big_btn btn-main-masai disabled" aria-disabled="true">گام بعدی</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                    </aside>
                 </div>
-            </div>
+
+                <ul class="fm-cart__trust">
+                    <li><i class="fa fa-cloud-arrow-down" aria-hidden="true"></i><span><b>تحویل آنی</b>لینک دانلود بلافاصله پس از پرداخت</span></li>
+                    <li><i class="fa fa-certificate" aria-hidden="true"></i><span><b>لایسنس رسمی</b>همهٔ فایل‌ها اورجینال هستند</span></li>
+                    <li><i class="fa fa-rotate-left" aria-hidden="true"></i><span><b>۷ روز ضمانت</b>بازگشت وجه در صورت مغایرت</span></li>
+                    <li><i class="fa fa-headset" aria-hidden="true"></i><span><b>پشتیبانی فنی</b>همراه شما پس از خرید</span></li>
+                </ul>
+
+                {% if suggestions %}
+                    <section class="fm-cart__suggest" aria-labelledby="cart-suggest-title">
+                        <h2 id="cart-suggest-title"><i class="fa fa-wand-magic-sparkles" aria-hidden="true"></i> شاید این فایل‌ها را هم بخواهید</h2>
+                        <ul class="fm-cart__suggest-list">
+                            {% for product in suggestions %}
+                                <li class="fm-suggest-card">
+                                    <a href="{% url 'product:product_detail' product.pid product.slug %}" class="fm-suggest-card__thumb">
+                                        {% if product.image %}<img src="{{ product.image.url }}" alt="" loading="lazy">{% else %}<img src="{% static 'img/product_image_not_found.jpg' %}" alt="" loading="lazy">{% endif %}
+                                    </a>
+                                    <a href="{% url 'product:product_detail' product.pid product.slug %}" class="fm-suggest-card__title">{{ product.title|truncatewords:8 }}</a>
+                                    <div class="fm-suggest-card__foot">
+                                        <span>{{ product.price|format_price }} <small>تومان</small></span>
+                                        <button type="button" class="fm-btn fm-btn--ghost fm-btn--sm js-add-to-cart" data-product-id="{{ product.id }}" aria-label="افزودن {{ product.title }} به سبد خرید"><i class="fa fa-cart-plus" aria-hidden="true"></i></button>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </section>
+                {% endif %}
+            {% else %}
+                <div class="fm-card fm-cart__empty">
+                    {% include 'includes/empty_state.html' with icon='fa-cart-shopping' title='سبد خرید شما خالی است' text='فایل موردنظرتان را انتخاب کنید؛ بلافاصله پس از پرداخت قابل دانلود است.' cta_url='/products/' cta_label='مشاهده فایل‌ها' %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="coupon-{{ message.tags }} coupon-message" role="status">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            {% endif %}
         </div>
     </main>
-
-
 {% endblock %}

@@ -1,16 +1,19 @@
-{% load static %}
-/* فایل‌مارکت PWA service worker — intentionally conservative for a storefront.
+{% load static site_extras %}
+/* PWA service worker — intentionally conservative for a storefront.
    Only public, versioned UI assets are cached. Authenticated responses, carts,
-   downloads and payment requests always stay on the network. */
-const CACHE_NAME = 'filemarket-shell-v1';
+   downloads and payment requests always stay on the network.
+   The cache name carries the brand version from «تنظیمات سایت»: renaming the
+   shop changes this script, so browsers reinstall it and re-cache the offline
+   page with the new name instead of keeping the old one forever. */
+const CACHE_NAME = 'filemarket-shell-v1-{{ site_brand.version }}';
 const OFFLINE_URL = '/offline/';
 const APP_SHELL = [
   OFFLINE_URL,
-  '{% static "css/bootstrap.min.css" %}',
-  '{% static "css/modern-2026.css" %}',
-  '{% static "css/fm-design-system.css" %}',
-  '{% static "css/fm-ui-audit.css" %}',
-  '{% static "js/modern-2026.js" %}',
+  '{% asset "css/bootstrap.min.css" %}',
+  '{% asset "css/modern-2026.css" %}',
+  '{% asset "css/fm-design-system.css" %}',
+  '{% asset "css/fm-ui-audit.css" %}',
+  '{% asset "js/modern-2026.js" %}',
   '{% static "img/pwa/icon-192.png" %}',
   '{% static "fonts/vazirmatn/Vazirmatn-FD-Regular.woff2" %}'
 ];
@@ -18,7 +21,8 @@ const APP_SHELL = [
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(APP_SHELL))
+      // 'reload' bypasses the HTTP cache so a reinstall never stores a stale copy.
+      .then(cache => cache.addAll(APP_SHELL.map(url => new Request(url, { cache: 'reload' }))))
       .then(() => self.skipWaiting())
   );
 });
@@ -52,14 +56,21 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Static application shell: cache first, update cache in the background.
+  // Static files: cache first, refreshed in the background. Pages link CSS/JS
+  // with a content hash (?v=…), so an updated file has a new URL and is fetched
+  // fresh on the first view; older copies of the same file are dropped.
   if (url.pathname.startsWith('/static/')) {
     event.respondWith(
       caches.match(request).then(cached => {
         const network = fetch(request).then(response => {
           if (response && response.ok) {
             const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+            caches.open(CACHE_NAME).then(cache => cache.keys().then(keys => Promise.all(
+              keys.filter(key => {
+                const old = new URL(key.url);
+                return old.pathname === url.pathname && old.search !== url.search;
+              }).map(key => cache.delete(key))
+            )).then(() => cache.put(request, copy)));
           }
           return response;
         });

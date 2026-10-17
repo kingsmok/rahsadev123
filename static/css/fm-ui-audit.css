@@ -888,7 +888,9 @@ header.Masai-header .main-menu .list .list-item.mega-menu > .sub-menu {
 
 /* در حالت شب علامت قابل‌درک «روشن‌کردن» نمایش داده می‌شود؛ در حالت روشن
    هلال ماه یعنی با لمس آن حالت شب فعال می‌شود. */
-[data-theme="dark"] .theme-toggle__symbol { font-size: 0; }
+/* !important: قاعدهٔ اندازهٔ دکمهٔ موبایل (nav.header-responsive …) اختصاصی‌تر بود و هلال
+   ماه کنار خورشید هم دیده می‌شد. */
+[data-theme="dark"] .theme-toggle__symbol { font-size: 0 !important; }
 [data-theme="dark"] .theme-toggle__symbol::after {
     content: "☀";
     font-family: Arial, sans-serif;

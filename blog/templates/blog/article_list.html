@@ -14,6 +14,8 @@
         {% include 'includes/page_head.html' with title='وبلاگ' subtitle='آموزش‌ها، راهنماها و تازه‌های دنیای قالب، افزونه و محصولات دیجیتال.' %}
         <div class="container ">
             <div class="row">
+                {# موبایل و تبلت: ستون کناری وبلاگ در کشوی همبرگری (static/js/fm-drawers.js) #}
+                {% include 'includes/side_drawer_toggle.html' with target='fm-blog-side' label='دسته‌بندی‌ها و آخرین مقالات' hint='موضوع‌های وبلاگ را مرور کنید' %}
                 <div class="single_blog_content cat_blog_content col-12 col-lg-9 mx-auto order-1 order-sm-1 ">
                     <div class="row listing-items Blog-category">
                         {% if articles %}
@@ -75,8 +77,8 @@
                     {% endif %}
                     <!-- Pagination -->
                 </div>
-                <div class="col-12 col-lg-3 ">
-
+                <aside class="col-12 col-lg-3 fm-side" id="fm-blog-side" data-fm-drawer data-fm-drawer-media="(max-width: 991.98px)" aria-labelledby="fm-blog-side-title">
+                    {% include 'includes/side_drawer_head.html' with target='fm-blog-side' title='دسته‌بندی‌های وبلاگ' icon='fa-folder-open' %}
                     <div class="sidebar_blog">
                         <div class="widget_blog">
                             <div class="widget_blog_headbox">
@@ -108,7 +110,7 @@
                         </div>
 
                     </div>
-                </div>
+                </aside>
             </div>
         </div>
     </main>

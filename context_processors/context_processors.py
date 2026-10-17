@@ -1,41 +1,60 @@
 from django.db import OperationalError, ProgrammingError
 
-from core.models import SiteSettings
+from core.branding import get_brand
 from product.models import ProductCategory, ProductBrand
-from cart.models import Cart, CartItem
+from cart.guest import get_cart
+from cart.models import CartItem
+from core.social import social_links
 
 
 def shop_func(request):
-    site_settings = SiteSettings.objects.first()
+    # نام، لوگو و آیکن‌ها از یک منبع واحد (core.branding) می‌آیند تا تغییرشان در
+    # «تنظیمات سایت» همزمان در همهٔ قالب‌ها — از جمله ادمین — دیده شود.
+    # «site_brand» نامیده شده چون «brand» در صفحهٔ برندهای محصول، متغیر view است.
+    site_brand = get_brand(request)
+    site_settings = site_brand.settings
     categories = ProductCategory.objects.all()
     brands = ProductBrand.objects.all()
 
     cart = None
     cart_items = []
     cart_total = 0
-    if request.user.is_authenticated:
-        try:
-            cart = Cart.objects.filter(user=request.user).first()
-            if cart:
-                # Keep one evaluated, joined collection for both the header and
-                # its total. Calling ``cart.total_price`` here issued another
-                # query and then one query per product on every rendered page.
-                cart_items = list(CartItem.objects.filter(cart=cart).select_related('product'))
-                cart_total = sum(item.total_price for item in cart_items)
-        except (OperationalError, ProgrammingError):
-            # A request must still render while migrations are being applied
-            # and the cart tables do not exist yet.
-            pass
+    wishlist_count = 0
+    try:
+        # مهمان هم سبد خرید دارد (سبدِ نشست؛ cart.guest.get_cart).
+        cart = get_cart(request)
+        if cart:
+            # Keep one evaluated, joined collection for both the header and
+            # its total. Calling ``cart.total_price`` here issued another
+            # query and then one query per product on every rendered page.
+            cart_items = list(CartItem.objects.filter(cart=cart).select_related('product'))
+            cart_total = sum(item.total_price for item in cart_items)
+        if request.user.is_authenticated:
+            from dashboard.models import Wishlist
+
+            wishlist_count = Wishlist.objects.filter(user=request.user).count()
+    except (OperationalError, ProgrammingError):
+        # A request must still render while migrations are being applied
+        # and the cart tables do not exist yet.
+        pass
+    # The drawer total must match the cart page: subtract the applied coupon.
+    cart_discount = min(cart.coupon_discount, cart_total) if (cart and cart.coupon_id) else 0
 
     return {
         'site_settings': site_settings,
-        'site_name': site_settings.site_name if site_settings else 'فایل‌مارکت',
+        'site_brand': site_brand,
+        'site_name': site_brand.name,
         'categories': categories,
         'brands': brands,
 
         'cart': cart,
         'cart_items': cart_items,
         'cart_total': cart_total,
+        'cart_count': len(cart_items),
+        'cart_discount': cart_discount,
+        'cart_payable': max(0, cart_total - cart_discount),
+        'wishlist_count': wishlist_count,
+        'social_links': social_links(site_settings),
     }
 
 

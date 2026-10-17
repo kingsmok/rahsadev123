@@ -927,7 +927,9 @@ main.main {
  .view_more{
     /* #5bbabe با متن سفید فقط ۲٫۲۸ کنتراست داشت؛ primary-700 همان خانوادهٔ
        فیروزه‌ایِ برند است و ۵٫۳ می‌دهد. */
-    background-color: var(--fm-primary-700, #2d6e74);
+    /* توکن action در هر دو حالت فیروزه‌ای تیره است؛ primary-700 توکنِ «متن»
+       است و در حالت شب روشن (#a2e2e5) می‌شود و متن سفید دکمه را محو می‌کرد. */
+    background-color: var(--fm-action-bg, #2d6e74);
         width: 250px;
     text-align: center;
     line-height: 48px;
@@ -5770,7 +5772,8 @@ color: #2ec4b1;
     font-weight: 100;
 }
     .view_more {
-        background-color: #5bbabe;
+        /* موبایل هم مثل دسکتاپ: #5bbabe با متن سفید فقط ۲٫۲۸ کنتراست داشت. */
+        background-color: var(--fm-action-bg, #2d6e74);
         /* width: 250px; */
         text-align: center;
         line-height: 42px;
@@ -7503,6 +7506,11 @@ color: #2ec4b1;
 .btn-second-masai{
     background-color:#CFEBED!important;
     color:#000!important;
+}
+/* لینک‌های .btn (مثل «پیش‌نمایش زنده») در modern-2026.css گرادیان فیروزه‌ای تیره
+   می‌گیرند؛ متن مشکی روی آن فقط ۳٫۶ (روز) و ۲٫۷ (شب) کنتراست داشت. */
+a.btn.btn-second-masai:not(.btn-light):not(.btn-outline){
+    color:#fff!important;
 }
 .btn-second-masai:hover{
    background-color: #5bbac0!important ;

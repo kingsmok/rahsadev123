@@ -14,7 +14,8 @@ class DownloadTokenAdmin(EnhancedAdminMixin, admin.ModelAdmin):
     readonly_fields = ('token', 'download_count', 'created_at')
     autocomplete_fields = ('user', 'product', 'order')
     date_hierarchy = 'created_at'
-    list_select_related = ('user', 'product', 'order')
+    # str(order) includes the buyer's username, so join it too (one query per row otherwise).
+    list_select_related = ('user', 'product', 'order', 'order__user')
     list_editable = ('is_active',)
     csv_filename = 'masaishop-download-tokens.csv'
 

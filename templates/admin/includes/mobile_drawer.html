@@ -1,0 +1,44 @@
+{% load i18n %}{% comment %}
+منوی همبرگری ادمین جنگو در موبایل (زیر ۷۶۸px).
+جنگو در این عرض سایدبار بخش‌ها (#nav-sidebar) را کاملاً پنهان می‌کند و ۹ لینک دسترسی
+سریع هم زیر هم در سربرگ می‌نشستند. این کشو هر دو را یک‌جا دارد؛ static/js/fm-admin.js آن را
+به <body> منتقل می‌کند تا داخل لایهٔ سربرگ چسبان گیر نیفتد. در دسکتاپ پنهان است و سربرگ و
+سایدبار جنگو مثل قبل کار می‌کنند.
+{% endcomment %}
+<button type="button" class="fm-adm-burger" data-fm-adm-open aria-controls="fm-adm-drawer"
+        aria-expanded="false" aria-haspopup="dialog">
+    <i class="fa-solid fa-bars" aria-hidden="true"></i><span>منو</span>
+</button>
+<div class="fm-adm-drawer" id="fm-adm-drawer" aria-labelledby="fm-adm-drawer-title" data-fm-adm-drawer>
+    <div class="fm-adm-drawer__head">
+        <b id="fm-adm-drawer-title"><i class="fa-solid fa-bars-staggered" aria-hidden="true"></i> منوی مدیریت</b>
+        <button type="button" class="fm-adm-drawer__close" data-fm-adm-close aria-label="بستن منو">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+    </div>
+    <p class="fm-adm-drawer__label" id="fm-adm-quick-title">دسترسی سریع</p>
+    <nav class="fm-adm-drawer__quick" aria-labelledby="fm-adm-quick-title">
+        {% include "admin/includes/quick_links.html" with link_class="" %}
+    </nav>
+    {% if available_apps %}
+        <p class="fm-adm-drawer__label" id="fm-adm-apps-title">همهٔ بخش‌ها</p>
+        <nav class="fm-adm-drawer__apps" aria-labelledby="fm-adm-apps-title">
+            {% for app in available_apps %}
+                <details class="fm-adm-drawer__app"{% if app.app_url in request.path|urlencode %} open{% endif %}>
+                    <summary>{{ app.name }}</summary>
+                    <ul>
+                        {% for model in app.models %}
+                            {% if model.admin_url %}
+                                <li><a href="{{ model.admin_url }}"{% if model.admin_url in request.path|urlencode %} aria-current="page"{% endif %}>{{ model.name }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </details>
+            {% endfor %}
+        </nav>
+    {% endif %}
+    <div class="fm-adm-drawer__foot">
+        <a href="{% url 'admin:index' %}"><i class="fa-solid fa-house" aria-hidden="true"></i> خانهٔ مدیریت</a>
+        {% if site_url %}<a href="{{ site_url }}"><i class="fa-solid fa-store" aria-hidden="true"></i> {% translate 'View site' %}</a>{% endif %}
+    </div>
+</div>

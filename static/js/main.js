@@ -14,16 +14,36 @@
     }
 
     $(function () {
+        // Slide duration comes from «ویترین‌های صفحهٔ اصلی» in the admin.
+        var bidDelay = (parseInt($('#bid-s').attr('data-autoplay-seconds'), 10) || 5) * 1000;
+        var bidCount = $('#bid-s > .item').length;
+        // Desktop: one product beside the offers. Tablet/phone (where the theme
+        // hides the offers carousel): a full-width row of 2–4 products. Looping,
+        // arrows and autoplay only when there are more products than fit.
+        function bidAt(perView) {
+            var items = Math.max(1, Math.min(perView, bidCount));
+            var moves = bidCount > items;
+            return {items: items, loop: moves, nav: moves, autoplay: moves};
+        }
         initCarousel('#bid-s', {
-            rtl: true, items: 1, autoplay: true, autoplayTimeout: 5000,
-            loop: true, dots: false,
+            rtl: true, items: 1, margin: 12, autoplay: bidCount > 1, autoplayTimeout: bidDelay,
+            autoplayHoverPause: true, loop: bidCount > 1, dots: false,
+            nav: bidCount > 1,
+            responsive: {0: bidAt(2), 576: bidAt(3), 820: bidAt(4), 1078: bidAt(1)},
+            navText: ['<span aria-hidden="true">›</span><span class="fm-sr-only">قبلی</span>', '<span aria-hidden="true">‹</span><span class="fm-sr-only">بعدی</span>'],
             onInitialized: startProgressBar,
             onTranslate: resetProgressBar,
-            onTranslated: startProgressBar
+            onTranslated: startProgressBar,
+            onResized: startProgressBar
         });
 
-        function startProgressBar() {
-            $('.slide-progress').css({width: '100%', transition: 'width 5000ms'});
+        function startProgressBar(event) {
+            var owl = event && event.relatedTarget;
+            if (bidCount < 2 || (owl && owl.settings && !owl.settings.autoplay)) {
+                resetProgressBar();
+                return;
+            }
+            $('.slide-progress').css({width: '100%', transition: 'width ' + bidDelay + 'ms linear'});
         }
 
         function resetProgressBar() {
@@ -106,119 +126,11 @@
                 .siblings('.mobile-menu-toggle').attr('aria-expanded', 'false');
         });
 
-        /* پنل همبرگری موبایل
-           قالب قدیمی برای نمایش پنل به کلاس html.nav-open وابسته بود، اما
-           اسکریپت قدیمی Now UI دیگر در base.html لود نمی‌شود. Bootstrap فقط
-           کلاس collapse/show را تغییر می‌دهد و پنل بیرون صفحه می‌ماند؛ این
-           اتصال کوچک، Collapse استاندارد Bootstrap را با پنل و backdrop
-           فعلی همگام می‌کند. */
-        var $mobileNavigation = $('#navigation');
-        var mobileBreakpoint = window.matchMedia ? window.matchMedia('(max-width: 1077px)') : null;
-        var lastMobileToggle = null;
-
-        function isMobileNavigation() {
-            return !mobileBreakpoint || mobileBreakpoint.matches;
-        }
-
-        function mobileBackdrop() {
-            var $backdrop = $('.fm-mobile-nav-backdrop');
-            if (!$backdrop.length) {
-                $backdrop = $('<div class="fm-mobile-nav-backdrop" aria-hidden="true"></div>').appendTo('body');
-                $backdrop.on('click', function () {
-                    if ($mobileNavigation.length && $mobileNavigation.hasClass('show')) {
-                        $mobileNavigation.collapse('hide');
-                    }
-                });
-            }
-            return $backdrop;
-        }
-
-        function setMobileNavigation(open) {
-            if (!isMobileNavigation()) return;
-            if (open) {
-                // نتایج جست‌وجوی زنده در همان ناحیهٔ هدر نمایش داده می‌شوند؛
-                // با باز شدن پنل نباید زیر یا روی منوی همبرگری باقی بمانند.
-                $('.live-search-results').removeClass('open');
-            }
-            $('html').toggleClass('nav-open', open);
-            $('.navbar-toggler[data-target="#navigation"]')
-                .attr('aria-label', open ? 'بستن منوی اصلی' : 'باز کردن منوی اصلی')
-                .attr('aria-expanded', String(open));
-            var $backdrop = mobileBackdrop();
-            if (open) {
-                requestAnimationFrame(function () { $backdrop.addClass('is-visible'); });
-            } else {
-                $backdrop.removeClass('is-visible');
-                setTimeout(function () {
-                    if (!$('html').hasClass('nav-open')) $backdrop.remove();
-                }, 250);
-            }
-        }
-
-        function mobileNavigationFocusable() {
-            return $mobileNavigation.find(
-                'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-            ).filter(':visible').toArray();
-        }
-
-        function trapMobileNavigationFocus(event) {
-            if (event.key !== 'Tab' || !$mobileNavigation.hasClass('show')) return;
-            var focusable = mobileNavigationFocusable();
-            if (!focusable.length) {
-                event.preventDefault();
-                return;
-            }
-            var first = focusable[0];
-            var last = focusable[focusable.length - 1];
-            if (event.shiftKey && document.activeElement === first) {
-                event.preventDefault();
-                last.focus();
-            } else if (!event.shiftKey && document.activeElement === last) {
-                event.preventDefault();
-                first.focus();
-            }
-        }
-
-        if ($mobileNavigation.length && $.fn.collapse) {
-            $mobileNavigation
-                .on('show.bs.collapse', function () {
-                    lastMobileToggle = document.activeElement;
-                    setMobileNavigation(true);
-                })
-                .on('shown.bs.collapse', function () {
-                    var first = mobileNavigationFocusable()[0];
-                    if (first) first.focus();
-                })
-                .on('hidden.bs.collapse', function () {
-                    setMobileNavigation(false);
-                    // When Cart Drawer closed this panel, it owns focus instead.
-                    if (!document.documentElement.classList.contains('cart-drawer-open') && lastMobileToggle && document.contains(lastMobileToggle)) {
-                        lastMobileToggle.focus();
-                    }
-                })
-                .on('click', 'a', function () {
-                    if (isMobileNavigation() && $mobileNavigation.hasClass('show')) {
-                        $mobileNavigation.collapse('hide');
-                    }
-                });
-
-            $(document).on('keydown', function (event) {
-                if (!isMobileNavigation() || !$mobileNavigation.hasClass('show')) return;
-                if (event.key === 'Escape') {
-                    event.preventDefault();
-                    $mobileNavigation.collapse('hide');
-                    return;
-                }
-                trapMobileNavigationFocus(event);
-            });
-
-            $(window).on('resize', function () {
-                if (!isMobileNavigation()) {
-                    $('html').removeClass('nav-open');
-                    $('.fm-mobile-nav-backdrop').remove();
-                }
-            });
-        }
+        /* پنل همبرگری موبایل (#navigation) حالا با کنترلر مشترک کشوها در
+           static/js/fm-drawers.js باز و بسته می‌شود — همان کنترلری که منوی
+           کناری فروشگاه، حساب کاربری، وبلاگ و صفحات راهنما را در موبایل
+           کشویی می‌کند. اتصال قبلی به Collapse بوت‌استرپ بسته‌شدن را ۲۵۰ms
+           معطل می‌کرد و منوی بسته با Tab قابل فوکوس می‌ماند. */
 
         var desktopCategory = $('.nav-categories-toggle');
         desktopCategory.on('focus', function () {

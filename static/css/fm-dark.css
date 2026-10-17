@@ -1,0 +1,129 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   حالت شب — اصلاحات ممیزی کامل
+   ───────────────────────────────────────────────────────────────────────
+   ممیزی خودکار در Chromium (کنتراست هر متن نسبت به زمینهٔ واقعی‌اش + یافتن
+   سطوح روشنِ باقی‌مانده) روی همهٔ صفحه‌های فروشگاه و داشبورد در ۱۲۸۰ و ۳۷۵
+   پیکسل نشان داد اجزای قالب قدیمی (theme.css / main_ui.css / fm-ui-audit.css)
+   رنگ سفید یا روشنِ ثابت دارند و در شب «کارت سفید با متن روشن» می‌سازند.
+
+   همهٔ قواعد این فایل فقط زیر [data-theme="dark"] فعال‌اند و حالت روز را تغییر
+   نمی‌دهند. این فایل آخرین برگهٔ سبک فروشگاه است (base.html).
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ───────────── ۱) کارت محصول، برند و مقاله در کاروسل‌ها (#fff ثابت) ───────────── */
+[data-theme="dark"] .widget-product .product-carousel .owl-item,
+[data-theme="dark"] .brand-slider .owl-carousel .owl-item,
+[data-theme="dark"] .Blog-carousel .owl-stage-outer .owl-stage .owl-item,
+[data-theme="dark"] .Blog-category .blog_tag {
+    background-color: var(--fm-neutral-100);
+    border-color: var(--fm-border);
+}
+/* قاب تصویر کارت‌ها و پیشنهاد لحظه‌ای */
+[data-theme="dark"] .widget-product .product-carousel .item > a:first-child,
+[data-theme="dark"] #offercarousel .carousel-inner .carousel-item .right-col > a {
+    background: var(--fm-surface-alt);
+}
+
+/* ───────────── ۲) قیمت‌ها، شمارنده و برچسب‌ها ───────────── */
+[data-theme="dark"] .product_main_details .price ins,
+[data-theme="dark"] #offercarousel .carousel-inner .carousel-item .row .left-col .price ins {
+    background-color: var(--fm-primary-50);
+}
+[data-theme="dark"] .product_main_details .price del { color: #f19a93; }
+[data-theme="dark"] .fm-countdown { background: rgba(220, 38, 38, .18); color: #fca5a5; }
+[data-theme="dark"] .fm-badge--accent { background: rgba(244, 114, 182, .16); color: #f9a8d4; }
+/* --fm-success در شب روشن است (برای متن)؛ دکمهٔ «به سبد اضافه شد» متن سفید دارد */
+[data-theme="dark"] .js-add-to-cart.is-added { background: #177a4c !important; }
+
+/* ───────────── ۳) صفحهٔ محصول: کادر اصلی و تب توضیحات (#fff ثابت) ───────────── */
+[data-theme="dark"] main.single-product .product,
+[data-theme="dark"] .box-tabs .card-body {
+    background-color: var(--fm-surface);
+}
+/* «نحوهٔ تحویل فایل» با #163839 روی زمینهٔ تیره عملاً نامرئی بود (۱٫۳) */
+[data-theme="dark"] .product_main_pr .time_pr { color: var(--fm-text); }
+
+/* ───────────── ۴) دکمه‌ها، آیکن‌ها و نوارها ───────────── */
+[data-theme="dark"] .view_more { border-color: transparent; }
+[data-theme="dark"] .promise-icon { color: var(--fm-primary-600); background: rgba(92, 195, 201, .12); }
+[data-theme="dark"] .back-to-top span:not(.icon) { color: var(--fm-text-soft); }
+/* کنترل‌های فیروزه‌ای روشن با آیکن سفید (۱٫۹ تا ۲٫۵): در شب هم‌رنگ بقیهٔ دکمه‌ها می‌شوند */
+[data-theme="dark"] .back-to-top .icon,
+[data-theme="dark"] .slider_main .prev-slide,
+[data-theme="dark"] .slider_main .next-slide { background: linear-gradient(#2a7d83, #1f6f74); }
+/* قاعدهٔ سراسری «p در شب = متن کم‌رنگ» متن روی نوار فیروزه‌ای خدمات را کدر می‌کرد */
+[data-theme="dark"] .svc-cta p,
+[data-theme="dark"] .svc-hero p { color: #e9fbfb !important; }
+[data-theme="dark"] .slider-track { background-color: var(--fm-primary-100); }
+[data-theme="dark"] .contact_us_content .form-account-title span { color: #f87171; }
+
+/* آیکن رنگی شبکه‌های اجتماعی (صفحهٔ تماس): رنگ برندهای تیره مثل ایکس، گیت‌هاب و
+   لینکدین روی کارت تیره ۱٫۲ تا ۲٫۸ کنتراست داشت. همان رنگ برند، روشن‌شده با سفید. */
+[data-theme="dark"] .fm-social__card .fm-social__icon {
+    color: color-mix(in srgb, var(--fm-social-color, #5cc3c9) 45%, #ffffff);
+}
+
+/* ───────────── ۵) وبلاگ: نوار خاکستری صفحهٔ اصلی، کارت‌ها و بردکرامب ───────────── */
+[data-theme="dark"] .bgGray { background-color: transparent; }
+[data-theme="dark"] main.category-blog .breadcrumb { background-color: var(--fm-surface); }
+[data-theme="dark"] main.category-blog .breadcrumb span { color: var(--fm-text-soft); }
+/* نویسنده و تاریخ کارت مقاله با #515151 !important روی کارت تیره ۱٫۸ کنتراست داشتند */
+[data-theme="dark"] .Blog-carousel .owl-stage-outer .owl-stage .owl-item .Blog_list .Blog_author,
+[data-theme="dark"] .Blog-carousel .owl-stage-outer .owl-stage .owl-item .Blog_list .Blog_Date,
+[data-theme="dark"] .Blog-category .blog_tag .Blog_list .Blog_author,
+[data-theme="dark"] .Blog-category .blog_tag .Blog_list .Blog_Date { color: var(--fm-text-soft) !important; }
+[data-theme="dark"] .Blog-category .blog_tag .Blog_list .Blog_author i,
+[data-theme="dark"] .Blog-carousel .owl-stage-outer .owl-stage .owl-item .Blog_list .Blog_author i {
+    background: var(--fm-primary-100) !important;
+    color: var(--fm-primary-600) !important;
+}
+
+/* ───────────── ۶) داشبورد کاربر، سبد و فرم‌ها ───────────── */
+[data-theme="dark"] .bg-light { background-color: var(--fm-surface-alt) !important; }
+/* ابزار bootstrap: .text-dark (#343a40 !important) روی سطح تیره نامرئی بود (تاریخ سفارش) */
+[data-theme="dark"] .text-dark { color: var(--fm-text-soft) !important; }
+[data-theme="dark"] .dropdown-item.active,
+[data-theme="dark"] .dropdown-item:active { background-color: var(--fm-primary-100); }
+[data-theme="dark"] .cart-page thead,
+[data-theme="dark"] .cart-page thead th { background-color: var(--fm-surface-alt); }
+[data-theme="dark"] .footer_login_reg { background-color: var(--fm-primary-50); border-top-color: var(--fm-border); }
+[data-theme="dark"] .fm-order-lines__thumb { background: var(--fm-surface-alt); }
+/* آیکن‌های رنگی کارت‌های آمار داشبورد (اعلان‌ها، علاقه‌مندی‌ها) روی کاشی تیره */
+[data-theme="dark"] .fm-metric-icon--notice { color: #f07878; }
+[data-theme="dark"] .fm-metric-icon--favorite { color: #f472b6; }
+
+/* ───────────── ۷) هدر موبایل ─────────────
+   theme.css به «همهٔ» لینک‌های منوی موبایل زمینهٔ سفید می‌دهد؛ در شب دکمهٔ
+   «ثبت‌نام» و نتایج جست‌وجوی زنده سفید با متن روشن می‌شدند. */
+[data-theme="dark"] nav.header-responsive a { background-color: transparent; }
+
+/* ───────────── ۸) لوگو ─────────────
+   لوگوی آپلودشده برای هدر روشن طراحی شده (مثلاً متن بنفش)؛ در شب مثل هدر
+   مدیریت روی یک کادر روشن نمایش داده می‌شود تا هویت برند خوانا بماند، مگر
+   این‌که «لوگوی حالت شب» در تنظیمات سایت آپلود شده باشد. */
+.site-logo--dark { display: none !important; }
+[data-theme="dark"] .site-logo--dark { display: block !important; }
+[data-theme="dark"] .site-logo--has-dark { display: none !important; }
+[data-theme="dark"] .site-logo:not(.site-logo--dark):not(.site-logo--has-dark) {
+    background: #fff;
+    border-radius: 10px;
+    padding: 3px 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .35);
+}
+
+/* ───────────── ۹) محتوای HTML سفارشی و متن ویرایشگر ─────────────
+   بخشی که نویسنده با زمینهٔ روشنِ inline ساخته (مثلاً style="background:#ecfeff")
+   در شب هم روشن می‌ماند، پس متنش هم باید رنگ تیرهٔ حالت روز را نگه دارد؛ قبلاً
+   متن روشنِ شب روی همان زمینهٔ روشن می‌نشست (۱٫۱). رنگی که نویسنده خودش inline
+   گذاشته باشد همچنان اولویت دارد. */
+[data-theme="dark"] :is(.fm-html-block, .fm-custom-html, .fm-prose, .content-expert) [style*="background"] {
+    color: #22333f;
+    color-scheme: light;
+}
+[data-theme="dark"] :is(.fm-html-block, .fm-custom-html, .fm-prose, .content-expert) [style*="background"]
+    :is(p, li, span, b, strong, em, small, label, td, th, h1, h2, h3, h4, h5, h6):not([style*="color"]) {
+    color: inherit !important;
+}
+[data-theme="dark"] :is(.fm-html-block, .fm-custom-html, .fm-prose, .content-expert) [style*="background"] a:not([style*="color"]) {
+    color: #2d6e74 !important;
+}

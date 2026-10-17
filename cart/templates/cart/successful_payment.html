@@ -1,64 +1,94 @@
 {% extends 'base.html' %}
-{% block title %}پایان خرید{% endblock %}
+{% block title %}پرداخت موفق | {{ site_name }}{% endblock %}
 {% load static %}
 {% load custom_filters %}
-{% load jalali_tags %}
 
 {% block content %}
-    <main class="cart-page default">
+    <main class="cart-page default fm-done">
         {% include 'includes/page_head.html' with title='پرداخت موفق' parent='سبد خرید' parent_url='/cart/' heading_tag='none' %}
         <div class="container">
-            <div class="row">
-                <div class="col-12 text-center">
-                    <ul class="order-steps">
-                        <li>
-                            <a href="{% url 'cart:cart' %}">
-                                <span>سبدخرید</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{% url 'cart:shopping_payment' %}">
-                                <span>روش پرداخت</span>
-                            </a>
-                        </li>
-                        <li class="active">
-                            <span class="active active3" aria-current="step">پایان خرید و دانلود</span>
-                        </li>
-                    </ul>
-                </div>
+            <ol class="fm-steps" aria-label="مراحل خرید">
+                <li class="is-done"><span class="fm-steps__dot"><i class="fa fa-check" aria-hidden="true"></i></span> سبد خرید</li>
+                <li class="is-done"><span class="fm-steps__dot"><i class="fa fa-check" aria-hidden="true"></i></span> {% if is_guest_order %}اطلاعات و پرداخت{% else %}روش پرداخت{% endif %}</li>
+                <li class="is-current" aria-current="step"><span class="fm-steps__dot">۳</span> دانلود فایل‌ها</li>
+            </ol>
 
-                <section class="cart default" aria-labelledby="payment-success-heading">
-                    <div class="container text-center cart_empty">
-                        <img src="{% static 'img/successful-cart.png' %}" class="" alt="پرداخت موفق"/>
-                        <h1 id="payment-success-heading">
-                            تبریک، پرداخت با موفقیت انجام شد
-                        </h1>
-                        <p>
-                            کد سفارش: <b>{{ order.order_number }}</b>
-                        </p>
-                        <p>
-                            فایل‌های شما آماده دانلود است! لینک دانلود اختصاصی هر فایل به مدت ۷ روز و تا ۵ بار دانلود معتبر است.
-                        </p>
-                        {% if tokens %}
-                            <div class="row justify-content-center">
-                                {% for token in tokens %}
-                                    <div class="col-12 col-md-6 mb-2">
-                                        <a href="{% url 'downloads:download' token.token %}"
-                                           class="btn btn-main-masai fm-download-token">
-                                            <i class="fa fa-download" aria-hidden="true"></i>
-                                            دانلود {{ token.product.title|truncatewords:6 }}
-                                        </a>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                        <div class="mt-3">
-                            <a href="{% url 'dashboard:order_detail' order.order_number %}" class="btn btn-second-masai">مشاهده سفارش و فاکتور</a>
-                            <a href="{% url 'dashboard:my_downloads' %}" class="btn btn-second-masai">دانلودهای من</a>
-                        </div>
+            <div class="fm-done__grid{% if account_card %} has-aside{% endif %}">
+                <section class="fm-card fm-done__main" aria-labelledby="payment-success-heading">
+                    <div class="fm-done__head">
+                        <span class="fm-done__icon" aria-hidden="true"><i class="fa fa-circle-check"></i></span>
+                        <h1 id="payment-success-heading">پرداخت با موفقیت انجام شد</h1>
+                        <p>کد سفارش: <b dir="ltr">{{ order.order_number }}</b> — مبلغ {{ order.final_price|format_price }} تومان</p>
                     </div>
+
+                    <h2 class="fm-card__title"><i class="fa fa-download" aria-hidden="true"></i> فایل‌های شما آماده دانلود است</h2>
+                    {% if tokens %}
+                        <ul class="fm-done__files">
+                            {% for token in tokens %}
+                                <li>
+                                    <span class="fm-done__file-title">{{ token.product.title|truncatewords:8 }}</span>
+                                    <a href="{% url 'downloads:download' token.token %}" class="fm-btn fm-btn--primary fm-download-token">
+                                        <i class="fa fa-download" aria-hidden="true"></i> دانلود
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <p class="fm-done__note"><i class="fa fa-circle-info" aria-hidden="true"></i> لینک دانلود اختصاصی هر فایل ۷ روز و تا ۵ بار معتبر است.</p>
+                    {% else %}
+                        <p class="fm-done__note">فایل‌های این سفارش به‌زودی آماده می‌شوند؛ در صورت نیاز با پشتیبانی تماس بگیرید.</p>
+                    {% endif %}
+
+                    {% if is_guest_order %}
+                        <div class="fm-done__link">
+                            <label for="order-link"><i class="fa fa-link" aria-hidden="true"></i> لینک صفحهٔ سفارش شما</label>
+                            <div class="fm-done__link-row">
+                                <input type="text" id="order-link" class="fm-input" value="{{ order_link }}" readonly dir="ltr" data-copy-source>
+                                <button type="button" class="fm-btn fm-btn--ghost" data-copy-button aria-describedby="order-link-status">
+                                    <i class="fa fa-copy" aria-hidden="true"></i> کپی
+                                </button>
+                            </div>
+                            <p class="fm-field__hint" id="order-link-status" role="status" aria-live="polite" data-copy-status>
+                                این لینک را نگه دارید؛ با آن هر زمان می‌توانید سفارش و فایل‌ها را ببینید.
+                                {% if order.contact_email %}یک نسخه از آن به ایمیلتان هم فرستاده شد.{% endif %}
+                            </p>
+                        </div>
+                        <p class="fm-done__note">
+                            <i class="fa fa-magnifying-glass" aria-hidden="true"></i>
+                            لینک را گم کردید؟ از <a href="{% url 'cart:track_order' %}">صفحهٔ پیگیری سفارش</a> با شمارهٔ سفارش و موبایل آن را دوباره بگیرید.
+                        </p>
+                    {% else %}
+                        <div class="fm-done__actions">
+                            <a href="{% url 'dashboard:order_detail' order.order_number %}" class="fm-btn fm-btn--ghost"><i class="fa fa-receipt" aria-hidden="true"></i> مشاهده سفارش و فاکتور</a>
+                            <a href="{% url 'dashboard:my_downloads' %}" class="fm-btn fm-btn--ghost"><i class="fa fa-cloud-arrow-down" aria-hidden="true"></i> دانلودهای من</a>
+                        </div>
+                    {% endif %}
                 </section>
+
+                {% if account_card %}
+                    <aside class="fm-done__aside" aria-label="ساخت حساب کاربری">
+                        {% include 'cart/includes/account_card.html' %}
+                    </aside>
+                {% endif %}
             </div>
         </div>
     </main>
+    {% if is_guest_order %}
+        <script>
+            (function () {
+                var button = document.querySelector('[data-copy-button]');
+                var source = document.querySelector('[data-copy-source]');
+                var status = document.querySelector('[data-copy-status]');
+                if (!button || !source) return;
+                button.addEventListener('click', function () {
+                    function done() { if (status) status.textContent = 'لینک کپی شد.'; }
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(source.value).then(done, function () { source.select(); });
+                    } else {
+                        source.select();
+                        try { document.execCommand('copy'); done(); } catch (e) { /* the text stays selected */ }
+                    }
+                });
+            })();
+        </script>
+    {% endif %}
 {% endblock %}

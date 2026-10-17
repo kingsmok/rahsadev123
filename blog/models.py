@@ -1,7 +1,10 @@
 from django.db import models
+from core.thumbnails import admin_thumbnail
 from django.contrib.auth.models import User
-from django.utils.html import format_html
 from django_ckeditor_5.fields import CKEditor5Field
+
+from accounts.roles import author_choices
+from core.custom_html import CustomHtmlMixin
 
 
 STATUS = (
@@ -30,8 +33,10 @@ class Tag(models.Model):
     def __str__(self): return self.title
 
 
-class Article(models.Model):
-    author = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='نویسنده مقاله')
+class Article(CustomHtmlMixin, models.Model):
+    # فقط مدیران و کاربرانِ گروه «نویسندگان» (accounts.roles).
+    author = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to=author_choices,
+                               verbose_name='نویسنده مقاله')
     category = models.ManyToManyField(Category, related_name='articles', verbose_name='دسته بندی مربوطه')
     tags = models.ManyToManyField(Tag, blank=True, related_name='articles', verbose_name='برچسب‌ها')
     title = models.CharField(max_length=200, unique=True, verbose_name='عنوان مقاله')
@@ -74,9 +79,8 @@ class Article(models.Model):
         ordering = ['-created_at', '-id']
 
     def article_image(self):
-        if self.image:
-            return format_html('<img src="{}" width="50px" height="50px">', self.image.url)
-        return format_html('<h3 style="color: red">تصویر ندارد</h3>')
+        return admin_thumbnail(self.image, self.title)
+    article_image.short_description = 'تصویر'
 
     def __str__(self):
         return self.title

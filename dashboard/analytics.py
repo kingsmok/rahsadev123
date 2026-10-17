@@ -22,7 +22,7 @@ from cart.models import Coupon, Order, OrderItem
 from core.models import ContactUs, NewsletterSubscriber, Redirect
 from downloads.models import DownloadToken
 from payments.models import PaymentTransaction
-from product.models import PRODUCT_TYPES, Product, ProductCategory
+from product.models import PRODUCT_TYPES, Product, ProductCategory, ProductComment, missing_file_q
 from services.models import PortfolioItem, ServicePackage, ServiceRequest
 
 # بازه‌های قابل انتخاب در داشبورد: (تعداد روز، برچسب فارسی)
@@ -120,8 +120,10 @@ def _window_kpis(start, end):
         'all_orders': Order.objects.filter(created_at__gte=start, created_at__lt=end).count(),
         'new_users': get_user_model().objects.filter(date_joined__gte=start, date_joined__lt=end).count(),
         'downloads': int(downloads.aggregate(total=Sum('download_count'))['total'] or 0),
-        'failed_payments': PaymentTransaction.objects.filter(
-            status='failed', created_at__gte=start, created_at__lt=end
+        # Declines only: a verified-but-undelivered payment took the money and
+        # belongs to the refund queue, not to "failed payments".
+        'failed_payments': PaymentTransaction.objects.declined().filter(
+            created_at__gte=start, created_at__lt=end
         ).count(),
     }
 
@@ -250,7 +252,7 @@ def low_stock_products(limit=6):
 def products_without_asset(limit=6):
     """محصولات منتشرشده‌ای که هنوز فایل قابل دانلود ندارند."""
     return list(
-        Product.objects.filter(status='published', digital_asset__isnull=True)
+        Product.objects.filter(missing_file_q(), status='published')
         .order_by('-created_at')[:limit]
     )
 
@@ -259,11 +261,13 @@ def pending_actions():
     """صف کارهای نیمه‌تمام؛ برای کارت «نیازمند رسیدگی»."""
     return {
         'pending_orders': Order.objects.filter(status='pending').count(),
-        'failed_payments': PaymentTransaction.objects.filter(status='failed').count(),
+        'failed_payments': PaymentTransaction.objects.declined().count(),
+        'unfulfilled_payments': PaymentTransaction.objects.unfulfilled().count(),
         'new_service_requests': ServiceRequest.objects.filter(status='new').count(),
         'draft_articles': Article.objects.filter(status='draft').count(),
         'draft_products': Product.objects.filter(status='draft').count(),
-        'unpublished_comments': Product.objects.filter(product_comments__status='draft').distinct().count(),
+        # New comments wait in status 'pending' for moderation (not 'draft').
+        'pending_comments': ProductComment.objects.filter(status='pending').count(),
         'new_messages': ContactUs.objects.count(),
         'active_coupons': Coupon.objects.filter(is_active=True).count(),
     }

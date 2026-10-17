@@ -16,7 +16,7 @@
     {% article_breadcrumb article %}
 {% endblock %}
 {% load jalali_tags %}
-{% load custom_filters %}
+{% load custom_filters site_extras %}
 
 {% block content %}
     <main class="blog-detail default">
@@ -24,6 +24,8 @@
 
         <div class="container space-bottom-30">
             <div class="row">
+                {# موبایل و تبلت: مقاله اول می‌آید و دسته‌ها/آخرین مقالات در کشوی همبرگری هستند #}
+                {% include 'includes/side_drawer_toggle.html' with target='fm-blog-side' label='دسته‌بندی‌ها و آخرین مقالات' hint='موضوع‌های وبلاگ را مرور کنید' %}
                 <div class="single_blog_content col-12 col-lg-9 order-2 order-lg-1">
                     <article class="fm-panel fm-article">
                         <h1 class="fm-article__title">{{ article.title }}</h1>
@@ -36,6 +38,7 @@
                                 {% else %}{{ article.author.username }}{% endif %}
                             </span>
                             <span><i class="fa fa-eye" aria-hidden="true"></i> {{ article.views }} بازدید</span>
+                            <button type="button" class="fm-article__share" data-share-open aria-haspopup="dialog" aria-controls="fm-share-sheet"><i class="fa fa-share-nodes" aria-hidden="true"></i> اشتراک‌گذاری</button>
                             {% if article.category.all %}
                                 <span class="fm-article__cats">
                                     <i class="fa fa-folder" aria-hidden="true"></i>
@@ -54,9 +57,15 @@
 
                         {% comment %}محتوای مقاله HTML است؛ قبلاً داخل یک پاراگراف و یک فرم قرار داشت
                            که ساختار HTML را خراب می‌کرد. حالا درست رندر می‌شود.{% endcomment %}
-                        <div class="fm-prose">
-                            {{ article.description|safe }}
-                        </div>
+                        {% if article.custom_html_before %}<div class="fm-custom-html">{{ article.custom_html|safe }}</div>{% endif %}
+                        {% if article.custom_html_replaces_content %}
+                            <div class="fm-custom-html">{{ article.custom_html|safe }}</div>
+                        {% else %}
+                            <div class="fm-prose">
+                                {{ article.description|safe }}
+                            </div>
+                        {% endif %}
+                        {% if article.custom_html_after %}<div class="fm-custom-html">{{ article.custom_html|safe }}</div>{% endif %}
 
                         {% if article.tags.all %}
                             <div class="fm-article__tags">
@@ -64,10 +73,16 @@
                                 {% for tag in article.tags.all %}<span class="fm-tag">{{ tag.title }}</span>{% endfor %}
                             </div>
                         {% endif %}
+                        <div class="fm-article__share-row">
+                            <span>این مطلب را به اشتراک بگذارید:</span>
+                            <button type="button" class="fm-btn fm-btn--ghost" data-share-open aria-haspopup="dialog" aria-controls="fm-share-sheet"><i class="fa fa-share-nodes" aria-hidden="true"></i> اشتراک‌گذاری</button>
+                        </div>
                     </article>
+                    {% html_blocks 'article_bottom' %}
                 </div>
 
-                <aside class="col-12 col-lg-3 order-1 order-lg-2">
+                <aside class="col-12 col-lg-3 order-1 order-lg-2 fm-side" id="fm-blog-side" data-fm-drawer data-fm-drawer-media="(max-width: 991.98px)" aria-labelledby="fm-blog-side-title">
+                    {% include 'includes/side_drawer_head.html' with target='fm-blog-side' title='دسته‌بندی‌های وبلاگ' icon='fa-folder-open' %}
                     <div class="sidebar_blog">
                         <div class="fm-panel fm-aside-nav">
                             <div class="fm-panel__head">
@@ -105,4 +120,5 @@
             </div>
         </div>
     </main>
+    {% include 'includes/share_sheet.html' with share_url=canonical_url|default:request.build_absolute_uri share_title=article.title %}
 {% endblock %}

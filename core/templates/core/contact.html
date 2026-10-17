@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load seo_tags %}
+{% load seo_tags site_extras %}
 
 {% block title %}تماس با ما | {{ site_name }}{% endblock %}
 {% block meta_description %}راه‌های ارتباط با پشتیبانی {{ site_name }}: تلفن، ایمیل، آدرس و فرم پیام — پاسخ‌گویی در ساعات اداری{% endblock %}
@@ -33,6 +33,7 @@
                                                 <li><i class="fa fa-phone colormain" aria-hidden="true"></i><a dir="ltr" href="tel:{{ site_settings.phone1 }}">{{ site_settings.phone1 }}</a>{% if site_settings.phone2 %} <span aria-hidden="true">—</span> <a dir="ltr" href="tel:{{ site_settings.phone2 }}">{{ site_settings.phone2 }}</a>{% endif %}</li>
                                             {% endif %}
                                         </ul>
+                                        {% social_icons 'contact' 'ما را در شبکه‌های اجتماعی دنبال کنید' %}
                                         <figure class="fm-local-map">
                                             <img src="{% static 'img/map.png' %}" alt="موقعیت تقریبی دفتر {{ site_name }}">
                                             <figcaption>موقعیت تقریبی دفتر {{ site_name }}</figcaption>

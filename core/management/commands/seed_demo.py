@@ -774,8 +774,9 @@ class Command(BaseCommand):
         # ------------------------------------------------------------------ تنظیمات درگاه‌های پرداخت
         gateways_data = [
             ('zarinpal', 'زرین‌پال', True, 'پرداخت امن با تمام کارت‌های عضو شتاب'),
-            ('snappay', 'اسنپ‌پی', False, 'پرداخت اقساطی اسنپ‌پی'),
-            ('torobpay', 'ترب‌پی', False, 'پرداخت از طریق ترب'),
+            ('zarinplus', 'زرین‌پلاس — خرید اقساطی', False, 'خرید اقساطی با اعتبار زرین‌پلاس'),
+            ('snappay', 'اسنپ‌پی — خرید اقساطی', False, 'خرید اقساطی؛ ۴ قسط بدون بهره با اسنپ‌پی'),
+            ('torobpay', 'ترب‌پی — خرید اعتباری', False, 'خرید اعتباری و اقساطی با ترب‌پی'),
         ]
         for key, title, enabled, description in gateways_data:
             GatewaySettings.objects.get_or_create(

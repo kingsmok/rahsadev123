@@ -72,3 +72,54 @@ class RefundRevokesDownloadTests(TestCase):
         self.order.status = 'paid'
         self.order.save(update_fields=['status'])
         self.assertEqual(self._download().status_code, 200)
+
+    # -- every other download path must apply the same rule -------------------
+
+    def test_legacy_product_download_url_hands_over_to_the_token_view(self):
+        response = self.client.get(f'/products/download/{self.product.pid}/')
+
+        self.assertRedirects(response, f'/downloads/{self.token.token}/', fetch_redirect_response=False)
+        self.assertEqual(self.client.get(response['Location']).status_code, 200)
+
+    def test_legacy_product_download_url_is_revoked_by_a_refund(self):
+        # This URL used to check only the token, so a refunded customer could
+        # keep downloading here while /downloads/<token>/ refused them.
+        self.order.status = 'refunded'
+        self.order.save(update_fields=['status'])
+
+        response = self.client.get(f'/products/download/{self.product.pid}/')
+
+        self.assertRedirects(
+            response, f'/products/{self.product.pid}/{self.product.slug}/', fetch_redirect_response=False,
+        )
+        self.token.refresh_from_db()
+        self.assertEqual(self.token.download_count, 0)
+
+    def test_atomic_consumption_refuses_a_cancelled_order(self):
+        self.order.status = 'cancelled'
+        self.order.save(update_fields=['status'])
+
+        self.assertFalse(self.token.register_download())
+        self.token.refresh_from_db()
+        self.assertEqual(self.token.download_count, 0)
+
+    def test_product_page_lets_a_refunded_customer_buy_again(self):
+        page = f'/products/{self.product.pid}/{self.product.slug}/'
+        self.assertContains(self.client.get(page), 'این فایل را قبلاً خریداری کرده‌اید')
+
+        self.order.status = 'refunded'
+        self.order.save(update_fields=['status'])
+        response = self.client.get(page)
+
+        self.assertNotContains(response, 'این فایل را قبلاً خریداری کرده‌اید')
+        self.assertNotContains(response, f'/downloads/{self.token.token}/')
+        self.assertContains(response, 'js-add-to-cart')
+
+    def test_my_downloads_explains_a_revoked_link(self):
+        self.order.status = 'cancelled'
+        self.order.save(update_fields=['status'])
+
+        response = self.client.get('/dashboard/downloads/')
+
+        self.assertContains(response, 'سفارش لغو یا مسترد شده')
+        self.assertNotContains(response, f'/downloads/{self.token.token}/')

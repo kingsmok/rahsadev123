@@ -23,6 +23,29 @@ ZARINPAL_SANDBOX = {
 }
 
 
+def _origin(url):
+    parts = urlsplit(url)
+    return f'{parts.scheme}://{parts.netloc}'
+
+
+#: Origins the customer's browser is redirected to right after the checkout
+#: form is POSTed (``payments:start`` answers with a 302 to the gateway page).
+#: Browsers apply the CSP ``form-action`` directive to every hop of a form
+#: submission's redirect chain, so these origins must be allowed there or the
+#: browser silently refuses to open the payment page.  When another gateway's
+#: ``start`` is implemented, add its start URL here.
+CHECKOUT_REDIRECT_ORIGINS = tuple(sorted({
+    _origin(ZARINPAL_PRODUCTION['start']),
+    _origin(ZARINPAL_SANDBOX['start']),
+    # زرین‌پلاس (مستند رسمی): صفحهٔ پرداخت اقساطی
+    'https://pwa.zarinplus.com',
+}))
+# Snapp Pay / Torob Pay return their payment-page URL at runtime (its host is
+# not documented publicly).  Instead of widening the CSP, ``start_payment``
+# sends the browser there through a small interstitial page (a navigation,
+# which ``form-action`` does not govern) when the origin is not listed above.
+
+
 def post_json(url, payload, headers=None):
     """POST only to an explicitly allowed HTTPS payment API host."""
     parsed = urlsplit(url)

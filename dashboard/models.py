@@ -47,6 +47,23 @@ class Wishlist(models.Model):
         return self.user.username
 
 
+class NotificationQuerySet(models.QuerySet):
+    def visible_to(self, user):
+        """Active, not expired, addressed to ``user`` or to everyone — each once.
+
+        The dashboard counter used its own query without ``distinct()`` or the
+        expiry filter: a broadcast that also listed users was counted once per
+        listed user, and expired notices were still counted.
+        """
+        now = timezone.now()
+        return self.filter(
+            models.Q(is_for_all_users=True) | models.Q(users=user),
+            is_active=True,
+        ).filter(
+            models.Q(expiration_date__isnull=True) | models.Q(expiration_date__gte=now)
+        ).distinct()
+
+
 class Notification(models.Model):
     message = models.TextField(verbose_name='پیام')
     is_for_all_users = models.BooleanField(default=False, help_text='با فعال‌سازی، اعلان به همه کاربران ارسال می‌شود', verbose_name='برای همه کاربران')
@@ -54,6 +71,8 @@ class Notification(models.Model):
     is_active = models.BooleanField(default=True, verbose_name='فعال')
     created_at = models.DateTimeField(default=timezone.now, verbose_name='تاریخ ایجاد')
     expiration_date = models.DateTimeField(null=True, blank=True, help_text='تاریخی که پس از آن اعلان به صورت خودکار حذف خواهد شد', verbose_name='تاریخ انقضا')
+
+    objects = NotificationQuerySet.as_manager()
 
     class Meta:
         verbose_name = 'اعلان'

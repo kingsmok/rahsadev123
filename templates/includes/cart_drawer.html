@@ -3,9 +3,9 @@
 {# This panel deliberately lives outside the header so it cannot be clipped by a header/container overflow or compete with Bootstrap's dropdown stacking. #}
 <div class="fm-cart-drawer-backdrop" data-cart-drawer-close aria-hidden="true"></div>
 <aside class="fm-cart-drawer" id="fm-cart-drawer" role="dialog" aria-modal="true"
-       aria-labelledby="fm-cart-drawer-title" aria-hidden="true" dir="rtl">
+       aria-labelledby="fm-cart-drawer-title" aria-hidden="true" dir="rtl" data-cart-count="{{ cart_count|default:0 }}">
     <header class="fm-cart-drawer__header">
-        <h2 id="fm-cart-drawer-title"><i class="fa fa-cart-shopping" aria-hidden="true"></i> سبد خرید</h2>
+        <h2 id="fm-cart-drawer-title"><i class="fa fa-cart-shopping" aria-hidden="true"></i> سبد خرید{% if cart_count %} <span class="fm-cart-drawer__count">{{ cart_count }} فایل</span>{% endif %}</h2>
         <button type="button" class="fm-cart-drawer__close" data-cart-drawer-close aria-label="بستن پنل سبد خرید">
             <i class="fa fa-times" aria-hidden="true"></i>
         </button>
@@ -15,7 +15,7 @@
         {% if cart_items %}
             <ul class="fm-cart-drawer__items" aria-label="محصولات سبد خرید">
                 {% for item in cart_items %}
-                    <li class="fm-cart-drawer__item">
+                    <li class="fm-cart-drawer__item{% if item.product.status != 'published' or not item.product.is_available %} is-unavailable{% endif %}">
                         <a href="{% url 'product:product_detail' item.product.pid item.product.slug %}" class="fm-cart-drawer__product">
                             {% if item.product.image %}
                                 <img src="{{ item.product.image.url }}" alt="{{ item.product.title|truncatewords:5 }}">
@@ -24,7 +24,11 @@
                             {% endif %}
                             <span class="fm-cart-drawer__product-info">
                                 <span class="fm-cart-drawer__product-title">{{ item.product.title|truncatewords:5 }}</span>
-                                <span class="fm-cart-drawer__product-meta"><i class="fa fa-download" aria-hidden="true"></i> دانلود آنی <b>· تعداد: {{ item.quantity }}</b></span>
+                                {% if item.product.status != 'published' or not item.product.is_available %}
+                                    <span class="fm-cart-drawer__product-meta fm-text-danger"><i class="fa fa-circle-exclamation" aria-hidden="true"></i> دیگر قابل خرید نیست؛ حذفش کنید</span>
+                                {% else %}
+                                    <span class="fm-cart-drawer__product-meta"><i class="fa fa-download" aria-hidden="true"></i> دانلود آنی</span>
+                                {% endif %}
                                 <strong>{{ item.total_price|format_price }} تومان</strong>
                             </span>
                         </a>
@@ -39,6 +43,7 @@
             <div class="fm-cart-drawer__empty">
                 <i class="fa fa-cart-shopping" aria-hidden="true"></i>
                 <p>سبد خرید شما خالی است.</p>
+                {% if not request.user.is_authenticated %}<p class="fm-cart-drawer__hint">خرید بدون نیاز به ثبت‌نام انجام می‌شود.</p>{% endif %}
                 <a href="{% url 'product:product_list' %}" class="fm-btn fm-btn--primary">مشاهده فایل‌ها</a>
             </div>
         {% endif %}
@@ -46,9 +51,19 @@
 
     {% if cart_items %}
         <footer class="fm-cart-drawer__footer">
+            {% if cart_discount %}
+                <div class="fm-cart-drawer__total fm-cart-drawer__total--sub">
+                    <span>جمع فایل‌ها</span>
+                    <span>{{ cart_total|format_price }} تومان</span>
+                </div>
+                <div class="fm-cart-drawer__total fm-cart-drawer__total--sub fm-text-success">
+                    <span>تخفیف</span>
+                    <span>{{ cart_discount|format_price }}- تومان</span>
+                </div>
+            {% endif %}
             <div class="fm-cart-drawer__total">
-                <span>جمع کل</span>
-                <strong>{{ cart_total|format_price }} تومان</strong>
+                <span>قابل پرداخت</span>
+                <strong>{{ cart_payable|format_price }} تومان</strong>
             </div>
             <div class="fm-cart-drawer__actions">
                 <a href="{% url 'cart:cart' %}" class="fm-btn fm-btn--ghost">مشاهده سبد</a>

@@ -4,14 +4,18 @@ import re
 import sys
 import tempfile
 from io import BytesIO, StringIO
+from pathlib import Path
 from unittest.mock import patch
 
+from django.apps import apps
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.template import Context
+from django.template.base import Lexer, TokenType
 from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from PIL import Image
@@ -99,9 +103,12 @@ class PublicFormAndSafetyTests(TestCase):
         self.assertContains(offline, 'اینترنت در دسترس نیست')
         self.assertContains(offline, 'noindex')
 
+        # Temporary redirect: the former permanent one was cached by browsers
+        # forever, so a newly uploaded icon never replaced the old tab icon.
         favicon = self.client.get('/favicon.ico')
-        self.assertEqual(favicon.status_code, 301)
+        self.assertEqual(favicon.status_code, 302)
         self.assertEqual(favicon['Location'], '/static/favicon.ico')
+        self.assertEqual(favicon['Cache-Control'], 'no-cache')
 
     def test_json_ld_is_script_safe_and_reports_iranian_currency_correctly(self):
         injected_value = '</script><script>alert("xss")</script>'
@@ -671,3 +678,393 @@ class BareCategoryRedirectTests(TestCase):
             response = self.client.get(path)
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response['Location'], '/products/')
+
+
+class TemplateCommentSyntaxTests(SimpleTestCase):
+    """کامنتِ {# … #} در جنگو فقط تک‌خطی است.
+
+    اگر {# و #} در یک خط نباشند جنگو آن را کامنت نمی‌شناسد و متنش خام در
+    صفحه چاپ می‌شود؛ این باگ یک بار در cart_drawer.html و بار دیگر در
+    admin/base_site.html رخ داد. کامنت چندخطی باید {% comment %} باشد.
+    """
+
+    @staticmethod
+    def _project_template_files():
+        base_dir = Path(settings.BASE_DIR).resolve()
+        directories = [Path(path) for engine in settings.TEMPLATES for path in engine.get('DIRS', [])]
+        # فقط اپ‌های خودِ پروژه؛ قالب‌های جنگو و بسته‌های نصب‌شده بررسی نمی‌شوند،
+        # حتی وقتی .venv (مثل run.sh) داخل پوشهٔ پروژه ساخته شده باشد.
+        directories += [
+            Path(config.path) / 'templates'
+            for config in apps.get_app_configs()
+            if Path(config.path).resolve().parent == base_dir
+        ]
+        for directory in directories:
+            if directory.is_dir():
+                yield from sorted(path for path in directory.rglob('*') if path.is_file())
+
+    def test_project_templates_have_no_multiline_hash_comments(self):
+        leaks = []
+        for path in self._project_template_files():
+            try:
+                source = path.read_text(encoding='utf-8')
+            except UnicodeDecodeError:
+                continue  # فایل باینری، قالب نیست
+            # توکن‌سازِ خودِ جنگو: {# … #} تک‌خطی توکن COMMENT می‌شود و نسخهٔ
+            # چندخطی‌اش TEXT می‌ماند، یعنی عیناً در خروجی چاپ می‌شود.
+            for token in Lexer(source).tokenize():
+                if token.token_type != TokenType.TEXT:
+                    continue
+                for match in re.finditer(r'\{#', token.contents):
+                    line = token.lineno + token.contents.count('\n', 0, match.start())
+                    leaks.append(f'{os.path.relpath(path, settings.BASE_DIR)}:{line}')
+        self.assertEqual(
+            leaks, [],
+            'این کامنت‌های {# … #} چندخطی‌اند و خام در صفحه چاپ می‌شوند؛ '
+            'تک‌خطی‌شان کنید یا از {% comment %} … {% endcomment %} استفاده کنید.',
+        )
+
+
+def _png_bytes(size=(64, 64), color=(124, 58, 237, 255), fmt='PNG'):
+    buffer = BytesIO()
+    mode = 'RGBA' if fmt == 'PNG' else 'RGB'
+    Image.new(mode, size, color if mode == 'RGBA' else color[:3]).save(buffer, format=fmt)
+    return buffer.getvalue()
+
+
+class ReplaceNameTests(SimpleTestCase):
+    def test_whole_names_and_persian_suffixes_are_replaced(self):
+        from core.branding import replace_name
+
+        self.assertEqual(
+            replace_name('حقوق فایل‌مارکت محفوظ است؛ فایل‌مارکت‌ها!', 'فایل‌مارکت', 'نوآوران‌سافت'),
+            'حقوق نوآوران‌سافت محفوظ است؛ نوآوران‌سافت‌ها!',
+        )
+        # Only part of a longer word: left alone.
+        self.assertEqual(replace_name('سوپرفایل‌مارکت', 'فایل‌مارکت', 'X'), 'سوپرفایل‌مارکت')
+        self.assertEqual(replace_name('C++ Shop rocks', 'C++ Shop', 'Nova'), 'Nova rocks')
+        for empty in ('', None):
+            self.assertEqual(replace_name(empty, 'فایل‌مارکت', 'X'), empty)
+        self.assertEqual(replace_name('بدون نام', 'فایل‌مارکت', 'X'), 'بدون نام')
+
+    def test_new_name_containing_the_old_one_is_not_doubled(self):
+        from core.branding import replace_name
+
+        self.assertEqual(
+            replace_name('به فایل‌مارکت پلاس و فایل‌مارکت خوش آمدید', 'فایل‌مارکت', 'فایل‌مارکت پلاس'),
+            'به فایل‌مارکت پلاس و فایل‌مارکت پلاس خوش آمدید',
+        )
+        self.assertEqual(replace_name('فایل‌مارکت پلاس', 'فایل‌مارکت پلاس', 'فایل‌مارکت'), 'فایل‌مارکت')
+
+    def test_brand_initial_and_defaults(self):
+        from core.branding import DEFAULT_SITE_NAME, Brand, brand_initial
+
+        self.assertEqual(brand_initial('نوآوران‌سافت'), 'ن')
+        self.assertEqual(brand_initial('  «novasoft»'), 'N')
+        brand = Brand(None)
+        self.assertEqual(brand.name, DEFAULT_SITE_NAME)
+        self.assertEqual(brand.version, 'default')
+        self.assertEqual(brand.favicon_url, '/static/img/favicon.png')
+        self.assertEqual(brand.favicon_ico_url, '/static/favicon.ico')
+        self.assertEqual(brand.logo_url, '')
+
+
+class SiteBrandingTests(TestCase):
+    """نام، لوگو و آیکن تب از «تنظیمات سایت» باید در همهٔ بخش‌ها اعمال شود.
+
+    قبلاً نام «فایل‌مارکت» در سربرگ و عنوان ادمین، پنل مدیریت، صفحهٔ آفلاین،
+    manifest و اسلایدر ثابت بود، آیکن تب از فایل استاتیک می‌آمد و
+    /favicon.ico ریدایرکت دائمی داشت؛ تغییر نام یا لوگو فقط هدر فروشگاه را
+    عوض می‌کرد.
+    """
+
+    OLD = 'فایل‌مارکت'
+    NEW = 'نوآوران‌سافت'
+
+    def setUp(self):
+        from django.core.cache import cache
+        from core.models import SiteSettings
+
+        self.temp_media = tempfile.TemporaryDirectory()
+        media_override = override_settings(MEDIA_ROOT=self.temp_media.name)
+        media_override.enable()
+        self.addCleanup(media_override.disable)
+        self.addCleanup(self.temp_media.cleanup)
+        cache.clear()
+        self.addCleanup(cache.clear)
+        self.admin_user = User.objects.create_superuser('boss', 'boss@example.com', 'Safe-pass-123!')
+        self.site = SiteSettings.objects.create(
+            site_name=self.OLD,
+            site_slogan='مارکت فایل و نرم‌افزار',
+            copy_right=f'تمامی حقوق برای {self.OLD} محفوظ است.',
+            default_meta_title=f'{self.OLD} | فروش فایل',
+            footer_description=f'{self.OLD} مرجع خرید فایل‌های نرم‌افزاری است.',
+            text_contact_us='پاسخگوی شما هستیم.',
+        )
+
+    def _rename(self, name=None, **fields):
+        for key, value in {'site_name': name or self.NEW, **fields}.items():
+            setattr(self.site, key, value)
+        self.site.save()
+
+    def _upload(self, field, content, name):
+        setattr(self.site, field, SimpleUploadedFile(name, content, content_type='image/png'))
+        self.site.save()
+        self.site.refresh_from_db()
+
+    def _brand(self):
+        from core.branding import Brand
+        from core.models import SiteSettings
+
+        return Brand(SiteSettings.objects.get(pk=self.site.pk))
+
+    def _admin_post_data(self, **overrides):
+        from django.forms.models import model_to_dict
+
+        self.site.refresh_from_db()
+        data = {
+            key: '' if value is None else value
+            for key, value in model_to_dict(self.site).items()
+            if key not in ('id', 'logo', 'logo_dark', 'favicon')
+        }
+        data['replace_old_name'] = 'on'
+        data.update(overrides)
+        return {key: value for key, value in data.items() if value is not None}
+
+    def test_renamed_site_reaches_every_surface(self):
+        neutral = 'متن بدون نام'
+        self._rename(copy_right=neutral, default_meta_title='', footer_description=neutral)
+        self.client.force_login(self.admin_user)
+        version = self._brand().version
+        pages = {
+            '/': [f'<meta name="author" content="{self.NEW}">', '<span class="brand-mark" aria-hidden="true">ن</span>'],
+            '/admin/': [f'<title>خانهٔ مدیریت | مدیریت {self.NEW}</title>', f'خانهٔ مدیریت {self.NEW}',
+                        f'پنل مدیریت {self.NEW}'],
+            f'/admin/core/sitesettings/{self.site.pk}/change/': [f'مدیریت {self.NEW}</title>'],
+            '/admin-panel/': [f'| {self.NEW}</title>', f'<b class="ap-brand__title">{self.NEW}</b>'],
+            '/dashboard/': [f'<meta name="author" content="{self.NEW}">'],
+            '/offline/': [f'| {self.NEW}</title>', '<div class="mark" aria-hidden="true">ن</div>'],
+            '/service-worker.js': [f"const CACHE_NAME = 'filemarket-shell-v1-{version}';"],
+        }
+        for url, expected in pages.items():
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 200)
+                html = response.content.decode()
+                for fragment in expected:
+                    self.assertIn(fragment, html)
+                if 'sitesettings' not in url:  # its help text names the default on purpose
+                    self.assertNotIn(self.OLD, html)
+
+        manifest = self.client.get('/manifest.webmanifest')
+        self.assertEqual(manifest['Content-Type'], 'application/manifest+json; charset=utf-8')
+        data = json.loads(manifest.content)
+        self.assertEqual(data['short_name'], self.NEW)
+        self.assertEqual(data['name'], f'{self.NEW} | مارکت فایل و نرم‌افزار')
+        self.assertNotIn(self.OLD, manifest.content.decode())
+
+        self.client.logout()
+        login = self.client.get('/admin/login/')
+        self.assertContains(login, f'مدیریت {self.NEW}</title>')
+        self.assertContains(login, f'>مدیریت {self.NEW}</a>')
+        self.assertNotContains(login, self.OLD)
+
+    def test_without_uploads_the_bundled_icons_are_used(self):
+        home = self.client.get('/').content.decode()
+        self.assertIn('<link rel="icon" type="image/png" href="/static/img/favicon.png">', home)
+        self.assertIn('<link rel="apple-touch-icon" href="/static/img/favicon.png">', home)
+        self.assertIn(f'<link rel="manifest" href="/manifest.webmanifest?v={self._brand().version}">', home)
+        self.assertEqual(self.client.get('/favicon.ico')['Location'], '/static/favicon.ico')
+        icon = self.client.get('/brand/icon-192.png')
+        self.assertEqual((icon.status_code, icon['Location']), (302, '/static/img/pwa/icon-192.png'))
+        icons = json.loads(self.client.get('/manifest.webmanifest').content)['icons']
+        self.assertEqual([item['src'] for item in icons], ['/static/img/pwa/icon-192.png', '/static/img/pwa/icon-512.png'])
+        self.assertEqual({item['purpose'] for item in icons}, {'any maskable'})
+
+    def test_uploaded_favicon_drives_tab_touch_and_app_icons_everywhere(self):
+        self._upload('favicon', _png_bytes((600, 600)), 'my-icon.png')
+        # Kept byte-for-byte: no lossy WebP conversion for the favicon.
+        self.assertTrue(self.site.favicon.name.endswith('.png'))
+        version = self._brand().version
+        tab_icon = f'<link rel="icon" type="image/png" href="/brand/icon-32.png?v={version}">'
+        touch_icon = f'<link rel="apple-touch-icon" href="/brand/icon-180.png?v={version}">'
+        self.client.force_login(self.admin_user)
+        for url in ('/', '/products/', '/dashboard/', '/admin/', '/admin/login/', '/admin-panel/', '/offline/'):
+            with self.subTest(url=url):
+                html = self.client.get(url, follow=True).content.decode()
+                self.assertIn(tab_icon, html)
+                self.assertNotIn('/static/img/favicon.png', html)
+                if url != '/offline/':
+                    self.assertIn(touch_icon, html)
+
+        favicon = self.client.get('/favicon.ico')
+        self.assertEqual((favicon.status_code, favicon['Location']), (302, f'/brand/icon-32.png?v={version}'))
+        for size in (32, 180, 192, 512):
+            with self.subTest(size=size):
+                response = self.client.get(f'/brand/icon-{size}.png', {'v': version})
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response['Content-Type'], 'image/png')
+                self.assertEqual(response['Cache-Control'], 'public, max-age=31536000, immutable')
+                with Image.open(BytesIO(response.content)) as image:
+                    self.assertEqual((image.format, image.size), ('PNG', (size, size)))
+
+        icons = json.loads(self.client.get('/manifest.webmanifest').content)['icons']
+        self.assertEqual(
+            [(item['src'], item['purpose']) for item in icons],
+            [(f'/brand/icon-192.png?v={version}', 'any'), (f'/brand/icon-512.png?v={version}', 'any')],
+        )
+        # The organisation schema falls back to the icon when there is no logo.
+        self.assertContains(self.client.get('/'), f'/brand/icon-512.png?v={version}')
+
+    def test_logo_is_shown_everywhere_and_is_the_icon_fallback(self):
+        self._upload('logo', _png_bytes((300, 100), fmt='JPEG'), 'wide-logo.jpg')
+        brand = self._brand()
+        self.assertTrue(brand.logo_url.endswith(f'?v={brand.version}'))
+        self.client.force_login(self.admin_user)
+        home = self.client.get('/').content.decode()
+        self.assertEqual(home.count(f'src="{brand.logo_url}"'), 2)  # desktop header + mobile menu
+        admin_home = self.client.get('/admin/').content.decode()
+        self.assertIn('fm-mark fm-mark--logo', admin_home)
+        self.assertIn(f'src="{brand.logo_url}"', admin_home)
+        panel = self.client.get('/admin-panel/').content.decode()
+        self.assertIn('ap-brand__mark--logo', panel)
+        self.assertIn(f'src="{brand.logo_url}"', panel)
+        self.assertIn(f'href="/brand/icon-32.png?v={brand.version}"', home)
+
+        # A wide logo is fitted into the square, not cropped or squashed.
+        icon = self.client.get('/brand/icon-32.png', {'v': brand.version})
+        with Image.open(BytesIO(icon.content)) as image:
+            self.assertEqual(image.size, (32, 32))
+            self.assertEqual(image.getpixel((0, 0))[3], 0)
+            self.assertEqual(image.getpixel((16, 16))[3], 255)
+
+        # A dedicated favicon wins over the logo for the icon and the admin mark.
+        self._upload('favicon', _png_bytes((64, 64)), 'icon.png')
+        admin_home = self.client.get('/admin/').content.decode()
+        self.assertIn('fm-mark fm-mark--image', admin_home)
+        self.assertIn(f'src="/brand/icon-180.png?v={self._brand().version}"', admin_home)
+        self.assertIn('ap-brand__mark--image', self.client.get('/admin-panel/').content.decode())
+
+    def test_every_save_changes_the_asset_version(self):
+        first = self._brand().version
+        self._rename()
+        second = self._brand().version
+        self.assertNotEqual(first, second)
+        self.site.save()
+        self.assertNotEqual(second, self._brand().version)
+
+    def test_icon_endpoint_limits_sizes_methods_and_caching(self):
+        self._upload('favicon', _png_bytes(), 'icon.png')
+        self.assertEqual(self.client.get('/brand/icon-64.png').status_code, 404)
+        self.assertEqual(self.client.post('/brand/icon-32.png').status_code, 405)
+        for params in ({}, {'v': 'stale'}):
+            response = self.client.get('/brand/icon-32.png', params)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response['Cache-Control'], 'public, max-age=300')
+        self.assertFalse(response.cookies)
+
+    def test_unreadable_icon_falls_back_to_the_bundled_icon(self):
+        from core.models import SiteSettings
+
+        SiteSettings.objects.filter(pk=self.site.pk).update(favicon='settings/missing.png')
+        with self.assertLogs('core.views', 'WARNING'):
+            response = self.client.get('/brand/icon-32.png')
+        self.assertEqual((response.status_code, response['Location']), (302, '/static/img/favicon.png'))
+
+    def test_admin_save_replaces_the_old_name_in_settings_texts(self):
+        self.client.force_login(self.admin_user)
+        url = reverse('admin:core_sitesettings_change', args=[self.site.pk])
+        response = self.client.post(url, self._admin_post_data(site_name=self.NEW), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.site.refresh_from_db()
+        self.assertEqual(self.site.site_name, self.NEW)
+        self.assertEqual(self.site.copy_right, f'تمامی حقوق برای {self.NEW} محفوظ است.')
+        self.assertEqual(self.site.default_meta_title, f'{self.NEW} | فروش فایل')
+        self.assertEqual(self.site.footer_description, f'{self.NEW} مرجع خرید فایل‌های نرم‌افزاری است.')
+        messages_text = [str(message) for message in response.context['messages']]
+        self.assertTrue(any('متن کپی رایت' in text and self.NEW in text for text in messages_text), messages_text)
+
+        home = self.client.get('/').content.decode()
+        self.assertIn(f'<title>{self.NEW} | فروش فایل</title>', home)
+        self.assertNotIn(self.OLD, home)
+
+    def test_admin_save_can_keep_texts_and_then_warns_about_them(self):
+        self.client.force_login(self.admin_user)
+        url = reverse('admin:core_sitesettings_change', args=[self.site.pk])
+        self.client.post(url, self._admin_post_data(site_name=self.NEW, replace_old_name=None))
+        self.site.refresh_from_db()
+        self.assertEqual(self.site.site_name, self.NEW)
+        self.assertIn(self.OLD, self.site.copy_right)
+        page = self.client.get(url)
+        self.assertContains(page, f'نام قبلی «{self.OLD}» هنوز در این بخش‌ها آمده')
+        self.assertContains(page, 'name="replace_old_name"')
+
+    def test_replacement_longer_than_the_field_is_skipped_with_a_warning(self):
+        title = f'{self.OLD} | ' + 'ا' * (70 - len(self.OLD) - 3)
+        self._rename(name=self.OLD, default_meta_title=title)
+        self.client.force_login(self.admin_user)
+        url = reverse('admin:core_sitesettings_change', args=[self.site.pk])
+        response = self.client.post(url, self._admin_post_data(site_name=self.NEW + ' پلاس'), follow=True)
+        self.site.refresh_from_db()
+        self.assertEqual(self.site.default_meta_title, title)
+        self.assertIn(self.NEW, self.site.copy_right)
+        messages_text = ' '.join(str(message) for message in response.context['messages'])
+        self.assertIn('عنوان سئوی پیش‌فرض', messages_text)
+        self.assertIn('حداکثر طول', messages_text)
+
+    def test_settings_admin_is_a_single_row(self):
+        from core.models import SiteSettings
+
+        self.client.force_login(self.admin_user)
+        changelist = reverse('admin:core_sitesettings_changelist')
+        response = self.client.get(changelist)
+        self.assertRedirects(response, reverse('admin:core_sitesettings_change', args=[self.site.pk]))
+        self.assertEqual(self.client.get(reverse('admin:core_sitesettings_add')).status_code, 403)
+
+        # Legacy duplicate rows: the list explains which one the site uses.
+        SiteSettings.objects.create(site_name='ردیف اضافه', copy_right='-')
+        response = self.client.get(changelist)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f'فقط ردیف شمارهٔ {self.site.pk}')
+        self.assertContains(response, 'در حال استفاده روی سایت')
+        self.assertEqual(self.client.get('/').context['site_name'], self.OLD)
+
+        SiteSettings.objects.all().delete()
+        self.assertEqual(self.client.get(changelist).status_code, 200)
+        self.assertEqual(self.client.get(reverse('admin:core_sitesettings_add')).status_code, 200)
+
+    def test_view_only_staff_sees_settings_without_the_replace_option(self):
+        from django.contrib.auth.models import Permission
+
+        viewer = User.objects.create_user('viewer', password='Safe-pass-123!', is_staff=True)
+        viewer.user_permissions.add(Permission.objects.get(codename='view_sitesettings'))
+        self.client.force_login(viewer)
+        page = self.client.get(reverse('admin:core_sitesettings_change', args=[self.site.pk]))
+        self.assertEqual(page.status_code, 200)
+        self.assertNotContains(page, 'جایگزینی نام قبلی در متن‌ها')
+        self.assertContains(page, 'پیش‌نمایش آیکن تب و لوگو')
+        self.assertEqual(
+            self.client.post(reverse('admin:core_sitesettings_change', args=[self.site.pk]),
+                             self._admin_post_data(site_name='هک')).status_code,
+            403,
+        )
+        self.site.refresh_from_db()
+        self.assertEqual(self.site.site_name, self.OLD)
+
+    def test_brand_preview_in_admin_shows_the_generated_icons(self):
+        self._upload('favicon', _png_bytes(), 'icon.png')
+        self.client.force_login(self.admin_user)
+        page = self.client.get(reverse('admin:core_sitesettings_change', args=[self.site.pk]))
+        version = self._brand().version
+        self.assertContains(page, f'src="/brand/icon-32.png?v={version}"')
+        self.assertContains(page, f'src="/brand/icon-180.png?v={version}"')
+        self.assertContains(page, 'از «آیکن تب مرورگر» آپلودشده')
+        self.assertContains(page, 'name="favicon"')
+
+    def test_missing_settings_table_falls_back_to_the_default_brand(self):
+        from django.db import OperationalError
+        from core.branding import DEFAULT_SITE_NAME, get_brand
+
+        with patch('core.models.SiteSettings.objects.order_by', side_effect=OperationalError('no such table')):
+            brand = get_brand(RequestFactory().get('/'))
+        self.assertEqual((brand.name, brand.version), (DEFAULT_SITE_NAME, 'default'))

@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}پیگیری سفارش | {{ site_name }}{% endblock %}
+{% block meta_description %}پیگیری سفارش‌های خرید بدون ثبت‌نام در {{ site_name }} با شمارهٔ سفارش و شماره موبایل.{% endblock %}
+{# پیام‌ها داخل همان کارت نمایش داده می‌شوند #}
+{% block messages %}{% endblock %}
+
+{% block content %}
+    <main class="fm-auth-page">
+        <div class="container">
+            <div class="fm-auth">
+                <div class="fm-auth__card">
+                    <div class="fm-auth__head">
+                        <div class="fm-auth__icon"><i class="fa fa-magnifying-glass" aria-hidden="true"></i></div>
+                        <h1>پیگیری سفارش</h1>
+                        {% if lookup %}
+                            <p>کد تأیید پیامک‌شده به <bdi dir="ltr">{{ mobile_masked }}</bdi> را وارد کنید.</p>
+                        {% else %}
+                            <p>برای خریدی که بدون ثبت‌نام انجام داده‌اید، شمارهٔ سفارش و موبایلی را که هنگام خرید وارد کردید بنویسید.</p>
+                        {% endif %}
+                    </div>
+
+                    {% if messages %}
+                        <div class="fm-messages" role="status" aria-live="polite">
+                            {% for message in messages %}
+                                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %}"><span>{{ message }}</span></div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% if lookup %}
+                        <form method="post" class="fm-form" novalidate>
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="verify">
+                            <div class="fm-field">
+                                <label for="track-code">کد تأیید <span aria-hidden="true">*</span></label>
+                                <input type="text" id="track-code" name="code" required autofocus dir="ltr" class="fm-input fm-otp-input"
+                                       inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="8" placeholder="•••••">
+                            </div>
+                            <button type="submit" class="fm-btn fm-btn--primary fm-btn--block"><i class="fa fa-unlock" aria-hidden="true"></i> نمایش سفارش</button>
+                        </form>
+                        <form method="post" class="fm-otp-actions">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="reset">
+                            <button type="submit" class="fm-link-btn">تغییر شمارهٔ سفارش یا موبایل</button>
+                        </form>
+                    {% else %}
+                        <form method="post" class="fm-form" novalidate>
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="lookup">
+                            <div class="fm-field">
+                                <label for="track-number">شمارهٔ سفارش <span aria-hidden="true">*</span></label>
+                                <input type="text" id="track-number" name="order_number" required dir="ltr" class="fm-input"
+                                       inputmode="numeric" autocomplete="off" maxlength="20" placeholder="1234567890">
+                            </div>
+                            <div class="fm-field">
+                                <label for="track-mobile">شماره موبایل <span aria-hidden="true">*</span></label>
+                                <input type="tel" id="track-mobile" name="mobile" required dir="ltr" class="fm-input"
+                                       inputmode="tel" autocomplete="tel" maxlength="20" placeholder="09121234567">
+                            </div>
+                            <button type="submit" class="fm-btn fm-btn--primary fm-btn--block">
+                                <i class="fa fa-paper-plane" aria-hidden="true"></i> {% if otp_available %}دریافت کد تأیید{% else %}ارسال لینک سفارش به ایمیل{% endif %}
+                            </button>
+                        </form>
+                        {% if not otp_available %}
+                            <p class="fm-field__hint">لینک صفحهٔ سفارش به ایمیلی فرستاده می‌شود که هنگام خرید وارد کرده‌اید. اگر ایمیل وارد نکرده بودید، با پشتیبانی تماس بگیرید.</p>
+                        {% endif %}
+                    {% endif %}
+
+                    <p class="fm-auth__alt">
+                        خرید را با حساب کاربری انجام داده‌اید؟ <a href="{% url 'account:login' %}?next={% url 'dashboard:orders' %}">وارد شوید</a> ·
+                        <a href="{% url 'core:contact' %}">تماس با پشتیبانی</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+{% endblock %}

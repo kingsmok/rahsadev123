@@ -59,3 +59,28 @@ def ensure_user_profile(sender, instance, **kwargs):
 
 post_save.connect(ensure_user_profile, sender=User)
 
+
+
+class PhoneOTP(models.Model):
+    """کد یک‌بارمصرف ورود/ثبت‌نام با پیامک.
+
+    خود کد ذخیره نمی‌شود؛ فقط HMAC آن (با SECRET_KEY). هر کد عمر کوتاه، سقف
+    تلاش و یک‌بار مصرف دارد و درخواست کد جدید، کدهای قبلی همان شماره را باطل
+    می‌کند (accounts.otp).
+    """
+
+    phone = models.CharField(max_length=11, db_index=True, verbose_name='شماره موبایل')
+    code_hash = models.CharField(max_length=128, verbose_name='هش کد')
+    attempts = models.PositiveSmallIntegerField(default=0, verbose_name='تعداد تلاش')
+    expires_at = models.DateTimeField(verbose_name='انقضا')
+    consumed_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان استفاده/ابطال')
+    ip_address = models.GenericIPAddressField(null=True, blank=True, verbose_name='IP درخواست‌کننده')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='زمان ارسال')
+
+    class Meta:
+        verbose_name = 'کد تأیید پیامکی'
+        verbose_name_plural = 'کدهای تأیید پیامکی'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.phone[:4]}***{self.phone[-2:]}'

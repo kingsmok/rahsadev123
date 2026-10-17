@@ -4,23 +4,33 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="robots" content="noindex, nofollow">
-    <meta name="theme-color" content="#46a9ae">
-    <title>اتصال اینترنت در دسترس نیست | فایل‌مارکت</title>
+    <meta name="theme-color" content="#2d6e74">
+    <title>اتصال اینترنت در دسترس نیست | {{ site_brand.name }}</title>
+    <link rel="icon" type="image/png" href="{{ site_brand.favicon_url }}">
+    <script>
+        /* همان کلید تم فروشگاه (fm-theme)؛ این صفحه بدون base.html و بدون اینترنت نمایش داده می‌شود. */
+        try { if (localStorage.getItem('fm-theme') === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); } } catch (e) {}
+    </script>
     <style>
         :root { color-scheme: light; }
         * { box-sizing: border-box; }
         body { min-height: 100vh; margin: 0; padding: 24px; display: grid; place-items: center; background: #f4f8f9; color: #18313b; font-family: Tahoma, Arial, sans-serif; }
         main { width: min(100%, 520px); padding: clamp(28px, 7vw, 52px); border: 1px solid rgba(38, 117, 123, .12); border-radius: 24px; background: #fff; box-shadow: 0 20px 50px rgba(20, 53, 65, .12); text-align: center; }
-        .mark { width: 64px; height: 64px; margin: 0 auto 20px; display: grid; place-items: center; border-radius: 20px; background: linear-gradient(135deg, #46a9ae, #63cbd0); color: #fff; font-size: 30px; font-weight: 800; }
+        .mark { width: 64px; height: 64px; margin: 0 auto 20px; display: grid; place-items: center; border-radius: 20px; background: linear-gradient(135deg, #2d6e74, #3a8a90); color: #fff; font-size: 30px; font-weight: 800; }
         h1 { margin: 0 0 12px; font-size: clamp(20px, 5vw, 27px); }
         p { margin: 0; color: #5e737d; font-size: 15px; line-height: 2; }
-        button { margin-top: 26px; padding: 12px 24px; border: 0; border-radius: 999px; background: #368f95; color: #fff; cursor: pointer; font: inherit; font-weight: 700; }
-        button:hover { background: #277a80; }
+        button { margin-top: 26px; padding: 12px 24px; border: 0; border-radius: 999px; background: #2d6e74; color: #fff; cursor: pointer; font: inherit; font-weight: 700; }
+        button:hover { background: #224a4e; }
+        /* حالت شب — همان پالت فروشگاه */
+        [data-theme="dark"] { color-scheme: dark; }
+        [data-theme="dark"] body { background: #0f1720; color: #e8eef4; }
+        [data-theme="dark"] main { background: #18232e; border-color: rgba(232, 238, 244, .1); box-shadow: 0 20px 50px rgba(0, 0, 0, .45); }
+        [data-theme="dark"] p { color: #9db0c0; }
     </style>
 </head>
 <body>
 <main>
-    <div class="mark" aria-hidden="true">ف</div>
+    <div class="mark" aria-hidden="true">{{ site_brand.initial }}</div>
     <h1>اینترنت در دسترس نیست</h1>
     <p>اتصال خود را بررسی کنید و دوباره تلاش کنید. بخش‌های ذخیره‌شدهٔ فروشگاه پس از اتصال دوباره به‌روزرسانی می‌شوند.</p>
     <button type="button" onclick="window.location.reload()">تلاش دوباره</button>

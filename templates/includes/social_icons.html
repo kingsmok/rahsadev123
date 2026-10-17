@@ -1,0 +1,52 @@
+{% load static site_extras %}
+{% if links %}
+    {% comment %}شبکه‌های اجتماعی از «تنظیمات سایت» (core.social). آیکن‌ها SVG هستند و
+       به فونت آیکن وابسته نیستند؛ شبکه‌های ایرانی (ایتا، روبیکا، بله، آپارات، …)
+       هم آیکن دارند.{% endcomment %}
+    {% with sprite='img/social/social-sprite.svg' %}{% asset sprite as sprite_url %}
+        {% if variant == 'contact' %}
+            <div class="fm-social fm-social--contact">
+                {% if title %}<h3 class="fm-social__title">{{ title }}</h3>{% endif %}
+                <ul class="fm-social__grid">
+                    {% for link in links %}
+                        <li>
+                            <a href="{{ link.url }}" target="_blank" rel="noopener me" class="fm-social__card" style="--fm-social-color: {{ link.color }}">
+                                <svg class="fm-social__icon" aria-hidden="true" focusable="false"><use href="{{ sprite_url }}#si-{{ link.key }}"></use></svg>
+                                <span>{{ link.label }}</span>
+                                <span class="fm-sr-only">(باز شدن در پنجرهٔ جدید)</span>
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% else %}
+            <div class="fm-social fm-social--{{ variant }}">
+                {% if title %}<p class="fm-social__title">{{ title }}</p>{% endif %}
+                {% if variant == 'footer' and global_links and iran_links %}
+                    <div class="fm-social__group">
+                        <span class="fm-social__group-label">شبکه‌های بین‌المللی</span>
+                        <ul class="fm-social__list">
+                            {% for link in global_links %}
+                                <li><a href="{{ link.url }}" target="_blank" rel="noopener me" class="fm-social__link" style="--fm-social-color: {{ link.color }}" aria-label="{{ link.label }} (باز شدن در پنجرهٔ جدید)" title="{{ link.label }}"><svg class="fm-social__icon" aria-hidden="true" focusable="false"><use href="{{ sprite_url }}#si-{{ link.key }}"></use></svg></a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="fm-social__group">
+                        <span class="fm-social__group-label">پیام‌رسان‌ها و شبکه‌های ایرانی</span>
+                        <ul class="fm-social__list">
+                            {% for link in iran_links %}
+                                <li><a href="{{ link.url }}" target="_blank" rel="noopener me" class="fm-social__link" style="--fm-social-color: {{ link.color }}" aria-label="{{ link.label }} (باز شدن در پنجرهٔ جدید)" title="{{ link.label }}"><svg class="fm-social__icon" aria-hidden="true" focusable="false"><use href="{{ sprite_url }}#si-{{ link.key }}"></use></svg></a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% else %}
+                    <ul class="fm-social__list">
+                        {% for link in links %}
+                            <li><a href="{{ link.url }}" target="_blank" rel="noopener me" class="fm-social__link" style="--fm-social-color: {{ link.color }}" aria-label="{{ link.label }} (باز شدن در پنجرهٔ جدید)" title="{{ link.label }}"><svg class="fm-social__icon" aria-hidden="true" focusable="false"><use href="{{ sprite_url }}#si-{{ link.key }}"></use></svg></a></li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% endwith %}
+{% endif %}

@@ -1,0 +1,22 @@
+{% load static %}
+{% comment %}یک بنر (کوچک/بزرگ/تک). پارامتر: banner. اندازه، متن، جای متن، تصویر موبایل و
+   تب جدید از پنل مدیریت ← بنرها تنظیم می‌شود.{% endcomment %}
+<div class="{{ banner.column_class }}">
+    <div class="widget-banner card border_all fm-banner {{ banner.css_modifiers }}">
+        {% if banner.url %}<a href="{{ banner.url }}" class="fm-banner__link"{% if banner.open_in_new_tab %} target="_blank" rel="noopener"{% endif %}{% if not banner.has_overlay %} aria-label="{{ banner.title }}"{% endif %}>{% else %}<div class="fm-banner__link">{% endif %}
+            <picture class="fm-banner__media">
+                {% if banner.mobile_image %}<source media="(max-width: 767px)" srcset="{{ banner.mobile_image.url }}">{% endif %}
+                <img loading="lazy" decoding="async" class="img-fluid" src="{{ banner.image.url }}" alt="{% if banner.has_overlay %}{% else %}{{ banner.title }}{% endif %}" onerror="this.hidden=true">
+            </picture>
+            {% if banner.has_overlay %}
+                <span class="fm-banner__shade" aria-hidden="true"></span>
+                <span class="fm-banner__copy">
+                    {% if banner.overlay_subtitle %}<span class="fm-banner__eyebrow">{{ banner.overlay_subtitle }}</span>{% endif %}
+                    <strong class="fm-banner__title">{{ banner.title }}</strong>
+                    {% if banner.overlay_description %}<span class="fm-banner__text">{{ banner.overlay_description|linebreaksbr }}</span>{% endif %}
+                    {% if banner.overlay_button %}<span class="fm-banner__cta">{{ banner.overlay_button }} <span aria-hidden="true">←</span></span>{% endif %}
+                </span>
+            {% endif %}
+        {% if banner.url %}</a>{% else %}</div>{% endif %}
+    </div>
+</div>
