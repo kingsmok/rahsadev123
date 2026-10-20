@@ -185,18 +185,30 @@ WSGI_APPLICATION = 'MasaiShop.wsgi.application'
 # درایور PostgreSQL (psycopg) در requirements هست.
 
 def _database_from_url(url):
-    from urllib.parse import unquote, urlparse
+    from urllib.parse import parse_qs, unquote, urlparse
 
     parsed = urlparse(url)
     scheme = parsed.scheme.lower()
+    common = {
+        'NAME': unquote(parsed.path.lstrip('/')),
+        'USER': unquote(parsed.username or ''),
+        'PASSWORD': unquote(parsed.password or ''),
+        'HOST': parsed.hostname or '',
+        'PORT': str(parsed.port or ''),
+    }
     if scheme in ('postgres', 'postgresql'):
+        return {'ENGINE': 'django.db.backends.postgresql', **common}
+    if scheme in ('mysql', 'mysql2'):
+        # utf8mb4 is required for Persian text and full Unicode.  Strict mode
+        # prevents MySQL silently truncating order/payment data.
         return {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': parsed.path.lstrip('/'),
-            'USER': unquote(parsed.username or ''),
-            'PASSWORD': unquote(parsed.password or ''),
-            'HOST': parsed.hostname or '',
-            'PORT': str(parsed.port or ''),
+            'ENGINE': 'django.db.backends.mysql',
+            **common,
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'connect_timeout': int(parse_qs(parsed.query).get('connect_timeout', ['10'])[0]),
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
         }
     if scheme == 'sqlite':
         name = parsed.path
@@ -223,6 +235,14 @@ DATABASES = {
         }
     )
 }
+# A shared host commonly limits concurrent SQL sessions. Zero closes the
+# connection after every request and is the safest one-process default. Hosts
+# that permit persistent connections can raise this (for example to 60).
+try:
+    DATABASES['default']['CONN_MAX_AGE'] = max(0, int(os.environ.get('DB_CONN_MAX_AGE', '0')))
+except ValueError as exc:
+    raise ImproperlyConfigured('DB_CONN_MAX_AGE must be a non-negative integer.') from exc
+DATABASES['default']['CONN_HEALTH_CHECKS'] = True
 
 # Cache: پیش‌فرض حافظهٔ محلیِ هر پردازه است (توسعه و هاست تک‌پردازه کافی است).
 # در استقرار چندپردازه‌ای CACHE_URL=redis://127.0.0.1:6379/1 بگذارید تا
@@ -288,6 +308,11 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+# Avoid buffering large request bodies in RAM on 1 GB shared hosting. Product
+# files larger than this can still be uploaded when the web host allows it;
+# Django streams them to a temporary file after FILE_UPLOAD_MAX_MEMORY_SIZE.
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('DJANGO_DATA_UPLOAD_MAX_MEMORY_SIZE', 5 * 1024 * 1024))
+FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('DJANGO_FILE_UPLOAD_MAX_MEMORY_SIZE', 1024 * 1024))
 # Paid digital assets are deliberately separate from public media. Do not map
 # this directory to a web-server URL; downloads are served after token checks.
 PRIVATE_MEDIA_ROOT = os.path.join(BASE_DIR, 'private_media')

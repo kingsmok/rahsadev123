@@ -12,9 +12,11 @@ python manage.py seed_demo      # داده‌های نمونه کامل + کار
 python manage.py runserver
 ```
 
-> **دیتابیس:** توسعه با SQLite و بدون هیچ تنظیمی اجرا می‌شود. برای تولید کافی است
-> `DATABASE_URL=postgresql://user:pass@host:5432/dbname` را در `.env` بگذارید
-> (درایور `psycopg` در requirements هست)؛ مهاجرت‌ها روی هر دو موتور اعمال می‌شوند.
+> **دیتابیس:** توسعه با SQLite و بدون هیچ تنظیمی اجرا می‌شود. در تولید، PostgreSQL با
+> `DATABASE_URL=postgresql://user:pass@host:5432/dbname` و MySQL/MariaDB هاست اشتراکی
+> با `DATABASE_URL=mysql://user:pass@host:3306/dbname` پشتیبانی می‌شوند. درایورها در
+> requirements هستند و مهاجرت‌ها روی هر سه موتور اعمال می‌شوند. راهنمای کامل cPanel و
+> تنظیم کم‌مصرف در [`deploy/shared-hosting/README.md`](deploy/shared-hosting/README.md) است.
 
 ## ⚡ اجرای یک‌کلیکی — `run.bat`
 

@@ -17,5 +17,7 @@ six==1.17.0
 sqlparse==0.6.0
 tzdata==2025.2
 wheel==0.46.2
-# PostgreSQL driver for production DATABASE_URL deployments (dev stays on SQLite).
+# SQL drivers for production DATABASE_URL deployments (dev stays on SQLite).
 psycopg[binary]==3.2.9
+# Pure Python: works on cPanel/shared hosts without a C compiler or system headers.
+PyMySQL==1.1.2

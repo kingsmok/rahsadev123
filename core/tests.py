@@ -481,13 +481,23 @@ class DatabaseUrlParsingTests(SimpleTestCase):
         self.assertTrue(rel['NAME'].endswith('local.sqlite3'))
         self.assertEqual(_database_from_url('sqlite:///:memory:')['NAME'], ':memory:')
 
+    def test_mysql_url(self):
+        from MasaiShop.settings import _database_from_url
+
+        cfg = _database_from_url('mysql://user:p%40ss@db.example.com:3307/shop?connect_timeout=7')
+        self.assertEqual(cfg['ENGINE'], 'django.db.backends.mysql')
+        self.assertEqual(cfg['NAME'], 'shop')
+        self.assertEqual(cfg['PASSWORD'], 'p@ss')
+        self.assertEqual(cfg['PORT'], '3307')
+        self.assertEqual(cfg['OPTIONS']['charset'], 'utf8mb4')
+        self.assertEqual(cfg['OPTIONS']['connect_timeout'], 7)
+
     def test_unknown_scheme_fails_closed(self):
         from django.core.exceptions import ImproperlyConfigured
-
         from MasaiShop.settings import _database_from_url
 
         with self.assertRaises(ImproperlyConfigured):
-            _database_from_url('mysql://user@host/db')
+            _database_from_url('oracle://user@host/db')
 
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
