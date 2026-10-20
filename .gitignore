@@ -176,3 +176,8 @@ cython_debug/
 # End of https://www.toptal.com/developers/gitignore/api/django
 # collectstatic output
 staticfiles/
+
+# Shared-hosting installer state and backups (may contain credentials)
+.installing
+.env.installing.tmp
+.env.before-install
